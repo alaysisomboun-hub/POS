@@ -4,7 +4,6 @@ import { AppShell } from './components/layout/AppShell';
 import { FirebaseProvider, useFirebase } from './core/firebase/FirebaseProvider';
 import { RoleGuard } from './core/rbac/RoleGuard';
 import { DashboardPage } from './modules/dashboard/DashboardPage';
-import { BranchManagementPage } from './modules/organization/BranchManagementPage';
 import { StaffManagementPage } from './modules/organization/StaffManagementPage';
 import { SettingsOverviewPage } from './modules/settings/SettingsOverviewPage';
 import { PhaseRoadmapPage } from './modules/common/PhaseRoadmapPage';
@@ -36,12 +35,6 @@ function MainRouter() {
         return (
           <RoleGuard moduleKey="staff" action="view">
             <StaffManagementPage />
-          </RoleGuard>
-        );
-      case 'branches':
-        return (
-          <RoleGuard moduleKey="branches" action="view">
-            <BranchManagementPage />
           </RoleGuard>
         );
       case 'settings':

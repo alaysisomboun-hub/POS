@@ -31,17 +31,17 @@ export function PhaseRoadmapPage({ moduleKey, onNavigate }: PhaseRoadmapPageProp
       </p>
 
       <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-600 leading-relaxed">
-        ขณะนี้ระบบอยู่ใน <strong>Phase 2 (ระบบ Login, องค์กร, สาขา, สิทธิ์พนักงาน 7 ระดับ และ Audit Log)</strong>{' '}
+        ขณะนี้ระบบอยู่ใน <strong>Phase 2 (ระบบร้านค้าเดี่ยว, สิทธิ์พนักงาน 7 ระดับ และ Audit Log)</strong>{' '}
         โมดูลนี้จะถูกสร้างพร้อมฐานข้อมูลจริงใน Phase {item?.phase ?? '-'} โดยไม่มีข้อมูลจำลองหรือปุ่มตัวอย่าง
       </div>
 
       <div className="flex flex-wrap gap-2.5 pt-2">
         <button
           type="button"
-          onClick={() => onNavigate('branches')}
+          onClick={() => onNavigate('settings')}
           className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-medium rounded-lg cursor-pointer"
         >
-          ไปที่จัดการสาขา
+          ไปที่ตั้งค่าร้านค้า
           <ArrowRight className="w-4 h-4" />
         </button>
         <button

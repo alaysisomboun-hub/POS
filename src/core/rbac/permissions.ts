@@ -22,10 +22,9 @@ export const MENU_ITEMS: MenuItemConfig[] = [
   // สินค้าและคลัง
   { key: 'products', label: 'สินค้าทั้งหมด', group: 'สินค้าและคลังสินค้า', phase: 3, description: 'จัดการ SKU บาร์โค้ด หลายหน่วย ราคาหลายระดับ และพิมพ์ฉลาก' },
   { key: 'categories', label: 'หมวดหมู่สินค้า', group: 'สินค้าและคลังสินค้า', phase: 3, description: 'จัดโครงสร้างหมวดหมู่สินค้าหลักและย่อย' },
-  { key: 'inventory', label: 'คลังสินค้า', group: 'สินค้าและคลังสินค้า', phase: 3, description: 'ยอดคงเหลือแยกสาขา ล็อต/วันหมดอายุ ตรวจนับ และ Stock Ledger' },
+  { key: 'inventory', label: 'คลังสินค้า', group: 'สินค้าและคลังสินค้า', phase: 3, description: 'ยอดคงเหลือ ล็อต/วันหมดอายุ ตรวจนับ และ Stock Ledger' },
   { key: 'stock_in', label: 'รับสินค้าเข้า', group: 'สินค้าและคลังสินค้า', phase: 3, description: 'รับสินค้าเข้าคลังและบันทึกล็อตพร้อมวันหมดอายุ' },
   { key: 'stock_out', label: 'เบิกสินค้าออก', group: 'สินค้าและคลังสินค้า', phase: 3, description: 'เบิกสินค้า สินค้าเสียหาย หมดอายุ และสูญหาย' },
-  { key: 'transfers', label: 'โอนสินค้าระหว่างสาขา', group: 'สินค้าและคลังสินค้า', phase: 6, description: 'คำขอโอน อนุมัติ จัดส่ง ตรวจรับ และบันทึกส่วนต่าง' },
 
   // จัดซื้อและซัพพลายเออร์
   { key: 'purchasing', label: 'จัดซื้อสินค้า', group: 'จัดซื้อและซัพพลายเออร์', phase: 6, description: 'ใบสั่งซื้อ (PO) คำนวณส่วนลด ค่าขนส่ง ภาษี และต้นทุน WAC' },
@@ -39,12 +38,11 @@ export const MENU_ITEMS: MenuItemConfig[] = [
   { key: 'accounts_receivable', label: 'ลูกหนี้', group: 'การเงินและบัญชี', phase: 7, description: 'ติดตามหนี้ลูกค้า รับชำระบางส่วน/เต็มจำนวน และแจ้งเตือนเกินกำหนด' },
   { key: 'accounts_payable', label: 'เจ้าหนี้', group: 'การเงินและบัญชี', phase: 7, description: 'ติดตามยอดค้างจ่ายซัพพลายเออร์และบันทึกชำระหนี้' },
   { key: 'income', label: 'รายรับ', group: 'การเงินและบัญชี', phase: 8, description: 'รายรับจากการขาย ชำระหนี้ และรายรับอื่น ๆ' },
-  { key: 'expenses', label: 'รายจ่าย', group: 'การเงินและบัญชี', phase: 8, description: 'บันทึกค่าใช้จ่ายดำเนินงาน 7 หมวดหมู่แยกสาขา' },
+  { key: 'expenses', label: 'รายจ่าย', group: 'การเงินและบัญชี', phase: 8, description: 'บันทึกค่าใช้จ่ายดำเนินงาน 7 หมวดหมู่ของร้าน' },
   { key: 'accounting', label: 'บัญชีและการเงิน', group: 'การเงินและบัญชี', phase: 8, description: 'ผังบัญชี สมุดรายวัน แยกประเภท งบทดลอง งบกำไรขาดทุน และงบดุล' },
 
   // องค์กรและระบบ
   { key: 'staff', label: 'พนักงาน', group: 'องค์กรและระบบ', phase: 2, description: 'จัดการพนักงาน บทบาท 7 ระดับ กำหนดสิทธิ์ และประวัติการใช้งาน (Audit Log)' },
-  { key: 'branches', label: 'สาขา', group: 'องค์กรและระบบ', phase: 2, description: 'จัดการข้อมูลสาขา ผู้จัดการสาขา และสิทธิ์พนักงานประจำสาขา' },
   { key: 'backup', label: 'สำรองข้อมูล', group: 'องค์กรและระบบ', phase: 10, description: 'สำรอง ตรวจสอบความสมบูรณ์ กู้คืน และรีเซ็ตข้อมูลอย่างปลอดภัย' },
   { key: 'settings', label: 'ตั้งค่าระบบ', group: 'องค์กรและระบบ', phase: 2, description: 'ตั้งค่าร้านค้า สกุลเงิน LAK ภาษี และรูปแบบใบเสร็จ' },
 ];
@@ -52,7 +50,7 @@ export const MENU_ITEMS: MenuItemConfig[] = [
 export const ROLE_LABELS: Record<UserRole, string> = {
   super_admin: 'Super Admin (ผู้ดูแลระบบสูงสุด)',
   owner: 'Owner (เจ้าของกิจการ)',
-  branch_manager: 'Branch Manager (ผู้จัดการสาขา)',
+  branch_manager: 'Store Manager (ผู้จัดการร้าน)',
   cashier: 'Cashier (พนักงานขาย)',
   warehouse_staff: 'Warehouse Staff (พนักงานคลังสินค้า)',
   purchasing_staff: 'Purchasing Staff (พนักงานจัดซื้อ)',
@@ -101,7 +99,6 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, PermissionsMap> = {
     inventory: ['view', 'create', 'edit', 'approve', 'export'],
     stock_in: ['view', 'create', 'approve'],
     stock_out: ['view', 'create', 'approve'],
-    transfers: ['view', 'create', 'approve'],
     purchasing: ['view', 'create', 'approve'],
     suppliers: ['view', 'create', 'edit'],
     customers: ['view', 'create', 'edit'],
@@ -112,7 +109,6 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, PermissionsMap> = {
     expenses: ['view', 'create'],
     reports: ['view', 'export'],
     staff: ['view', 'create', 'edit'],
-    branches: ['view'],
     notifications: ['view', 'edit'],
     settings: ['view'],
   },
@@ -131,7 +127,6 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, PermissionsMap> = {
     inventory: ['view', 'create', 'edit', 'export'],
     stock_in: ['view', 'create'],
     stock_out: ['view', 'create'],
-    transfers: ['view', 'create', 'edit'],
     purchasing: ['view', 'edit'],
     notifications: ['view'],
   },

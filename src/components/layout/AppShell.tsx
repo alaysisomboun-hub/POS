@@ -1,11 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import {
   Activity,
-  ArrowLeftRight,
   BarChart3,
   Bell,
   Boxes,
-  Building2,
   CreditCard,
   DatabaseBackup,
   FileSpreadsheet,
@@ -41,7 +39,6 @@ const MODULE_ICONS: Record<ModuleKey, React.ComponentType<{ className?: string }
   inventory: Boxes,
   stock_in: PackagePlus,
   stock_out: PackageMinus,
-  transfers: ArrowLeftRight,
   purchasing: ShoppingBag,
   suppliers: Truck,
   customers: Users,
@@ -53,7 +50,6 @@ const MODULE_ICONS: Record<ModuleKey, React.ComponentType<{ className?: string }
   accounting: BarChart3,
   reports: FileSpreadsheet,
   staff: UserCog,
-  branches: Building2,
   ai_analyst: Sparkles,
   notifications: Bell,
   backup: DatabaseBackup,
@@ -67,13 +63,7 @@ interface AppShellProps {
 }
 
 export function AppShell({ activeModule, onSelectModule, children }: AppShellProps) {
-  const {
-    userProfile,
-    organization,
-    branches,
-    activeBranch,
-    setActiveBranchId,
-  } = useFirebase();
+  const { userProfile, organization } = useFirebase();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const menuGroups = useMemo(() => getVisibleMenuGroups(userProfile), [userProfile]);
@@ -196,22 +186,9 @@ export function AppShell({ activeModule, onSelectModule, children }: AppShellPro
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
-            {branches.length > 0 && (
-              <div className="flex items-center gap-2">
-                <span className="hidden sm:inline text-xs text-slate-500">สาขา:</span>
-                <select
-                  value={activeBranch?.branchId || ''}
-                  onChange={(e) => setActiveBranchId(e.target.value)}
-                  className="px-2.5 py-1.5 text-xs sm:text-sm font-medium text-slate-700 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-600 max-w-[170px] sm:max-w-[220px] truncate"
-                >
-                  {branches.map((b) => (
-                    <option key={b.branchId} value={b.branchId}>
-                      {b.branchCode} · {b.branchName}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
+            <span className="hidden sm:inline text-xs font-medium text-slate-500">
+              {organization?.name || 'ร้านค้าหลัก'}
+            </span>
           </div>
         </header>
 

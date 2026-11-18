@@ -8,8 +8,10 @@ import { appendAuditLogToBatch } from '../../core/firebase/auditService';
 import { hasPermission } from '../../core/rbac/permissions';
 
 export function SettingsOverviewPage() {
-  const { userProfile, organization, settings } = useFirebase();
+  const { userProfile, organization, activeBranch, activeBranchId, settings } = useFirebase();
   const [storeName, setStoreName] = useState('');
+  const [storePhone, setStorePhone] = useState('');
+  const [storeAddress, setStoreAddress] = useState('');
   const [paperSize, setPaperSize] = useState<'80mm' | '58mm'>('80mm');
   const [receiptPrefix, setReceiptPrefix] = useState('INV');
   const [footerText, setFooterText] = useState('');
@@ -28,6 +30,8 @@ export function SettingsOverviewPage() {
       setStoreName(organization.name);
     }
     if (settings) {
+      setStorePhone(settings.storeProfile?.phone || activeBranch?.phone || '');
+      setStoreAddress(settings.storeProfile?.address || activeBranch?.address || '');
       setPaperSize(settings.receiptSettings?.paperSize ?? '80mm');
       setReceiptPrefix(settings.receiptSettings?.prefix ?? 'INV');
       setFooterText(settings.receiptSettings?.footerText ?? '');
@@ -35,8 +39,11 @@ export function SettingsOverviewPage() {
       setTaxRate(String(settings.taxSettings?.taxRate ?? 0));
       setTaxId(settings.taxSettings?.taxId ?? '');
       setRoundingMode(settings.currencySettings?.roundingMode ?? 'integer');
+    } else if (activeBranch) {
+      setStorePhone(activeBranch.phone || '');
+      setStoreAddress(activeBranch.address || '');
     }
-  }, [organization, settings]);
+  }, [organization, activeBranch, settings]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,24 +58,38 @@ export function SettingsOverviewPage() {
     try {
       const batch = writeBatch(db);
 
-      if (storeName.trim() && storeName.trim() !== organization.name) {
+      const resolvedStoreName = storeName.trim().slice(0, 120) || organization.name;
+      const resolvedPhone = storePhone.trim().slice(0, 30);
+      const resolvedAddress = storeAddress.trim().slice(0, 300);
+
+      if (resolvedStoreName !== organization.name) {
         batch.update(doc(db, 'organizations', organization.organizationId), {
-          name: storeName.trim().slice(0, 120),
+          name: resolvedStoreName,
+          updatedAt: serverTimestamp(),
+        });
+      }
+
+      if (activeBranch) {
+        batch.update(doc(db, 'branches', activeBranchId), {
+          branchName: resolvedStoreName,
+          address: resolvedAddress,
+          phone: resolvedPhone,
           updatedAt: serverTimestamp(),
         });
       }
 
       batch.update(doc(db, 'settings', organization.organizationId), {
         storeProfile: {
-          name: storeName.trim().slice(0, 120) || organization.name,
+          name: resolvedStoreName,
           logoUrl: settings.storeProfile?.logoUrl ?? '',
-          address: settings.storeProfile?.address ?? '',
-          phone: settings.storeProfile?.phone ?? '',
+          address: resolvedAddress,
+          phone: resolvedPhone,
         },
         receiptSettings: {
           ...settings.receiptSettings,
           prefix: receiptPrefix.trim().toUpperCase().slice(0, 10) || 'INV',
           paperSize,
+          headerText: resolvedStoreName,
           footerText: footerText.trim().slice(0, 200),
           showTaxId: taxEnabled,
         },
@@ -88,18 +109,22 @@ export function SettingsOverviewPage() {
 
       appendAuditLogToBatch(batch, {
         user: userProfile,
-        branchId: null,
+        branchId: activeBranchId,
         action: 'UPDATE_SYSTEM_SETTINGS',
         entityType: 'settings',
         entityId: organization.organizationId,
         before: {
           storeName: organization.name,
+          phone: settings.storeProfile?.phone ?? '',
+          address: settings.storeProfile?.address ?? '',
           taxEnabled: settings.taxSettings?.taxEnabled,
           taxRate: settings.taxSettings?.taxRate,
           paperSize: settings.receiptSettings?.paperSize,
         },
         after: {
-          storeName: storeName.trim(),
+          storeName: resolvedStoreName,
+          phone: resolvedPhone,
+          address: resolvedAddress,
           taxEnabled,
           taxRate: parsedTaxRate,
           paperSize,
@@ -123,9 +148,9 @@ export function SettingsOverviewPage() {
   return (
     <div className="max-w-3xl space-y-5">
       <div>
-        <h2 className="text-base font-semibold text-slate-900">ตั้งค่าองค์กร ใบเสร็จ และภาษี</h2>
+        <h2 className="text-base font-semibold text-slate-900">ตั้งค่าร้านค้า ใบเสร็จ และภาษี</h2>
         <p className="text-xs text-slate-500">
-          สกุลเงินหลัก: LAK (กีบ) · เขตเวลา: Asia/Vientiane · รูปแบบวันที่: DD/MM/YYYY
+          ระบบร้านค้าเดี่ยว (1 สาขา) · สกุลเงินหลัก: LAK (กีบ) · เขตเวลา: Asia/Vientiane · รูปแบบวันที่: DD/MM/YYYY
         </p>
       </div>
 
@@ -145,13 +170,37 @@ export function SettingsOverviewPage() {
       <form onSubmit={handleSave} className="bg-white border border-slate-200 rounded-xl p-6 space-y-5">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1">ชื่อร้าน / องค์กร</label>
+            <label className="block text-xs font-medium text-slate-700 mb-1">ชื่อร้านค้า</label>
             <input
               type="text"
               disabled={!canManage}
               maxLength={120}
               value={storeName}
               onChange={(e) => setStoreName(e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg disabled:bg-slate-50"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-700 mb-1">เบอร์โทรศัพท์ร้าน</label>
+            <input
+              type="text"
+              disabled={!canManage}
+              maxLength={30}
+              value={storePhone}
+              onChange={(e) => setStorePhone(e.target.value)}
+              placeholder="020-xxxx-xxxx"
+              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg disabled:bg-slate-50"
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="block text-xs font-medium text-slate-700 mb-1">ที่อยู่ร้านค้า</label>
+            <input
+              type="text"
+              disabled={!canManage}
+              maxLength={300}
+              value={storeAddress}
+              onChange={(e) => setStoreAddress(e.target.value)}
+              placeholder="ที่อยู่ร้านสำหรับแสดงบนใบเสร็จ"
               className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg disabled:bg-slate-50"
             />
           </div>

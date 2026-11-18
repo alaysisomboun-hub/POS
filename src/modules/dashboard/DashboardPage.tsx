@@ -9,9 +9,10 @@ import {
 } from 'firebase/firestore';
 import {
   ArrowRight,
-  Building2,
   History,
+  Package,
   Settings,
+  Store,
   TrendingUp,
   UserCog,
   Users,
@@ -29,7 +30,7 @@ interface DashboardPageProps {
 }
 
 export function DashboardPage({ onNavigate }: DashboardPageProps) {
-  const { organization, branches, activeBranch, settings } = useFirebase();
+  const { organization, activeBranch, settings } = useFirebase();
   const [staffCount, setStaffCount] = useState<number>(0);
   const [recentLogs, setRecentLogs] = useState<AuditLog[]>([]);
 
@@ -67,8 +68,6 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
     };
   }, []);
 
-  const activeBranchCount = branches.filter((b) => b.status === 'active').length;
-
   return (
     <div className="space-y-6">
       {/* Header Summary */}
@@ -78,16 +77,16 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
             {organization?.name ?? 'Grocery POS Management System'}
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            สาขาที่เลือก: {activeBranch ? `${activeBranch.branchCode} · ${activeBranch.branchName}` : '-'} · สกุลเงินหลัก: LAK · เขตเวลา: Asia/Vientiane
+            ระบบร้านค้าเดี่ยว (1 สาขา) · สกุลเงินหลัก: LAK · เขตเวลา: Asia/Vientiane
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2 shrink-0">
           <button
             type="button"
-            onClick={() => onNavigate('branches')}
+            onClick={() => onNavigate('staff')}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs sm:text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors whitespace-nowrap cursor-pointer"
           >
-            จัดการสาขา
+            พนักงานและสิทธิ์
             <ArrowRight className="w-4 h-4" />
           </button>
           <button
@@ -122,13 +121,15 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
 
         <div className="bg-white border border-slate-200 rounded-xl p-5">
           <div className="flex items-center justify-between text-xs font-medium text-slate-500 mb-2">
-            <span>สาขาที่เปิดใช้งาน</span>
-            <Building2 className="w-4 h-4 text-blue-600" />
+            <span>โครงสร้างร้านค้า</span>
+            <Store className="w-4 h-4 text-blue-600" />
           </div>
           <div className="text-2xl font-bold text-slate-900 tabular-nums">
-            {activeBranchCount} <span className="text-sm font-normal text-slate-500">/ {branches.length} สาขา</span>
+            1 ร้านค้า
           </div>
-          <div className="text-xs text-slate-500 mt-1">ข้อมูลจริงจาก Cloud Firestore</div>
+          <div className="text-xs text-slate-500 mt-1 truncate">
+            {activeBranch?.branchName || organization?.name || 'ร้านค้าหลัก'} · เชื่อมโยงอัตโนมัติ
+          </div>
         </div>
 
         <div className="bg-white border border-slate-200 rounded-xl p-5">
@@ -148,21 +149,6 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
         <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-3">
           <h3 className="text-sm font-semibold text-slate-900">โมดูลที่พร้อมใช้งานในระบบ</h3>
           <div className="space-y-2">
-            <button
-              type="button"
-              onClick={() => onNavigate('branches')}
-              className="w-full flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:border-blue-300 hover:bg-blue-50/40 text-left transition-colors cursor-pointer"
-            >
-              <div className="flex items-center gap-3">
-                <Building2 className="w-4 h-4 text-blue-600 shrink-0" />
-                <div>
-                  <div className="text-sm font-medium text-slate-900">จัดการสาขา</div>
-                  <div className="text-xs text-slate-500">เพิ่ม/แก้ไขสาขา และสลับสาขาใช้งาน</div>
-                </div>
-              </div>
-              <ArrowRight className="w-4 h-4 text-slate-400" />
-            </button>
-
             <button
               type="button"
               onClick={() => onNavigate('staff')}
@@ -187,7 +173,22 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
                 <Settings className="w-4 h-4 text-blue-600 shrink-0" />
                 <div>
                   <div className="text-sm font-medium text-slate-900">ตั้งค่าระบบและใบเสร็จ</div>
-                  <div className="text-xs text-slate-500">ชื่อร้าน ขนาดกระดาษ 80mm/58mm และภาษี</div>
+                  <div className="text-xs text-slate-500">ข้อมูลร้าน ขนาดกระดาษ 80mm/58mm และภาษี</div>
+                </div>
+              </div>
+              <ArrowRight className="w-4 h-4 text-slate-400" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onNavigate('products')}
+              className="w-full flex items-center justify-between p-3 rounded-lg border border-slate-200 hover:border-blue-300 hover:bg-blue-50/40 text-left transition-colors cursor-pointer"
+            >
+              <div className="flex items-center gap-3">
+                <Package className="w-4 h-4 text-blue-600 shrink-0" />
+                <div>
+                  <div className="text-sm font-medium text-slate-900">สินค้าและคลังสินค้า</div>
+                  <div className="text-xs text-slate-500">แผนพัฒนาถัดไป (Phase 3)</div>
                 </div>
               </div>
               <ArrowRight className="w-4 h-4 text-slate-400" />

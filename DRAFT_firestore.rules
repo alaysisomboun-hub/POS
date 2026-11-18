@@ -186,16 +186,22 @@ service cloud.firestore {
     }
 
     match /branches/{branchId} {
-      allow get: if isValidId(branchId) && isMainWorkspace(existing().organizationId);
-      allow list: if isMainWorkspace(existing().organizationId);
+      allow get: if isValidId(branchId) &&
+        branchId == 'br_hq_01' &&
+        isMainWorkspace(existing().organizationId);
+      allow list: if false;
       allow create: if isValidId(branchId) &&
+        branchId == 'br_hq_01' &&
         isValidBranch(incoming()) &&
         isMainWorkspace(incoming().organizationId) &&
-        incoming().branchId == branchId &&
+        incoming().branchId == 'br_hq_01' &&
+        incoming().isMainBranch == true &&
+        incoming().status == 'active' &&
         incoming().createdAt == request.time &&
         incoming().updatedAt == request.time &&
         existsAfter(/databases/$(database)/documents/organizations/$(incoming().organizationId));
       allow update: if isValidId(branchId) &&
+        branchId == 'br_hq_01' &&
         isValidBranch(incoming()) &&
         isMainWorkspace(existing().organizationId) &&
         incoming().branchId == existing().branchId &&
@@ -203,9 +209,10 @@ service cloud.firestore {
         incoming().ownerUid == existing().ownerUid &&
         incoming().createdAt == existing().createdAt &&
         incoming().updatedAt == request.time &&
+        incoming().isMainBranch == true &&
+        incoming().status == 'active' &&
         incoming().diff(existing()).affectedKeys().hasOnly([
-          'branchCode', 'branchName', 'address', 'phone',
-          'managerId', 'assignedUids', 'isMainBranch', 'status', 'updatedAt'
+          'branchName', 'address', 'phone', 'updatedAt'
         ]);
       allow delete: if false;
     }

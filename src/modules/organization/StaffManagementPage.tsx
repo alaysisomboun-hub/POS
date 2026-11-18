@@ -37,7 +37,7 @@ import type {
 type TabKey = 'staff' | 'audit';
 
 export function StaffManagementPage() {
-  const { userProfile, branches } = useFirebase();
+  const { userProfile, activeBranchId } = useFirebase();
   const [activeTab, setActiveTab] = useState<TabKey>('staff');
   const [staffList, setStaffList] = useState<UserProfile[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
@@ -51,7 +51,6 @@ export function StaffManagementPage() {
   const [formName, setFormName] = useState('');
   const [formPhone, setFormPhone] = useState('');
   const [formRole, setFormRole] = useState<UserRole>('cashier');
-  const [formBranchIds, setFormBranchIds] = useState<string[]>([]);
   const [formStatus, setFormStatus] = useState<'active' | 'suspended'>('active');
   const [formPermissions, setFormPermissions] = useState<PermissionsMap>(
     DEFAULT_ROLE_PERMISSIONS.cashier,
@@ -99,12 +98,6 @@ export function StaffManagementPage() {
     return () => unsubAudit();
   }, [userProfile, activeTab, auditLimit]);
 
-  const branchNameMap = useMemo(() => {
-    const map = new Map<string, string>();
-    branches.forEach((b) => map.set(b.branchId, `${b.branchCode} · ${b.branchName}`));
-    return map;
-  }, [branches]);
-
   const filteredStaff = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return staffList;
@@ -123,7 +116,6 @@ export function StaffManagementPage() {
     setFormName('');
     setFormPhone('');
     setFormRole('cashier');
-    setFormBranchIds(branches.slice(0, 1).map((b) => b.branchId));
     setFormStatus('active');
     setFormPermissions(structuredClone(DEFAULT_ROLE_PERMISSIONS.cashier));
     setShowPermissionMatrix(false);
@@ -137,7 +129,6 @@ export function StaffManagementPage() {
     setFormName(staff.name);
     setFormPhone(staff.phone || '');
     setFormRole(staff.role);
-    setFormBranchIds(staff.branchIds);
     setFormStatus(staff.status);
     setFormPermissions(
       structuredClone(staff.permissions || DEFAULT_ROLE_PERMISSIONS[staff.role]),
@@ -150,12 +141,6 @@ export function StaffManagementPage() {
   const handleRoleSelect = (role: UserRole) => {
     setFormRole(role);
     setFormPermissions(structuredClone(DEFAULT_ROLE_PERMISSIONS[role]));
-  };
-
-  const toggleBranch = (branchId: string) => {
-    setFormBranchIds((prev) =>
-      prev.includes(branchId) ? prev.filter((id) => id !== branchId) : [...prev, branchId],
-    );
   };
 
   const togglePermission = (moduleKey: ModuleKey, action: PermissionAction) => {
@@ -175,8 +160,8 @@ export function StaffManagementPage() {
     e.preventDefault();
     if (!userProfile) return;
 
-    if (!formName.trim() || formBranchIds.length === 0) {
-      setErrorMsg('กรุณากรอกชื่อพนักงานและเลือกอย่างน้อย 1 สาขา');
+    if (!formName.trim()) {
+      setErrorMsg('กรุณากรอกชื่อพนักงาน');
       return;
     }
 
@@ -185,6 +170,7 @@ export function StaffManagementPage() {
 
     try {
       const batch = writeBatch(db);
+      const singleBranchIds = [activeBranchId];
 
       if (modalMode === 'create_staff') {
         const uid = generateSafeId('usr');
@@ -196,7 +182,7 @@ export function StaffManagementPage() {
           email: formEmail.trim().toLowerCase().slice(0, 160),
           phone: formPhone.trim().slice(0, 30),
           role: formRole,
-          branchIds: formBranchIds,
+          branchIds: singleBranchIds,
           permissions: formPermissions,
           status: formStatus,
           createdAt: serverTimestamp(),
@@ -205,12 +191,12 @@ export function StaffManagementPage() {
 
         appendAuditLogToBatch(batch, {
           user: userProfile,
-          branchId: formBranchIds[0] ?? null,
+          branchId: activeBranchId,
           action: 'CREATE_STAFF',
           entityType: 'users',
           entityId: uid,
           before: null,
-          after: { name: formName.trim(), role: formRole, branchIds: formBranchIds },
+          after: { name: formName.trim(), role: formRole, branchIds: singleBranchIds },
         });
       } else if (modalMode === 'edit_staff' && editingStaff) {
         batch.update(doc(db, 'users', editingStaff.uid), {
@@ -218,7 +204,7 @@ export function StaffManagementPage() {
           email: formEmail.trim().toLowerCase().slice(0, 160),
           phone: formPhone.trim().slice(0, 30),
           role: formRole,
-          branchIds: formBranchIds,
+          branchIds: singleBranchIds,
           permissions: formPermissions,
           status: formStatus,
           lastLoginAt: serverTimestamp(),
@@ -226,18 +212,16 @@ export function StaffManagementPage() {
 
         appendAuditLogToBatch(batch, {
           user: userProfile,
-          branchId: formBranchIds[0] ?? null,
+          branchId: activeBranchId,
           action: 'UPDATE_STAFF_PERMISSIONS',
           entityType: 'users',
           entityId: editingStaff.uid,
           before: {
             role: editingStaff.role,
-            branchIds: editingStaff.branchIds,
             status: editingStaff.status,
           },
           after: {
             role: formRole,
-            branchIds: formBranchIds,
             status: formStatus,
           },
         });
@@ -321,7 +305,6 @@ export function StaffManagementPage() {
                 <tr className="border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-600">
                   <th className="py-3 px-4">ชื่อพนักงาน</th>
                   <th className="py-3 px-4">บทบาท (Role)</th>
-                  <th className="py-3 px-4">สาขาที่รับผิดชอบ</th>
                   <th className="py-3 px-4">สถานะ</th>
                   <th className="py-3 px-4">อัปเดตล่าสุด</th>
                   <th className="py-3 px-4 text-right">จัดการ</th>
@@ -338,9 +321,6 @@ export function StaffManagementPage() {
                     </td>
                     <td className="py-3 px-4 text-xs font-medium text-blue-700">
                       {ROLE_LABELS[staff.role]}
-                    </td>
-                    <td className="py-3 px-4 text-xs text-slate-600">
-                      {staff.branchIds.map((id) => branchNameMap.get(id) ?? id).join(', ') || '-'}
                     </td>
                     <td className="py-3 px-4 text-xs">
                       <span
@@ -559,35 +539,6 @@ export function StaffManagementPage() {
                     <option value="active">ใช้งานปกติ</option>
                     <option value="suspended">ระงับสิทธิ์</option>
                   </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1.5">
-                  สาขาที่รับผิดชอบ *
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {branches.map((b) => {
-                    const checked = formBranchIds.includes(b.branchId);
-                    return (
-                      <label
-                        key={b.branchId}
-                        className={`inline-flex items-center gap-2 px-3 py-1.5 text-xs border rounded-lg cursor-pointer ${
-                          checked
-                            ? 'bg-blue-50 border-blue-200 text-blue-800 font-medium'
-                            : 'bg-white border-slate-200 text-slate-600'
-                        }`}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={() => toggleBranch(b.branchId)}
-                          className="rounded border-slate-300 text-blue-600"
-                        />
-                        {b.branchCode} · {b.branchName}
-                      </label>
-                    );
-                  })}
                 </div>
               </div>
 

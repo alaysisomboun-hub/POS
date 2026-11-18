@@ -2,7 +2,7 @@
   "entities": {
     "Organization": {
       "title": "Organization",
-      "description": "ข้อมูลองค์กรหรือร้านค้าหลัก รองรับหลายสาขา สกุลเงิน LAK และเขตเวลา Asia/Vientiane",
+      "description": "ข้อมูลร้านค้าหลัก (ระบบ 1 สาขา) สกุลเงิน LAK และเขตเวลา Asia/Vientiane",
       "type": "object",
       "properties": {
         "organizationId": {
@@ -294,6 +294,9 @@
           "maxLength": 128,
           "pattern": "^[a-zA-Z0-9_\\-]+$"
         },
+        "storeProfile": {
+          "type": "object"
+        },
         "receiptSettings": {
           "type": "object"
         },
@@ -333,7 +336,7 @@
     },
     "/branches/{branchId}": {
       "schema": { "$ref": "#/entities/Branch" },
-      "description": "สาขาทั้งหมดขององค์กร"
+      "description": "ข้อมูลสาขาหลักเดียวของร้านค้า (br_hq_01)"
     },
     "/users/{uid}": {
       "schema": { "$ref": "#/entities/UserProfile" },
