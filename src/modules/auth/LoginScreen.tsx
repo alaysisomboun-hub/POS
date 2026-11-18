@@ -1,10 +1,16 @@
 import { useState } from 'react';
-import { Store, ShieldCheck, ArrowRight, Lock } from 'lucide-react';
+import { Store, ShieldCheck, ArrowRight, Lock, Copy, Check } from 'lucide-react';
 import { useFirebase } from '../../core/firebase/FirebaseProvider';
+import firebaseConfig from '../../../firebase-applet-config.json';
 
 export function LoginScreen() {
   const { signInWithGoogle, authError, connectionOk } = useFirebase();
   const [submitting, setSubmitting] = useState(false);
+  const [copiedHost, setCopiedHost] = useState(false);
+
+  const currentHost = typeof window !== 'undefined' ? window.location.hostname : '';
+  const isUnauthorizedDomain = authError?.startsWith('auth/unauthorized-domain|') ?? false;
+  const displayError = authError?.includes('|') ? authError.split('|')[1] : authError;
 
   const handleLogin = async () => {
     setSubmitting(true);
@@ -12,6 +18,17 @@ export function LoginScreen() {
       await signInWithGoogle();
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleCopyHost = async () => {
+    if (!currentHost) return;
+    try {
+      await navigator.clipboard.writeText(currentHost);
+      setCopiedHost(true);
+      setTimeout(() => setCopiedHost(false), 2000);
+    } catch {
+      // ignore clipboard errors
     }
   };
 
@@ -47,9 +64,27 @@ export function LoginScreen() {
           </div>
         )}
 
-        {authError && (
-          <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700 break-words">
-            {authError}
+        {displayError && (
+          <div className="mb-4 p-3.5 rounded-lg bg-red-50 border border-red-200 text-xs text-red-800 space-y-2 break-words">
+            <div className="font-semibold">{displayError}</div>
+            {isUnauthorizedDomain && currentHost && (
+              <div className="pt-1 space-y-2 text-slate-700">
+                <p>
+                  กรุณาเพิ่มโดเมนด้านล่างใน Firebase Console &gt; Authentication &gt; Settings &gt; Authorized domains (โปรเจกต์ <span className="font-mono font-semibold">{firebaseConfig.projectId}</span>):
+                </p>
+                <div className="flex items-center justify-between gap-2 bg-white border border-red-200 rounded px-2.5 py-1.5">
+                  <code className="text-[11px] font-mono text-slate-900 truncate">{currentHost}</code>
+                  <button
+                    type="button"
+                    onClick={handleCopyHost}
+                    className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium text-blue-700 hover:bg-blue-50 rounded shrink-0 cursor-pointer"
+                  >
+                    {copiedHost ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                    {copiedHost ? 'คัดลอกแล้ว' : 'คัดลอก'}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

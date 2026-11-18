@@ -285,9 +285,25 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
     try {
       await signInWithPopup(auth, googleProvider);
     } catch (error) {
-      const msg = error instanceof Error ? error.message : 'ไม่สามารถเข้าสู่ระบบด้วย Google ได้';
-      setAuthError(msg);
-      throw error;
+      const code =
+        typeof error === 'object' && error !== null && 'code' in error
+          ? String((error as { code?: unknown }).code)
+          : '';
+      if (code === 'auth/unauthorized-domain') {
+        const host = typeof window !== 'undefined' ? window.location.hostname : '';
+        setAuthError(
+          `auth/unauthorized-domain|โดเมนปัจจุบัน (${host}) ยังไม่ได้รับอนุญาตใน Firebase Authentication (Authorized domains)`,
+        );
+      } else if (code === 'auth/popup-blocked') {
+        setAuthError(
+          'auth/popup-blocked|เบราว์เซอร์บล็อกหน้าต่าง Pop-up กรุณาอนุญาต Pop-up สำหรับเว็บไซต์นี้แล้วลองใหม่อีกครั้ง',
+        );
+      } else if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
+        setAuthError(null);
+      } else {
+        const msg = error instanceof Error ? error.message : 'ไม่สามารถเข้าสู่ระบบด้วย Google ได้';
+        setAuthError(msg);
+      }
     }
   }, []);
 
