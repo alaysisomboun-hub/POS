@@ -4,6 +4,13 @@ import { AppShell } from './components/layout/AppShell';
 import { FirebaseProvider, useFirebase } from './core/firebase/FirebaseProvider';
 import { RoleGuard } from './core/rbac/RoleGuard';
 import { DashboardPage } from './modules/dashboard/DashboardPage';
+import { PosTerminalPage } from './modules/pos/PosTerminalPage';
+import { SalesHistoryPage } from './modules/pos/SalesHistoryPage';
+import { CategoriesPage } from './modules/products/CategoriesPage';
+import { ProductsPage } from './modules/products/ProductsPage';
+import { InventoryPage } from './modules/inventory/InventoryPage';
+import { StockInPage } from './modules/inventory/StockInPage';
+import { StockOutPage } from './modules/inventory/StockOutPage';
 import { StaffManagementPage } from './modules/organization/StaffManagementPage';
 import { SettingsOverviewPage } from './modules/settings/SettingsOverviewPage';
 import { PhaseRoadmapPage } from './modules/common/PhaseRoadmapPage';
@@ -29,6 +36,48 @@ function MainRouter() {
         return (
           <RoleGuard moduleKey="dashboard" action="view">
             <DashboardPage onNavigate={setActiveModule} />
+          </RoleGuard>
+        );
+      case 'pos':
+        return (
+          <RoleGuard moduleKey="pos" action="view">
+            <PosTerminalPage />
+          </RoleGuard>
+        );
+      case 'sales_history':
+        return (
+          <RoleGuard moduleKey="sales_history" action="view">
+            <SalesHistoryPage />
+          </RoleGuard>
+        );
+      case 'products':
+        return (
+          <RoleGuard moduleKey="products" action="view">
+            <ProductsPage />
+          </RoleGuard>
+        );
+      case 'categories':
+        return (
+          <RoleGuard moduleKey="categories" action="view">
+            <CategoriesPage />
+          </RoleGuard>
+        );
+      case 'inventory':
+        return (
+          <RoleGuard moduleKey="inventory" action="view">
+            <InventoryPage />
+          </RoleGuard>
+        );
+      case 'stock_in':
+        return (
+          <RoleGuard moduleKey="stock_in" action="view">
+            <StockInPage />
+          </RoleGuard>
+        );
+      case 'stock_out':
+        return (
+          <RoleGuard moduleKey="stock_out" action="view">
+            <StockOutPage />
           </RoleGuard>
         );
       case 'staff':

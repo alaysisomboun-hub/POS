@@ -43,6 +43,10 @@ service cloud.firestore {
       return orgId == 'org_main';
     }
 
+    function isMainBranchId(branchId) {
+      return branchId == 'br_hq_01';
+    }
+
     // -------------------------------------------------------------------------
     // Entity Validation Blueprints
     // -------------------------------------------------------------------------
@@ -161,6 +165,310 @@ service cloud.firestore {
         data.updatedAt is timestamp;
     }
 
+    function isValidCategory(data) {
+      return data.keys().hasAll([
+          'categoryId', 'organizationId', 'ownerUid', 'name', 'parentId',
+          'description', 'sortOrder', 'status', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'categoryId', 'organizationId', 'ownerUid', 'name', 'parentId',
+          'description', 'sortOrder', 'status', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.categoryId) && data.categoryId.size() <= 64 &&
+        isValidId(data.organizationId) && data.organizationId.size() <= 64 &&
+        isValidId(data.ownerUid) &&
+        data.name is string && data.name.size() >= 1 && data.name.size() <= 100 &&
+        (data.parentId == null || (data.parentId is string && isValidId(data.parentId) && data.parentId.size() <= 64)) &&
+        data.description is string && data.description.size() <= 300 &&
+        data.sortOrder is number && data.sortOrder >= 0 && data.sortOrder <= 99999 &&
+        data.status in ['active', 'inactive'] &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidStorageLocation(data) {
+      return data.keys().hasAll([
+          'locationId', 'organizationId', 'branchId', 'ownerUid', 'code',
+          'name', 'zoneType', 'description', 'status', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'locationId', 'organizationId', 'branchId', 'ownerUid', 'code',
+          'name', 'zoneType', 'description', 'status', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.locationId) && data.locationId.size() <= 64 &&
+        isValidId(data.organizationId) && data.organizationId.size() <= 64 &&
+        isMainBranchId(data.branchId) &&
+        isValidId(data.ownerUid) &&
+        data.code is string && data.code.size() >= 1 && data.code.size() <= 30 &&
+        data.name is string && data.name.size() >= 1 && data.name.size() <= 100 &&
+        data.zoneType in ['shelf', 'warehouse', 'cooler', 'freezer', 'counter'] &&
+        data.description is string && data.description.size() <= 200 &&
+        data.status in ['active', 'inactive'] &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidProduct(data) {
+      return data.keys().hasAll([
+          'productId', 'organizationId', 'branchId', 'ownerUid', 'sku', 'name',
+          'categoryId', 'subCategoryId', 'storageLocationId', 'storageLocationName',
+          'baseUnitName', 'barcode', 'barcodes', 'units', 'trackExpiry',
+          'costPriceLak', 'retailPriceLak', 'wholesalePriceLak', 'memberPriceLak',
+          'minStockBaseQty', 'reorderQtyBaseQty', 'taxable', 'notes', 'status',
+          'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'productId', 'organizationId', 'branchId', 'ownerUid', 'sku', 'name',
+          'categoryId', 'subCategoryId', 'storageLocationId', 'storageLocationName',
+          'baseUnitName', 'barcode', 'barcodes', 'units', 'trackExpiry',
+          'costPriceLak', 'retailPriceLak', 'wholesalePriceLak', 'memberPriceLak',
+          'minStockBaseQty', 'reorderQtyBaseQty', 'taxable', 'notes', 'status',
+          'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.productId) && data.productId.size() <= 64 &&
+        isValidId(data.organizationId) && data.organizationId.size() <= 64 &&
+        isMainBranchId(data.branchId) &&
+        isValidId(data.ownerUid) &&
+        data.sku is string && data.sku.size() >= 1 && data.sku.size() <= 50 &&
+        data.name is string && data.name.size() >= 1 && data.name.size() <= 160 &&
+        data.categoryId is string && data.categoryId.size() <= 64 &&
+        (data.subCategoryId == null || (data.subCategoryId is string && data.subCategoryId.size() <= 64)) &&
+        (data.storageLocationId == null || (data.storageLocationId is string && data.storageLocationId.size() <= 64)) &&
+        data.storageLocationName is string && data.storageLocationName.size() <= 100 &&
+        data.baseUnitName is string && data.baseUnitName.size() >= 1 && data.baseUnitName.size() <= 40 &&
+        data.barcode is string && data.barcode.size() <= 64 &&
+        data.barcodes is list && data.barcodes.size() <= 15 &&
+        (data.barcodes.size() == 0 || data.barcodes[0] is string) &&
+        data.units is list && data.units.size() >= 1 && data.units.size() <= 10 &&
+        data.units[0] is map &&
+        data.trackExpiry is bool &&
+        data.costPriceLak is number && data.costPriceLak >= 0 &&
+        data.retailPriceLak is number && data.retailPriceLak >= 0 &&
+        data.wholesalePriceLak is number && data.wholesalePriceLak >= 0 &&
+        data.memberPriceLak is number && data.memberPriceLak >= 0 &&
+        data.minStockBaseQty is number && data.minStockBaseQty >= 0 &&
+        data.reorderQtyBaseQty is number && data.reorderQtyBaseQty >= 0 &&
+        data.taxable is bool &&
+        data.notes is string && data.notes.size() <= 500 &&
+        data.status in ['active', 'inactive'] &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidInventoryBalance(data) {
+      return data.keys().hasAll([
+          'inventoryId', 'organizationId', 'branchId', 'ownerUid', 'productId',
+          'skuSnapshot', 'productNameSnapshot', 'baseUnitNameSnapshot',
+          'qtyOnHandBase', 'reservedQtyBase', 'avgCostLak', 'minStockBaseQty',
+          'storageLocationName', 'lastMovementAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'inventoryId', 'organizationId', 'branchId', 'ownerUid', 'productId',
+          'skuSnapshot', 'productNameSnapshot', 'baseUnitNameSnapshot',
+          'qtyOnHandBase', 'reservedQtyBase', 'avgCostLak', 'minStockBaseQty',
+          'storageLocationName', 'lastMovementAt', 'updatedAt'
+        ]) &&
+        isValidId(data.inventoryId) && data.inventoryId.size() <= 128 &&
+        isValidId(data.organizationId) && data.organizationId.size() <= 64 &&
+        isMainBranchId(data.branchId) &&
+        isValidId(data.ownerUid) &&
+        isValidId(data.productId) && data.productId.size() <= 64 &&
+        data.skuSnapshot is string && data.skuSnapshot.size() <= 50 &&
+        data.productNameSnapshot is string && data.productNameSnapshot.size() <= 160 &&
+        data.baseUnitNameSnapshot is string && data.baseUnitNameSnapshot.size() <= 40 &&
+        data.qtyOnHandBase is number &&
+        data.reservedQtyBase is number && data.reservedQtyBase >= 0 &&
+        data.avgCostLak is number && data.avgCostLak >= 0 &&
+        data.minStockBaseQty is number && data.minStockBaseQty >= 0 &&
+        data.storageLocationName is string && data.storageLocationName.size() <= 100 &&
+        data.lastMovementAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidInventoryLot(data) {
+      return data.keys().hasAll([
+          'lotId', 'organizationId', 'branchId', 'ownerUid', 'productId',
+          'skuSnapshot', 'productNameSnapshot', 'lotNumber', 'expiryDate',
+          'initialQtyBase', 'remainingQtyBase', 'unitCostBaseLak',
+          'storageLocationName', 'status', 'receivedAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'lotId', 'organizationId', 'branchId', 'ownerUid', 'productId',
+          'skuSnapshot', 'productNameSnapshot', 'lotNumber', 'expiryDate',
+          'initialQtyBase', 'remainingQtyBase', 'unitCostBaseLak',
+          'storageLocationName', 'status', 'receivedAt', 'updatedAt'
+        ]) &&
+        isValidId(data.lotId) && data.lotId.size() <= 64 &&
+        isValidId(data.organizationId) && data.organizationId.size() <= 64 &&
+        isMainBranchId(data.branchId) &&
+        isValidId(data.ownerUid) &&
+        isValidId(data.productId) && data.productId.size() <= 64 &&
+        data.skuSnapshot is string && data.skuSnapshot.size() <= 50 &&
+        data.productNameSnapshot is string && data.productNameSnapshot.size() <= 160 &&
+        data.lotNumber is string && data.lotNumber.size() >= 1 && data.lotNumber.size() <= 60 &&
+        (data.expiryDate == null || (data.expiryDate is string && data.expiryDate.size() <= 20)) &&
+        data.initialQtyBase is number && data.initialQtyBase >= 0 &&
+        data.remainingQtyBase is number && data.remainingQtyBase >= 0 &&
+        data.unitCostBaseLak is number && data.unitCostBaseLak >= 0 &&
+        data.storageLocationName is string && data.storageLocationName.size() <= 100 &&
+        data.status in ['active', 'depleted', 'expired'] &&
+        data.receivedAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidStockMovement(data) {
+      return data.keys().hasAll([
+          'movementId', 'organizationId', 'branchId', 'ownerUid', 'productId',
+          'skuSnapshot', 'productNameSnapshot', 'lotId', 'lotNumberSnapshot',
+          'movementType', 'unitName', 'conversionFactor', 'inputQty',
+          'baseQtyDelta', 'balanceBeforeBase', 'balanceAfterBase',
+          'unitCostBaseLak', 'totalCostLak', 'reason', 'referenceNo',
+          'performedByUid', 'performedByName', 'createdAt'
+        ]) &&
+        data.keys().hasOnly([
+          'movementId', 'organizationId', 'branchId', 'ownerUid', 'productId',
+          'skuSnapshot', 'productNameSnapshot', 'lotId', 'lotNumberSnapshot',
+          'movementType', 'unitName', 'conversionFactor', 'inputQty',
+          'baseQtyDelta', 'balanceBeforeBase', 'balanceAfterBase',
+          'unitCostBaseLak', 'totalCostLak', 'reason', 'referenceNo',
+          'performedByUid', 'performedByName', 'createdAt'
+        ]) &&
+        isValidId(data.movementId) && data.movementId.size() <= 64 &&
+        isValidId(data.organizationId) && data.organizationId.size() <= 64 &&
+        isMainBranchId(data.branchId) &&
+        isValidId(data.ownerUid) &&
+        isValidId(data.productId) && data.productId.size() <= 64 &&
+        data.skuSnapshot is string && data.skuSnapshot.size() <= 50 &&
+        data.productNameSnapshot is string && data.productNameSnapshot.size() <= 160 &&
+        (data.lotId == null || (data.lotId is string && data.lotId.size() <= 64)) &&
+        (data.lotNumberSnapshot == null || (data.lotNumberSnapshot is string && data.lotNumberSnapshot.size() <= 60)) &&
+        data.movementType in ['initial', 'stock_in', 'stock_out', 'damaged', 'expired', 'lost', 'adjustment_in', 'adjustment_out', 'sale', 'sale_return', 'sale_void'] &&
+        data.unitName is string && data.unitName.size() >= 1 && data.unitName.size() <= 40 &&
+        data.conversionFactor is number && data.conversionFactor >= 1 &&
+        data.inputQty is number && data.inputQty > 0 &&
+        data.baseQtyDelta is number &&
+        data.balanceBeforeBase is number &&
+        data.balanceAfterBase is number &&
+        data.unitCostBaseLak is number && data.unitCostBaseLak >= 0 &&
+        data.totalCostLak is number && data.totalCostLak >= 0 &&
+        data.reason is string && data.reason.size() <= 300 &&
+        data.referenceNo is string && data.referenceNo.size() <= 60 &&
+        isValidId(data.performedByUid) &&
+        data.performedByName is string && data.performedByName.size() <= 120 &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidSaleOrder(data) {
+      return data.keys().hasAll([
+          'saleId', 'invoiceNumber', 'organizationId', 'branchId', 'ownerUid',
+          'priceTier', 'customerId', 'customerName', 'items', 'subtotalLak',
+          'itemDiscountTotalLak', 'billDiscountLak', 'taxableAmountLak',
+          'taxRate', 'taxAmountLak', 'grandTotalLak', 'cogsTotalLak',
+          'grossProfitLak', 'paymentMethod', 'payments', 'paidAmountLak',
+          'changeAmountLak', 'creditDueLak', 'status', 'notes', 'cashierUid',
+          'cashierName', 'voidedReason', 'voidedByName', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'saleId', 'invoiceNumber', 'organizationId', 'branchId', 'ownerUid',
+          'priceTier', 'customerId', 'customerName', 'items', 'subtotalLak',
+          'itemDiscountTotalLak', 'billDiscountLak', 'taxableAmountLak',
+          'taxRate', 'taxAmountLak', 'grandTotalLak', 'cogsTotalLak',
+          'grossProfitLak', 'paymentMethod', 'payments', 'paidAmountLak',
+          'changeAmountLak', 'creditDueLak', 'status', 'notes', 'cashierUid',
+          'cashierName', 'voidedReason', 'voidedByName', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.saleId) && data.saleId.size() <= 64 &&
+        data.invoiceNumber is string && data.invoiceNumber.size() >= 1 && data.invoiceNumber.size() <= 40 &&
+        isValidId(data.organizationId) && data.organizationId.size() <= 64 &&
+        isMainBranchId(data.branchId) &&
+        isValidId(data.ownerUid) &&
+        data.priceTier in ['retail', 'wholesale', 'member'] &&
+        (data.customerId == null || (data.customerId is string && data.customerId.size() <= 64)) &&
+        data.customerName is string && data.customerName.size() >= 1 && data.customerName.size() <= 120 &&
+        data.items is list && data.items.size() >= 1 && data.items.size() <= 100 &&
+        data.items[0] is map &&
+        data.subtotalLak is number && data.subtotalLak >= 0 &&
+        data.itemDiscountTotalLak is number && data.itemDiscountTotalLak >= 0 &&
+        data.billDiscountLak is number && data.billDiscountLak >= 0 &&
+        data.taxableAmountLak is number && data.taxableAmountLak >= 0 &&
+        data.taxRate is number && data.taxRate >= 0 && data.taxRate <= 100 &&
+        data.taxAmountLak is number && data.taxAmountLak >= 0 &&
+        data.grandTotalLak is number && data.grandTotalLak >= 0 &&
+        data.cogsTotalLak is number && data.cogsTotalLak >= 0 &&
+        data.grossProfitLak is number &&
+        data.paymentMethod in ['cash', 'transfer', 'qr', 'credit', 'split'] &&
+        data.payments is list && data.payments.size() >= 1 && data.payments.size() <= 5 &&
+        data.payments[0] is map &&
+        data.paidAmountLak is number && data.paidAmountLak >= 0 &&
+        data.changeAmountLak is number && data.changeAmountLak >= 0 &&
+        data.creditDueLak is number && data.creditDueLak >= 0 &&
+        data.status in ['completed', 'partial_return', 'returned', 'voided'] &&
+        data.notes is string && data.notes.size() <= 300 &&
+        isValidId(data.cashierUid) &&
+        data.cashierName is string && data.cashierName.size() <= 120 &&
+        (data.voidedReason == null || (data.voidedReason is string && data.voidedReason.size() <= 300)) &&
+        (data.voidedByName == null || (data.voidedByName is string && data.voidedByName.size() <= 120)) &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidSaleReturn(data) {
+      return data.keys().hasAll([
+          'returnId', 'returnNumber', 'saleId', 'invoiceNumber', 'organizationId',
+          'branchId', 'ownerUid', 'items', 'totalRefundLak', 'refundMethod',
+          'reason', 'performedByUid', 'performedByName', 'createdAt'
+        ]) &&
+        data.keys().hasOnly([
+          'returnId', 'returnNumber', 'saleId', 'invoiceNumber', 'organizationId',
+          'branchId', 'ownerUid', 'items', 'totalRefundLak', 'refundMethod',
+          'reason', 'performedByUid', 'performedByName', 'createdAt'
+        ]) &&
+        isValidId(data.returnId) && data.returnId.size() <= 64 &&
+        data.returnNumber is string && data.returnNumber.size() >= 1 && data.returnNumber.size() <= 40 &&
+        isValidId(data.saleId) && data.saleId.size() <= 64 &&
+        data.invoiceNumber is string && data.invoiceNumber.size() >= 1 && data.invoiceNumber.size() <= 40 &&
+        isValidId(data.organizationId) && data.organizationId.size() <= 64 &&
+        isMainBranchId(data.branchId) &&
+        isValidId(data.ownerUid) &&
+        data.items is list && data.items.size() >= 1 && data.items.size() <= 100 &&
+        data.items[0] is map &&
+        data.totalRefundLak is number && data.totalRefundLak >= 0 &&
+        data.refundMethod in ['cash', 'transfer', 'credit_adjust'] &&
+        data.reason is string && data.reason.size() >= 1 && data.reason.size() <= 300 &&
+        isValidId(data.performedByUid) &&
+        data.performedByName is string && data.performedByName.size() <= 120 &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidPosHeldBill(data) {
+      return data.keys().hasAll([
+          'heldId', 'organizationId', 'branchId', 'ownerUid', 'label',
+          'priceTier', 'customerName', 'billDiscountLak', 'items', 'notes',
+          'status', 'createdByUid', 'createdByName', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'heldId', 'organizationId', 'branchId', 'ownerUid', 'label',
+          'priceTier', 'customerName', 'billDiscountLak', 'items', 'notes',
+          'status', 'createdByUid', 'createdByName', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.heldId) && data.heldId.size() <= 64 &&
+        isValidId(data.organizationId) && data.organizationId.size() <= 64 &&
+        isMainBranchId(data.branchId) &&
+        isValidId(data.ownerUid) &&
+        data.label is string && data.label.size() >= 1 && data.label.size() <= 100 &&
+        data.priceTier in ['retail', 'wholesale', 'member'] &&
+        data.customerName is string && data.customerName.size() >= 1 && data.customerName.size() <= 120 &&
+        data.billDiscountLak is number && data.billDiscountLak >= 0 &&
+        data.items is list && data.items.size() >= 1 && data.items.size() <= 100 &&
+        data.items[0] is map &&
+        data.notes is string && data.notes.size() <= 300 &&
+        data.status in ['held', 'resumed', 'discarded'] &&
+        isValidId(data.createdByUid) &&
+        data.createdByName is string && data.createdByName.size() <= 120 &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
     // -------------------------------------------------------------------------
     // Collection Rules (Zero-Auth Direct Workspace with Strict Schema Validation)
     // -------------------------------------------------------------------------
@@ -187,11 +495,11 @@ service cloud.firestore {
 
     match /branches/{branchId} {
       allow get: if isValidId(branchId) &&
-        branchId == 'br_hq_01' &&
+        isMainBranchId(branchId) &&
         isMainWorkspace(existing().organizationId);
       allow list: if false;
       allow create: if isValidId(branchId) &&
-        branchId == 'br_hq_01' &&
+        isMainBranchId(branchId) &&
         isValidBranch(incoming()) &&
         isMainWorkspace(incoming().organizationId) &&
         incoming().branchId == 'br_hq_01' &&
@@ -201,7 +509,7 @@ service cloud.firestore {
         incoming().updatedAt == request.time &&
         existsAfter(/databases/$(database)/documents/organizations/$(incoming().organizationId));
       allow update: if isValidId(branchId) &&
-        branchId == 'br_hq_01' &&
+        isMainBranchId(branchId) &&
         isValidBranch(incoming()) &&
         isMainWorkspace(existing().organizationId) &&
         incoming().branchId == existing().branchId &&
@@ -272,6 +580,214 @@ service cloud.firestore {
           'storeProfile', 'receiptSettings', 'taxSettings',
           'currencySettings', 'notificationSettings', 'inventorySettings', 'updatedAt'
         ]);
+      allow delete: if false;
+    }
+
+    match /categories/{categoryId} {
+      allow get: if isValidId(categoryId) && isMainWorkspace(existing().organizationId);
+      allow list: if isMainWorkspace(existing().organizationId);
+      allow create: if isValidId(categoryId) &&
+        isValidCategory(incoming()) &&
+        isMainWorkspace(incoming().organizationId) &&
+        incoming().categoryId == categoryId &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        exists(/databases/$(database)/documents/organizations/$(incoming().organizationId));
+      allow update: if isValidId(categoryId) &&
+        isValidCategory(incoming()) &&
+        isMainWorkspace(existing().organizationId) &&
+        incoming().categoryId == existing().categoryId &&
+        incoming().organizationId == existing().organizationId &&
+        incoming().ownerUid == existing().ownerUid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'name', 'parentId', 'description', 'sortOrder', 'status', 'updatedAt'
+        ]);
+      allow delete: if false;
+    }
+
+    match /storageLocations/{locationId} {
+      allow get: if isValidId(locationId) && isMainWorkspace(existing().organizationId);
+      allow list: if isMainWorkspace(existing().organizationId);
+      allow create: if isValidId(locationId) &&
+        isValidStorageLocation(incoming()) &&
+        isMainWorkspace(incoming().organizationId) &&
+        incoming().locationId == locationId &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        exists(/databases/$(database)/documents/organizations/$(incoming().organizationId));
+      allow update: if isValidId(locationId) &&
+        isValidStorageLocation(incoming()) &&
+        isMainWorkspace(existing().organizationId) &&
+        incoming().locationId == existing().locationId &&
+        incoming().organizationId == existing().organizationId &&
+        incoming().branchId == existing().branchId &&
+        incoming().ownerUid == existing().ownerUid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'code', 'name', 'zoneType', 'description', 'status', 'updatedAt'
+        ]);
+      allow delete: if false;
+    }
+
+    match /products/{productId} {
+      allow get: if isValidId(productId) && isMainWorkspace(existing().organizationId);
+      allow list: if isMainWorkspace(existing().organizationId);
+      allow create: if isValidId(productId) &&
+        isValidProduct(incoming()) &&
+        isMainWorkspace(incoming().organizationId) &&
+        incoming().productId == productId &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        exists(/databases/$(database)/documents/organizations/$(incoming().organizationId));
+      allow update: if isValidId(productId) &&
+        isValidProduct(incoming()) &&
+        isMainWorkspace(existing().organizationId) &&
+        incoming().productId == existing().productId &&
+        incoming().organizationId == existing().organizationId &&
+        incoming().branchId == existing().branchId &&
+        incoming().ownerUid == existing().ownerUid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'sku', 'name', 'categoryId', 'subCategoryId', 'storageLocationId',
+          'storageLocationName', 'baseUnitName', 'barcode', 'barcodes', 'units',
+          'trackExpiry', 'costPriceLak', 'retailPriceLak', 'wholesalePriceLak',
+          'memberPriceLak', 'minStockBaseQty', 'reorderQtyBaseQty', 'taxable',
+          'notes', 'status', 'updatedAt'
+        ]);
+      allow delete: if false;
+    }
+
+    match /inventory/{inventoryId} {
+      allow get: if isValidId(inventoryId) && isMainWorkspace(existing().organizationId);
+      allow list: if isMainWorkspace(existing().organizationId);
+      allow create: if isValidId(inventoryId) &&
+        isValidInventoryBalance(incoming()) &&
+        isMainWorkspace(incoming().organizationId) &&
+        incoming().inventoryId == inventoryId &&
+        incoming().lastMovementAt == request.time &&
+        incoming().updatedAt == request.time &&
+        existsAfter(/databases/$(database)/documents/products/$(incoming().productId));
+      allow update: if isValidId(inventoryId) &&
+        isValidInventoryBalance(incoming()) &&
+        isMainWorkspace(existing().organizationId) &&
+        incoming().inventoryId == existing().inventoryId &&
+        incoming().organizationId == existing().organizationId &&
+        incoming().branchId == existing().branchId &&
+        incoming().ownerUid == existing().ownerUid &&
+        incoming().productId == existing().productId &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'skuSnapshot', 'productNameSnapshot', 'baseUnitNameSnapshot',
+          'qtyOnHandBase', 'reservedQtyBase', 'avgCostLak', 'minStockBaseQty',
+          'storageLocationName', 'lastMovementAt', 'updatedAt'
+        ]);
+      allow delete: if false;
+    }
+
+    match /inventoryLots/{lotId} {
+      allow get: if isValidId(lotId) && isMainWorkspace(existing().organizationId);
+      allow list: if isMainWorkspace(existing().organizationId);
+      allow create: if isValidId(lotId) &&
+        isValidInventoryLot(incoming()) &&
+        isMainWorkspace(incoming().organizationId) &&
+        incoming().lotId == lotId &&
+        incoming().receivedAt == request.time &&
+        incoming().updatedAt == request.time &&
+        existsAfter(/databases/$(database)/documents/products/$(incoming().productId));
+      allow update: if isValidId(lotId) &&
+        isValidInventoryLot(incoming()) &&
+        isMainWorkspace(existing().organizationId) &&
+        incoming().lotId == existing().lotId &&
+        incoming().organizationId == existing().organizationId &&
+        incoming().branchId == existing().branchId &&
+        incoming().ownerUid == existing().ownerUid &&
+        incoming().productId == existing().productId &&
+        incoming().receivedAt == existing().receivedAt &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'remainingQtyBase', 'status', 'storageLocationName', 'updatedAt'
+        ]);
+      allow delete: if false;
+    }
+
+    match /stockMovements/{movementId} {
+      allow get: if isValidId(movementId) && isMainWorkspace(existing().organizationId);
+      allow list: if isMainWorkspace(existing().organizationId);
+      allow create: if isValidId(movementId) &&
+        isValidStockMovement(incoming()) &&
+        isMainWorkspace(incoming().organizationId) &&
+        incoming().movementId == movementId &&
+        incoming().createdAt == request.time &&
+        existsAfter(/databases/$(database)/documents/products/$(incoming().productId));
+      allow update, delete: if false;
+    }
+
+    match /sales/{saleId} {
+      allow get: if isValidId(saleId) && isMainWorkspace(existing().organizationId);
+      allow list: if isMainWorkspace(existing().organizationId);
+      allow create: if isValidId(saleId) &&
+        isValidSaleOrder(incoming()) &&
+        isMainWorkspace(incoming().organizationId) &&
+        incoming().saleId == saleId &&
+        incoming().status == 'completed' &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        exists(/databases/$(database)/documents/organizations/$(incoming().organizationId));
+      allow update: if isValidId(saleId) &&
+        isValidSaleOrder(incoming()) &&
+        isMainWorkspace(existing().organizationId) &&
+        existing().status in ['completed', 'partial_return'] &&
+        incoming().saleId == existing().saleId &&
+        incoming().invoiceNumber == existing().invoiceNumber &&
+        incoming().organizationId == existing().organizationId &&
+        incoming().branchId == existing().branchId &&
+        incoming().ownerUid == existing().ownerUid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'status', 'voidedReason', 'voidedByName', 'updatedAt'
+        ]);
+      allow delete: if false;
+    }
+
+    match /saleReturns/{returnId} {
+      allow get: if isValidId(returnId) && isMainWorkspace(existing().organizationId);
+      allow list: if isMainWorkspace(existing().organizationId);
+      allow create: if isValidId(returnId) &&
+        isValidSaleReturn(incoming()) &&
+        isMainWorkspace(incoming().organizationId) &&
+        incoming().returnId == returnId &&
+        incoming().createdAt == request.time &&
+        exists(/databases/$(database)/documents/sales/$(incoming().saleId));
+      allow update, delete: if false;
+    }
+
+    match /posHeldBills/{heldId} {
+      allow get: if isValidId(heldId) && isMainWorkspace(existing().organizationId);
+      allow list: if isMainWorkspace(existing().organizationId);
+      allow create: if isValidId(heldId) &&
+        isValidPosHeldBill(incoming()) &&
+        isMainWorkspace(incoming().organizationId) &&
+        incoming().heldId == heldId &&
+        incoming().status == 'held' &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        exists(/databases/$(database)/documents/organizations/$(incoming().organizationId));
+      allow update: if isValidId(heldId) &&
+        isValidPosHeldBill(incoming()) &&
+        isMainWorkspace(existing().organizationId) &&
+        existing().status == 'held' &&
+        incoming().heldId == existing().heldId &&
+        incoming().organizationId == existing().organizationId &&
+        incoming().branchId == existing().branchId &&
+        incoming().ownerUid == existing().ownerUid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']);
       allow delete: if false;
     }
   }

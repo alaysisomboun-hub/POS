@@ -158,3 +158,264 @@ export interface SystemSetting {
   };
   updatedAt: Timestamp;
 }
+
+export interface Category {
+  categoryId: string;
+  organizationId: string;
+  ownerUid: string;
+  name: string;
+  parentId: string | null;
+  description: string;
+  sortOrder: number;
+  status: 'active' | 'inactive';
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export type StorageZoneType = 'shelf' | 'warehouse' | 'cooler' | 'freezer' | 'counter';
+
+export interface StorageLocation {
+  locationId: string;
+  organizationId: string;
+  branchId: string;
+  ownerUid: string;
+  code: string;
+  name: string;
+  zoneType: StorageZoneType;
+  description: string;
+  status: 'active' | 'inactive';
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export interface ProductUnit {
+  unitId: string;
+  unitName: string;
+  conversionFactor: number;
+  barcode: string;
+  retailPrice: number;
+  wholesalePrice: number;
+  memberPrice: number;
+  isBaseUnit: boolean;
+}
+
+export interface Product {
+  productId: string;
+  organizationId: string;
+  branchId: string;
+  ownerUid: string;
+  sku: string;
+  name: string;
+  categoryId: string;
+  subCategoryId: string | null;
+  storageLocationId: string | null;
+  storageLocationName: string;
+  baseUnitName: string;
+  barcode: string;
+  barcodes: string[];
+  units: ProductUnit[];
+  trackExpiry: boolean;
+  costPriceLak: number;
+  retailPriceLak: number;
+  wholesalePriceLak: number;
+  memberPriceLak: number;
+  minStockBaseQty: number;
+  reorderQtyBaseQty: number;
+  taxable: boolean;
+  notes: string;
+  status: 'active' | 'inactive';
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export interface InventoryBalance {
+  inventoryId: string;
+  organizationId: string;
+  branchId: string;
+  ownerUid: string;
+  productId: string;
+  skuSnapshot: string;
+  productNameSnapshot: string;
+  baseUnitNameSnapshot: string;
+  qtyOnHandBase: number;
+  reservedQtyBase: number;
+  avgCostLak: number;
+  minStockBaseQty: number;
+  storageLocationName: string;
+  lastMovementAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export interface InventoryLot {
+  lotId: string;
+  organizationId: string;
+  branchId: string;
+  ownerUid: string;
+  productId: string;
+  skuSnapshot: string;
+  productNameSnapshot: string;
+  lotNumber: string;
+  expiryDate: string | null;
+  initialQtyBase: number;
+  remainingQtyBase: number;
+  unitCostBaseLak: number;
+  storageLocationName: string;
+  status: 'active' | 'depleted' | 'expired';
+  receivedAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export type StockMovementType =
+  | 'initial'
+  | 'stock_in'
+  | 'stock_out'
+  | 'damaged'
+  | 'expired'
+  | 'lost'
+  | 'adjustment_in'
+  | 'adjustment_out'
+  | 'sale'
+  | 'sale_return'
+  | 'sale_void';
+
+export interface StockMovement {
+  movementId: string;
+  organizationId: string;
+  branchId: string;
+  ownerUid: string;
+  productId: string;
+  skuSnapshot: string;
+  productNameSnapshot: string;
+  lotId: string | null;
+  lotNumberSnapshot: string | null;
+  movementType: StockMovementType;
+  unitName: string;
+  conversionFactor: number;
+  inputQty: number;
+  baseQtyDelta: number;
+  balanceBeforeBase: number;
+  balanceAfterBase: number;
+  unitCostBaseLak: number;
+  totalCostLak: number;
+  reason: string;
+  referenceNo: string;
+  performedByUid: string;
+  performedByName: string;
+  createdAt: Timestamp;
+}
+
+export type PriceTier = 'retail' | 'wholesale' | 'member';
+export type PaymentMethodType = 'cash' | 'transfer' | 'qr' | 'credit' | 'split';
+
+export interface SaleItem {
+  productId: string;
+  sku: string;
+  name: string;
+  unitId: string;
+  unitName: string;
+  conversionFactor: number;
+  qty: number;
+  baseQty: number;
+  unitPriceLak: number;
+  discountLak: number;
+  lineTotalLak: number;
+  unitCostBaseLak: number;
+  cogsTotalLak: number;
+  taxable: boolean;
+}
+
+export interface PaymentSplit {
+  method: 'cash' | 'transfer' | 'qr' | 'credit';
+  amountLak: number;
+}
+
+export interface SaleOrder {
+  saleId: string;
+  invoiceNumber: string;
+  organizationId: string;
+  branchId: string;
+  ownerUid: string;
+  priceTier: PriceTier;
+  customerId: string | null;
+  customerName: string;
+  items: SaleItem[];
+  subtotalLak: number;
+  itemDiscountTotalLak: number;
+  billDiscountLak: number;
+  taxableAmountLak: number;
+  taxRate: number;
+  taxAmountLak: number;
+  grandTotalLak: number;
+  cogsTotalLak: number;
+  grossProfitLak: number;
+  paymentMethod: PaymentMethodType;
+  payments: PaymentSplit[];
+  paidAmountLak: number;
+  changeAmountLak: number;
+  creditDueLak: number;
+  status: 'completed' | 'partial_return' | 'returned' | 'voided';
+  notes: string;
+  cashierUid: string;
+  cashierName: string;
+  voidedReason: string | null;
+  voidedByName: string | null;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export interface SaleReturnItem {
+  productId: string;
+  sku: string;
+  name: string;
+  unitName: string;
+  conversionFactor: number;
+  qty: number;
+  baseQty: number;
+  refundPerUnitLak: number;
+  lineRefundLak: number;
+  restock: boolean;
+}
+
+export interface SaleReturn {
+  returnId: string;
+  returnNumber: string;
+  saleId: string;
+  invoiceNumber: string;
+  organizationId: string;
+  branchId: string;
+  ownerUid: string;
+  items: SaleReturnItem[];
+  totalRefundLak: number;
+  refundMethod: 'cash' | 'transfer' | 'credit_adjust';
+  reason: string;
+  performedByUid: string;
+  performedByName: string;
+  createdAt: Timestamp;
+}
+
+export interface HeldBillItem {
+  productId: string;
+  unitId: string;
+  qty: number;
+  discountLak: number;
+}
+
+export interface PosHeldBill {
+  heldId: string;
+  organizationId: string;
+  branchId: string;
+  ownerUid: string;
+  label: string;
+  priceTier: PriceTier;
+  customerName: string;
+  billDiscountLak: number;
+  items: HeldBillItem[];
+  notes: string;
+  status: 'held' | 'resumed' | 'discarded';
+  createdByUid: string;
+  createdByName: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+

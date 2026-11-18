@@ -5,200 +5,65 @@
       "description": "ข้อมูลร้านค้าหลัก (ระบบ 1 สาขา) สกุลเงิน LAK และเขตเวลา Asia/Vientiane",
       "type": "object",
       "properties": {
-        "organizationId": {
-          "type": "string",
-          "maxLength": 64,
-          "pattern": "^[a-zA-Z0-9_\\-]+$",
-          "description": "รหัสองค์กร"
-        },
-        "name": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 120,
-          "description": "ชื่อร้านค้าหรือองค์กร"
-        },
-        "ownerUid": {
-          "type": "string",
-          "maxLength": 128,
-          "pattern": "^[a-zA-Z0-9_\\-]+$",
-          "description": "UID ของเจ้าขององค์กร"
-        },
-        "currency": {
-          "type": "string",
-          "enum": ["LAK"],
-          "description": "สกุลเงินหลัก"
-        },
-        "timezone": {
-          "type": "string",
-          "enum": ["Asia/Vientiane"],
-          "description": "เขตเวลาหลัก"
-        },
-        "createdAt": {
-          "type": "string",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "format": "date-time"
-        }
+        "organizationId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "ownerUid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "currency": { "type": "string", "enum": ["LAK"] },
+        "timezone": { "type": "string", "enum": ["Asia/Vientiane"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["organizationId", "name", "ownerUid", "currency", "timezone", "createdAt", "updatedAt"]
     },
     "Branch": {
       "title": "Branch",
-      "description": "ข้อมูลสาขาของร้านค้า",
+      "description": "ข้อมูลสาขาหลักเดียวของร้านค้า (br_hq_01)",
       "type": "object",
       "properties": {
-        "branchId": {
-          "type": "string",
-          "maxLength": 64,
-          "pattern": "^[a-zA-Z0-9_\\-]+$"
-        },
-        "organizationId": {
-          "type": "string",
-          "maxLength": 64,
-          "pattern": "^[a-zA-Z0-9_\\-]+$"
-        },
-        "ownerUid": {
-          "type": "string",
-          "maxLength": 128,
-          "pattern": "^[a-zA-Z0-9_\\-]+$"
-        },
-        "branchCode": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 20,
-          "pattern": "^[A-Z0-9\\-]+$"
-        },
-        "branchName": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 120
-        },
-        "address": {
-          "type": "string",
-          "maxLength": 300
-        },
-        "phone": {
-          "type": "string",
-          "maxLength": 30
-        },
-        "managerId": {
-          "type": "string",
-          "maxLength": 128
-        },
-        "assignedUids": {
-          "type": "array"
-        },
-        "isMainBranch": {
-          "type": "boolean"
-        },
-        "status": {
-          "type": "string",
-          "enum": ["active", "inactive"]
-        },
-        "createdAt": {
-          "type": "string",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "format": "date-time"
-        }
+        "branchId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "organizationId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerUid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "branchCode": { "type": "string", "minLength": 1, "maxLength": 20, "pattern": "^[A-Z0-9\\-]+$" },
+        "branchName": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "address": { "type": "string", "maxLength": 300 },
+        "phone": { "type": "string", "maxLength": 30 },
+        "managerId": { "type": "string", "maxLength": 128 },
+        "assignedUids": { "type": "array" },
+        "isMainBranch": { "type": "boolean" },
+        "status": { "type": "string", "enum": ["active", "inactive"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
       },
       "required": [
-        "branchId",
-        "organizationId",
-        "ownerUid",
-        "branchCode",
-        "branchName",
-        "address",
-        "phone",
-        "managerId",
-        "assignedUids",
-        "isMainBranch",
-        "status",
-        "createdAt",
-        "updatedAt"
+        "branchId", "organizationId", "ownerUid", "branchCode", "branchName",
+        "address", "phone", "managerId", "assignedUids", "isMainBranch", "status",
+        "createdAt", "updatedAt"
       ]
     },
     "UserProfile": {
       "title": "UserProfile",
-      "description": "ข้อมูลผู้ใช้งาน บทบาท สาขา และสิทธิ์ RBAC",
+      "description": "ข้อมูลผู้ใช้งาน บทบาท และสิทธิ์ RBAC",
       "type": "object",
       "properties": {
-        "uid": {
-          "type": "string",
-          "maxLength": 128,
-          "pattern": "^[a-zA-Z0-9_\\-]+$"
-        },
-        "organizationId": {
-          "type": "string",
-          "maxLength": 64,
-          "pattern": "^[a-zA-Z0-9_\\-]+$"
-        },
-        "ownerUid": {
-          "type": "string",
-          "maxLength": 128,
-          "pattern": "^[a-zA-Z0-9_\\-]+$"
-        },
-        "name": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 120
-        },
-        "email": {
-          "type": "string",
-          "maxLength": 160
-        },
-        "phone": {
-          "type": "string",
-          "maxLength": 30
-        },
+        "uid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "organizationId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerUid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "email": { "type": "string", "maxLength": 160 },
+        "phone": { "type": "string", "maxLength": 30 },
         "role": {
           "type": "string",
-          "enum": [
-            "super_admin",
-            "owner",
-            "branch_manager",
-            "cashier",
-            "warehouse_staff",
-            "purchasing_staff",
-            "accountant"
-          ]
+          "enum": ["super_admin", "owner", "branch_manager", "cashier", "warehouse_staff", "purchasing_staff", "accountant"]
         },
-        "branchIds": {
-          "type": "array"
-        },
-        "permissions": {
-          "type": "object"
-        },
-        "status": {
-          "type": "string",
-          "enum": ["active", "suspended"]
-        },
-        "createdAt": {
-          "type": "string",
-          "format": "date-time"
-        },
-        "lastLoginAt": {
-          "type": "string",
-          "format": "date-time"
-        }
+        "branchIds": { "type": "array" },
+        "permissions": { "type": "object" },
+        "status": { "type": "string", "enum": ["active", "suspended"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "lastLoginAt": { "type": "string", "format": "date-time" }
       },
       "required": [
-        "uid",
-        "organizationId",
-        "ownerUid",
-        "name",
-        "email",
-        "phone",
-        "role",
-        "branchIds",
-        "permissions",
-        "status",
-        "createdAt",
-        "lastLoginAt"
+        "uid", "organizationId", "ownerUid", "name", "email", "phone",
+        "role", "branchIds", "permissions", "status", "createdAt", "lastLoginAt"
       ]
     },
     "AuditLog": {
@@ -206,77 +71,24 @@
       "description": "ประวัติการดำเนินการและเปลี่ยนแปลงข้อมูลแบบ Append-only",
       "type": "object",
       "properties": {
-        "auditId": {
-          "type": "string",
-          "maxLength": 64,
-          "pattern": "^[a-zA-Z0-9_\\-]+$"
-        },
-        "organizationId": {
-          "type": "string",
-          "maxLength": 64,
-          "pattern": "^[a-zA-Z0-9_\\-]+$"
-        },
-        "ownerUid": {
-          "type": "string",
-          "maxLength": 128,
-          "pattern": "^[a-zA-Z0-9_\\-]+$"
-        },
-        "branchId": {
-          "type": "string",
-          "maxLength": 64
-        },
-        "userId": {
-          "type": "string",
-          "maxLength": 128,
-          "pattern": "^[a-zA-Z0-9_\\-]+$"
-        },
-        "userNameSnapshot": {
-          "type": "string",
-          "maxLength": 120
-        },
-        "userRoleSnapshot": {
-          "type": "string",
-          "maxLength": 40
-        },
-        "action": {
-          "type": "string",
-          "maxLength": 80
-        },
-        "entityType": {
-          "type": "string",
-          "maxLength": 60
-        },
-        "entityId": {
-          "type": "string",
-          "maxLength": 128
-        },
-        "before": {
-          "type": "object"
-        },
-        "after": {
-          "type": "object"
-        },
-        "deviceInfo": {
-          "type": "string",
-          "maxLength": 200
-        },
-        "createdAt": {
-          "type": "string",
-          "format": "date-time"
-        }
+        "auditId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "organizationId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerUid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "branchId": { "type": "string", "maxLength": 64 },
+        "userId": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "userNameSnapshot": { "type": "string", "maxLength": 120 },
+        "userRoleSnapshot": { "type": "string", "maxLength": 40 },
+        "action": { "type": "string", "maxLength": 80 },
+        "entityType": { "type": "string", "maxLength": 60 },
+        "entityId": { "type": "string", "maxLength": 128 },
+        "before": { "type": "object" },
+        "after": { "type": "object" },
+        "deviceInfo": { "type": "string", "maxLength": 200 },
+        "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": [
-        "auditId",
-        "organizationId",
-        "ownerUid",
-        "userId",
-        "userNameSnapshot",
-        "userRoleSnapshot",
-        "action",
-        "entityType",
-        "entityId",
-        "deviceInfo",
-        "createdAt"
+        "auditId", "organizationId", "ownerUid", "userId", "userNameSnapshot",
+        "userRoleSnapshot", "action", "entityType", "entityId", "deviceInfo", "createdAt"
       ]
     },
     "SystemSetting": {
@@ -284,48 +96,292 @@
       "description": "การตั้งค่าร้านค้า ใบเสร็จ ภาษี สกุลเงิน และคลังสินค้า",
       "type": "object",
       "properties": {
-        "organizationId": {
-          "type": "string",
-          "maxLength": 64,
-          "pattern": "^[a-zA-Z0-9_\\-]+$"
-        },
-        "ownerUid": {
-          "type": "string",
-          "maxLength": 128,
-          "pattern": "^[a-zA-Z0-9_\\-]+$"
-        },
-        "storeProfile": {
-          "type": "object"
-        },
-        "receiptSettings": {
-          "type": "object"
-        },
-        "taxSettings": {
-          "type": "object"
-        },
-        "currencySettings": {
-          "type": "object"
-        },
-        "notificationSettings": {
-          "type": "object"
-        },
-        "inventorySettings": {
-          "type": "object"
-        },
-        "updatedAt": {
-          "type": "string",
-          "format": "date-time"
-        }
+        "organizationId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerUid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "storeProfile": { "type": "object" },
+        "receiptSettings": { "type": "object" },
+        "taxSettings": { "type": "object" },
+        "currencySettings": { "type": "object" },
+        "notificationSettings": { "type": "object" },
+        "inventorySettings": { "type": "object" },
+        "updatedAt": { "type": "string", "format": "date-time" }
       },
       "required": [
-        "organizationId",
-        "ownerUid",
-        "receiptSettings",
-        "taxSettings",
-        "currencySettings",
-        "notificationSettings",
-        "inventorySettings",
-        "updatedAt"
+        "organizationId", "ownerUid", "receiptSettings", "taxSettings",
+        "currencySettings", "notificationSettings", "inventorySettings", "updatedAt"
+      ]
+    },
+    "Category": {
+      "title": "Category",
+      "description": "หมวดหมู่สินค้าหลักและหมวดหมู่ย่อย",
+      "type": "object",
+      "properties": {
+        "categoryId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "organizationId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerUid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "parentId": { "type": "string", "maxLength": 64 },
+        "description": { "type": "string", "maxLength": 300 },
+        "sortOrder": { "type": "number" },
+        "status": { "type": "string", "enum": ["active", "inactive"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["categoryId", "organizationId", "ownerUid", "name", "description", "sortOrder", "status", "createdAt", "updatedAt"]
+    },
+    "StorageLocation": {
+      "title": "StorageLocation",
+      "description": "ตำแหน่งจัดเก็บสินค้าในร้านและคลัง",
+      "type": "object",
+      "properties": {
+        "locationId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "organizationId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "branchId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerUid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "code": { "type": "string", "minLength": 1, "maxLength": 30 },
+        "name": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "zoneType": { "type": "string", "enum": ["shelf", "warehouse", "cooler", "freezer", "counter"] },
+        "description": { "type": "string", "maxLength": 200 },
+        "status": { "type": "string", "enum": ["active", "inactive"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["locationId", "organizationId", "branchId", "ownerUid", "code", "name", "zoneType", "description", "status", "createdAt", "updatedAt"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "สินค้า SKU บาร์โค้ด หลายหน่วย-ตัวคูณแปลงหน่วย และราคาหลายระดับ (LAK)",
+      "type": "object",
+      "properties": {
+        "productId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "organizationId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "branchId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerUid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "sku": { "type": "string", "minLength": 1, "maxLength": 50 },
+        "name": { "type": "string", "minLength": 1, "maxLength": 160 },
+        "categoryId": { "type": "string", "maxLength": 64 },
+        "subCategoryId": { "type": "string", "maxLength": 64 },
+        "storageLocationId": { "type": "string", "maxLength": 64 },
+        "storageLocationName": { "type": "string", "maxLength": 100 },
+        "baseUnitName": { "type": "string", "minLength": 1, "maxLength": 40 },
+        "barcode": { "type": "string", "maxLength": 64 },
+        "barcodes": { "type": "array" },
+        "units": { "type": "array" },
+        "trackExpiry": { "type": "boolean" },
+        "costPriceLak": { "type": "number" },
+        "retailPriceLak": { "type": "number" },
+        "wholesalePriceLak": { "type": "number" },
+        "memberPriceLak": { "type": "number" },
+        "minStockBaseQty": { "type": "number" },
+        "reorderQtyBaseQty": { "type": "number" },
+        "taxable": { "type": "boolean" },
+        "notes": { "type": "string", "maxLength": 500 },
+        "status": { "type": "string", "enum": ["active", "inactive"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "productId", "organizationId", "branchId", "ownerUid", "sku", "name",
+        "categoryId", "storageLocationName", "baseUnitName", "barcode", "barcodes",
+        "units", "trackExpiry", "costPriceLak", "retailPriceLak", "wholesalePriceLak",
+        "memberPriceLak", "minStockBaseQty", "reorderQtyBaseQty", "taxable", "notes",
+        "status", "createdAt", "updatedAt"
+      ]
+    },
+    "InventoryBalance": {
+      "title": "InventoryBalance",
+      "description": "ยอดคงเหลือสินค้าคงคลังสาขาหลักในหน่วยฐาน พร้อมต้นทุนเฉลี่ย WAC",
+      "type": "object",
+      "properties": {
+        "inventoryId": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "organizationId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "branchId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerUid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "productId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "skuSnapshot": { "type": "string", "maxLength": 50 },
+        "productNameSnapshot": { "type": "string", "maxLength": 160 },
+        "baseUnitNameSnapshot": { "type": "string", "maxLength": 40 },
+        "qtyOnHandBase": { "type": "number" },
+        "reservedQtyBase": { "type": "number" },
+        "avgCostLak": { "type": "number" },
+        "minStockBaseQty": { "type": "number" },
+        "storageLocationName": { "type": "string", "maxLength": 100 },
+        "lastMovementAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "inventoryId", "organizationId", "branchId", "ownerUid", "productId",
+        "skuSnapshot", "productNameSnapshot", "baseUnitNameSnapshot",
+        "qtyOnHandBase", "reservedQtyBase", "avgCostLak", "minStockBaseQty",
+        "storageLocationName", "lastMovementAt", "updatedAt"
+      ]
+    },
+    "InventoryLot": {
+      "title": "InventoryLot",
+      "description": "ล็อตสินค้าและวันหมดอายุสำหรับตัดสต็อก FEFO",
+      "type": "object",
+      "properties": {
+        "lotId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "organizationId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "branchId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerUid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "productId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "skuSnapshot": { "type": "string", "maxLength": 50 },
+        "productNameSnapshot": { "type": "string", "maxLength": 160 },
+        "lotNumber": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "expiryDate": { "type": "string", "maxLength": 20 },
+        "initialQtyBase": { "type": "number" },
+        "remainingQtyBase": { "type": "number" },
+        "unitCostBaseLak": { "type": "number" },
+        "storageLocationName": { "type": "string", "maxLength": 100 },
+        "status": { "type": "string", "enum": ["active", "depleted", "expired"] },
+        "receivedAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "lotId", "organizationId", "branchId", "ownerUid", "productId",
+        "skuSnapshot", "productNameSnapshot", "lotNumber", "initialQtyBase",
+        "remainingQtyBase", "unitCostBaseLak", "storageLocationName", "status",
+        "receivedAt", "updatedAt"
+      ]
+    },
+    "StockMovement": {
+      "title": "StockMovement",
+      "description": "สมุดบัญชีความเคลื่อนไหวสต็อกสินค้า (Stock Ledger แบบ Append-only)",
+      "type": "object",
+      "properties": {
+        "movementId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "organizationId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "branchId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerUid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "productId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "skuSnapshot": { "type": "string", "maxLength": 50 },
+        "productNameSnapshot": { "type": "string", "maxLength": 160 },
+        "lotId": { "type": "string", "maxLength": 64 },
+        "lotNumberSnapshot": { "type": "string", "maxLength": 60 },
+        "movementType": {
+          "type": "string",
+          "enum": ["initial", "stock_in", "stock_out", "damaged", "expired", "lost", "adjustment_in", "adjustment_out", "sale", "sale_return", "sale_void"]
+        },
+        "unitName": { "type": "string", "maxLength": 40 },
+        "conversionFactor": { "type": "number" },
+        "inputQty": { "type": "number" },
+        "baseQtyDelta": { "type": "number" },
+        "balanceBeforeBase": { "type": "number" },
+        "balanceAfterBase": { "type": "number" },
+        "unitCostBaseLak": { "type": "number" },
+        "totalCostLak": { "type": "number" },
+        "reason": { "type": "string", "maxLength": 300 },
+        "referenceNo": { "type": "string", "maxLength": 60 },
+        "performedByUid": { "type": "string", "maxLength": 128 },
+        "performedByName": { "type": "string", "maxLength": 120 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "movementId", "organizationId", "branchId", "ownerUid", "productId",
+        "skuSnapshot", "productNameSnapshot", "movementType", "unitName",
+        "conversionFactor", "inputQty", "baseQtyDelta", "balanceBeforeBase",
+        "balanceAfterBase", "unitCostBaseLak", "totalCostLak", "reason",
+        "referenceNo", "performedByUid", "performedByName", "createdAt"
+      ]
+    },
+    "SaleOrder": {
+      "title": "SaleOrder",
+      "description": "บิลขายหน้าร้าน POS รองรับขายปลีก-ขายส่ง ชำระหลายช่องทาง และกำไรขั้นต้น (LAK)",
+      "type": "object",
+      "properties": {
+        "saleId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "invoiceNumber": { "type": "string", "minLength": 1, "maxLength": 40 },
+        "organizationId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "branchId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerUid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "priceTier": { "type": "string", "enum": ["retail", "wholesale", "member"] },
+        "customerId": { "type": "string", "maxLength": 64 },
+        "customerName": { "type": "string", "maxLength": 120 },
+        "items": { "type": "array" },
+        "subtotalLak": { "type": "number" },
+        "itemDiscountTotalLak": { "type": "number" },
+        "billDiscountLak": { "type": "number" },
+        "taxableAmountLak": { "type": "number" },
+        "taxRate": { "type": "number" },
+        "taxAmountLak": { "type": "number" },
+        "grandTotalLak": { "type": "number" },
+        "cogsTotalLak": { "type": "number" },
+        "grossProfitLak": { "type": "number" },
+        "paymentMethod": { "type": "string", "enum": ["cash", "transfer", "qr", "credit", "split"] },
+        "payments": { "type": "array" },
+        "paidAmountLak": { "type": "number" },
+        "changeAmountLak": { "type": "number" },
+        "creditDueLak": { "type": "number" },
+        "status": { "type": "string", "enum": ["completed", "partial_return", "returned", "voided"] },
+        "notes": { "type": "string", "maxLength": 300 },
+        "cashierUid": { "type": "string", "maxLength": 128 },
+        "cashierName": { "type": "string", "maxLength": 120 },
+        "voidedReason": { "type": "string", "maxLength": 300 },
+        "voidedByName": { "type": "string", "maxLength": 120 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "saleId", "invoiceNumber", "organizationId", "branchId", "ownerUid",
+        "priceTier", "customerName", "items", "subtotalLak", "itemDiscountTotalLak",
+        "billDiscountLak", "taxableAmountLak", "taxRate", "taxAmountLak",
+        "grandTotalLak", "cogsTotalLak", "grossProfitLak", "paymentMethod",
+        "payments", "paidAmountLak", "changeAmountLak", "creditDueLak",
+        "status", "notes", "cashierUid", "cashierName", "createdAt", "updatedAt"
+      ]
+    },
+    "SaleReturn": {
+      "title": "SaleReturn",
+      "description": "ใบรับคืนสินค้าจากบิลขาย POS",
+      "type": "object",
+      "properties": {
+        "returnId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "returnNumber": { "type": "string", "minLength": 1, "maxLength": 40 },
+        "saleId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "invoiceNumber": { "type": "string", "maxLength": 40 },
+        "organizationId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "branchId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerUid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "items": { "type": "array" },
+        "totalRefundLak": { "type": "number" },
+        "refundMethod": { "type": "string", "enum": ["cash", "transfer", "credit_adjust"] },
+        "reason": { "type": "string", "maxLength": 300 },
+        "performedByUid": { "type": "string", "maxLength": 128 },
+        "performedByName": { "type": "string", "maxLength": 120 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "returnId", "returnNumber", "saleId", "invoiceNumber", "organizationId",
+        "branchId", "ownerUid", "items", "totalRefundLak", "refundMethod",
+        "reason", "performedByUid", "performedByName", "createdAt"
+      ]
+    },
+    "PosHeldBill": {
+      "title": "PosHeldBill",
+      "description": "รายการบิลที่พักไว้ชั่วคราวบนหน้าจอขาย POS",
+      "type": "object",
+      "properties": {
+        "heldId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "organizationId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "branchId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerUid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "label": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "priceTier": { "type": "string", "enum": ["retail", "wholesale", "member"] },
+        "customerName": { "type": "string", "maxLength": 120 },
+        "billDiscountLak": { "type": "number" },
+        "items": { "type": "array" },
+        "notes": { "type": "string", "maxLength": 300 },
+        "status": { "type": "string", "enum": ["held", "resumed", "discarded"] },
+        "createdByUid": { "type": "string", "maxLength": 128 },
+        "createdByName": { "type": "string", "maxLength": 120 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "heldId", "organizationId", "branchId", "ownerUid", "label",
+        "priceTier", "customerName", "billDiscountLak", "items", "notes",
+        "status", "createdByUid", "createdByName", "createdAt", "updatedAt"
       ]
     }
   },
@@ -349,6 +405,42 @@
     "/settings/{organizationId}": {
       "schema": { "$ref": "#/entities/SystemSetting" },
       "description": "การตั้งค่าหลักขององค์กร"
+    },
+    "/categories/{categoryId}": {
+      "schema": { "$ref": "#/entities/Category" },
+      "description": "หมวดหมู่สินค้าหลักและหมวดหมู่ย่อย"
+    },
+    "/storageLocations/{locationId}": {
+      "schema": { "$ref": "#/entities/StorageLocation" },
+      "description": "ตำแหน่งจัดเก็บสินค้าในร้านค้า"
+    },
+    "/products/{productId}": {
+      "schema": { "$ref": "#/entities/Product" },
+      "description": "รายการสินค้า หลายหน่วย และโครงสร้างราคา LAK"
+    },
+    "/inventory/{inventoryId}": {
+      "schema": { "$ref": "#/entities/InventoryBalance" },
+      "description": "ยอดคงเหลือสินค้าคงคลังสาขาเดียว"
+    },
+    "/inventoryLots/{lotId}": {
+      "schema": { "$ref": "#/entities/InventoryLot" },
+      "description": "ล็อตสินค้าและวันหมดอายุ"
+    },
+    "/stockMovements/{movementId}": {
+      "schema": { "$ref": "#/entities/StockMovement" },
+      "description": "ประวัติความเคลื่อนไหวสต็อกสินค้าแบบแก้ไขไม่ได้"
+    },
+    "/sales/{saleId}": {
+      "schema": { "$ref": "#/entities/SaleOrder" },
+      "description": "ประวัติบิลขายหน้าร้าน POS"
+    },
+    "/saleReturns/{returnId}": {
+      "schema": { "$ref": "#/entities/SaleReturn" },
+      "description": "ประวัติการคืนสินค้าจากบิลขาย"
+    },
+    "/posHeldBills/{heldId}": {
+      "schema": { "$ref": "#/entities/PosHeldBill" },
+      "description": "บิลที่พักไว้ชั่วคราวบนหน้าจอขาย POS"
     }
   }
 }
