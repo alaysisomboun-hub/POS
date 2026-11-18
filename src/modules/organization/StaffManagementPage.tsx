@@ -10,7 +10,17 @@ import {
   where,
   writeBatch,
 } from 'firebase/firestore';
-import { Edit3, History, Search, Shield, UserPlus, X } from 'lucide-react';
+import {
+  CheckCircle2,
+  Edit3,
+  History,
+  Power,
+  RotateCcw,
+  Search,
+  Shield,
+  UserPlus,
+  X,
+} from 'lucide-react';
 import { db } from '../../core/firebase/config';
 import { OperationType, handleFirestoreError } from '../../core/firebase/errorHandler';
 import { useFirebase } from '../../core/firebase/FirebaseProvider';
@@ -34,15 +44,25 @@ import type {
   UserRole,
 } from '../../core/firebase/types';
 
-type TabKey = 'staff' | 'audit';
+type TabKey = 'staff' | 'roles' | 'audit';
 
 export function StaffManagementPage() {
   const { userProfile, activeBranchId } = useFirebase();
   const [activeTab, setActiveTab] = useState<TabKey>('staff');
   const [staffList, setStaffList] = useState<UserProfile[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
-  const [auditLimit, setAuditLimit] = useState(25);
+  const [auditLimit, setAuditLimit] = useState(50);
+
+  // Staff filters
   const [search, setSearch] = useState('');
+  const [roleFilter, setRoleFilter] = useState<'all' | UserRole>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'suspended'>('all');
+
+  // Audit filters
+  const [auditSearch, setAuditSearch] = useState('');
+  const [auditEntityFilter, setAuditEntityFilter] = useState<string>('all');
+
+  const [feedback, setFeedback] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
 
   // Modal state for Create or Edit Staff
   const [modalMode, setModalMode] = useState<'create_staff' | 'edit_staff' | null>(null);
@@ -55,7 +75,7 @@ export function StaffManagementPage() {
   const [formPermissions, setFormPermissions] = useState<PermissionsMap>(
     DEFAULT_ROLE_PERMISSIONS.cashier,
   );
-  const [showPermissionMatrix, setShowPermissionMatrix] = useState(false);
+  const [showPermissionMatrix, setShowPermissionMatrix] = useState(true);
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -98,17 +118,48 @@ export function StaffManagementPage() {
     return () => unsubAudit();
   }, [userProfile, activeTab, auditLimit]);
 
+  const kpiSummary = useMemo(() => {
+    const total = staffList.length;
+    const active = staffList.filter((s) => s.status === 'active').length;
+    const suspended = total - active;
+    const activeRolesCount = new Set(staffList.map((s) => s.role)).size;
+    return { total, active, suspended, activeRolesCount };
+  }, [staffList]);
+
   const filteredStaff = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return staffList;
-    return staffList.filter(
-      (s) =>
+    return staffList.filter((s) => {
+      if (roleFilter !== 'all' && s.role !== roleFilter) return false;
+      if (statusFilter !== 'all' && s.status !== statusFilter) return false;
+      if (!q) return true;
+      return (
         s.name.toLowerCase().includes(q) ||
         s.email.toLowerCase().includes(q) ||
         s.phone.toLowerCase().includes(q) ||
-        ROLE_LABELS[s.role].toLowerCase().includes(q),
-    );
-  }, [staffList, search]);
+        ROLE_LABELS[s.role].toLowerCase().includes(q)
+      );
+    });
+  }, [staffList, search, roleFilter, statusFilter]);
+
+  const auditEntities = useMemo(() => {
+    const set = new Set<string>();
+    auditLogs.forEach((l) => set.add(l.entityType));
+    return Array.from(set).sort();
+  }, [auditLogs]);
+
+  const filteredAuditLogs = useMemo(() => {
+    const q = auditSearch.trim().toLowerCase();
+    return auditLogs.filter((l) => {
+      if (auditEntityFilter !== 'all' && l.entityType !== auditEntityFilter) return false;
+      if (!q) return true;
+      return (
+        l.action.toLowerCase().includes(q) ||
+        l.entityType.toLowerCase().includes(q) ||
+        l.userNameSnapshot.toLowerCase().includes(q) ||
+        l.entityId.toLowerCase().includes(q)
+      );
+    });
+  }, [auditLogs, auditSearch, auditEntityFilter]);
 
   const openCreateStaffModal = () => {
     setEditingStaff(null);
@@ -118,7 +169,7 @@ export function StaffManagementPage() {
     setFormRole('cashier');
     setFormStatus('active');
     setFormPermissions(structuredClone(DEFAULT_ROLE_PERMISSIONS.cashier));
-    setShowPermissionMatrix(false);
+    setShowPermissionMatrix(true);
     setErrorMsg(null);
     setModalMode('create_staff');
   };
@@ -133,7 +184,7 @@ export function StaffManagementPage() {
     setFormPermissions(
       structuredClone(staff.permissions || DEFAULT_ROLE_PERMISSIONS[staff.role]),
     );
-    setShowPermissionMatrix(false);
+    setShowPermissionMatrix(true);
     setErrorMsg(null);
     setModalMode('edit_staff');
   };
@@ -154,6 +205,60 @@ export function StaffManagementPage() {
         [moduleKey]: next,
       };
     });
+  };
+
+  const toggleModuleAllActions = (moduleKey: ModuleKey) => {
+    setFormPermissions((prev) => {
+      const current = prev[moduleKey] ?? [];
+      const hasAll = ALL_ACTIONS.every((a) => current.includes(a));
+      return {
+        ...prev,
+        [moduleKey]: hasAll ? [] : [...ALL_ACTIONS],
+      };
+    });
+  };
+
+  const handleToggleStaffStatus = async (staff: UserProfile) => {
+    if (!userProfile || !canEdit) return;
+    if (staff.uid === userProfile.uid && staff.status === 'active') {
+      setFeedback({
+        type: 'err',
+        text: 'ไม่สามารถระงับสิทธิ์บัญชีผู้ดูแลหลักที่กำลังใช้งานอยู่ได้',
+      });
+      return;
+    }
+
+    const nextStatus = staff.status === 'active' ? 'suspended' : 'active';
+    try {
+      const batch = writeBatch(db);
+      batch.update(doc(db, 'users', staff.uid), {
+        status: nextStatus,
+        lastLoginAt: serverTimestamp(),
+      });
+      appendAuditLogToBatch(batch, {
+        user: userProfile,
+        branchId: activeBranchId,
+        action: 'UPDATE_STAFF_STATUS',
+        entityType: 'users',
+        entityId: staff.uid,
+        before: { status: staff.status, name: staff.name },
+        after: { status: nextStatus, name: staff.name },
+      });
+      await batch.commit();
+      setFeedback({
+        type: 'ok',
+        text: `${nextStatus === 'active' ? 'เปิดใช้งาน' : 'ระงับสิทธิ์'}พนักงาน "${staff.name}" เรียบร้อยแล้ว`,
+      });
+    } catch (error) {
+      try {
+        handleFirestoreError(error, OperationType.UPDATE, `users/${staff.uid}`);
+      } catch (err) {
+        setFeedback({
+          type: 'err',
+          text: err instanceof Error ? err.message : 'ไม่สามารถเปลี่ยนสถานะพนักงานได้',
+        });
+      }
+    }
   };
 
   const handleSaveStaff = async (e: React.FormEvent) => {
@@ -229,6 +334,13 @@ export function StaffManagementPage() {
 
       await batch.commit();
       setModalMode(null);
+      setFeedback({
+        type: 'ok',
+        text:
+          modalMode === 'create_staff'
+            ? `เพิ่มพนักงาน "${formName.trim()}" เรียบร้อยแล้ว`
+            : `อัปเดตข้อมูลและสิทธิ์ของ "${formName.trim()}" เรียบร้อยแล้ว`,
+      });
     } catch (error) {
       try {
         handleFirestoreError(error, OperationType.WRITE, 'users');
@@ -242,8 +354,58 @@ export function StaffManagementPage() {
 
   return (
     <div className="space-y-5">
+      {/* KPI Summary Row */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white border border-slate-200 rounded-xl p-4">
+          <div className="text-xs font-medium text-slate-500">พนักงานทั้งหมด</div>
+          <div className="text-xl font-bold text-slate-900 mt-1 tabular-nums">
+            {kpiSummary.total.toLocaleString('en-US')} คน
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-xl p-4">
+          <div className="text-xs font-medium text-slate-500">ใช้งานปกติ</div>
+          <div className="text-xl font-bold text-green-700 mt-1 tabular-nums">
+            {kpiSummary.active.toLocaleString('en-US')} คน
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-xl p-4">
+          <div className="text-xs font-medium text-slate-500">ถูกระงับสิทธิ์</div>
+          <div className="text-xl font-bold text-red-600 mt-1 tabular-nums">
+            {kpiSummary.suspended.toLocaleString('en-US')} คน
+          </div>
+        </div>
+        <div className="bg-white border border-slate-200 rounded-xl p-4">
+          <div className="text-xs font-medium text-slate-500">บทบาทที่มีผู้ใช้งาน</div>
+          <div className="text-xl font-bold text-blue-700 mt-1 tabular-nums">
+            {kpiSummary.activeRolesCount} / 7 บทบาท
+          </div>
+        </div>
+      </div>
+
+      {feedback && (
+        <div
+          className={`p-3 rounded-lg border text-xs flex items-center justify-between gap-2 ${
+            feedback.type === 'ok'
+              ? 'bg-green-50 border-green-200 text-green-800'
+              : 'bg-red-50 border-red-200 text-red-700'
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            {feedback.type === 'ok' && <CheckCircle2 className="w-4 h-4 shrink-0" />}
+            <span>{feedback.text}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setFeedback(null)}
+            className="text-current opacity-70 hover:opacity-100 cursor-pointer"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {/* Header & Tabs */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
         <div className="inline-flex items-center gap-1 p-1 bg-slate-200/70 rounded-lg self-start">
           <button
             type="button"
@@ -254,7 +416,19 @@ export function StaffManagementPage() {
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            พนักงาน ({staffList.length})
+            รายชื่อพนักงาน ({staffList.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('roles')}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-colors whitespace-nowrap cursor-pointer ${
+              activeTab === 'roles'
+                ? 'bg-white text-slate-900 shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <Shield className="w-3.5 h-3.5" />
+            สิทธิ์ 7 บทบาท (RBAC)
           </button>
           <button
             type="button"
@@ -266,28 +440,51 @@ export function StaffManagementPage() {
             }`}
           >
             <History className="w-3.5 h-3.5" />
-            ประวัติการใช้งาน
+            ประวัติการใช้งาน (Audit Log)
           </button>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2">
           {activeTab === 'staff' && (
-            <div className="relative flex-1 sm:w-64">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="ค้นหาชื่อ เบอร์โทร บทบาท..."
-                className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-blue-600"
-              />
-            </div>
+            <>
+              <div className="relative flex-1 sm:w-56">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="ค้นหาชื่อ เบอร์โทร อีเมล..."
+                  className="w-full pl-9 pr-3 py-2 text-xs sm:text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-blue-600"
+                />
+              </div>
+              <select
+                value={roleFilter}
+                onChange={(e) => setRoleFilter(e.target.value as 'all' | UserRole)}
+                className="px-3 py-2 text-xs sm:text-sm bg-white border border-slate-200 rounded-lg"
+              >
+                <option value="all">ทุกบทบาท</option>
+                {(Object.keys(ROLE_LABELS) as UserRole[]).map((role) => (
+                  <option key={role} value={role}>
+                    {ROLE_LABELS[role]}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'suspended')}
+                className="px-3 py-2 text-xs sm:text-sm bg-white border border-slate-200 rounded-lg"
+              >
+                <option value="all">ทุกสถานะ</option>
+                <option value="active">ใช้งานปกติ</option>
+                <option value="suspended">ระงับสิทธิ์</option>
+              </select>
+            </>
           )}
-          {canCreate && (
+          {canCreate && activeTab === 'staff' && (
             <button
               type="button"
               onClick={openCreateStaffModal}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-medium rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer"
             >
               <UserPlus className="w-4 h-4" />
               เพิ่มพนักงาน
@@ -305,51 +502,81 @@ export function StaffManagementPage() {
                 <tr className="border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-600">
                   <th className="py-3 px-4">ชื่อพนักงาน</th>
                   <th className="py-3 px-4">บทบาท (Role)</th>
+                  <th className="py-3 px-4">จำนวนสิทธิ์โมดูล</th>
                   <th className="py-3 px-4">สถานะ</th>
                   <th className="py-3 px-4">อัปเดตล่าสุด</th>
                   <th className="py-3 px-4 text-right">จัดการ</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-sm">
-                {filteredStaff.map((staff) => (
-                  <tr key={staff.uid} className="hover:bg-slate-50/70">
-                    <td className="py-3 px-4">
-                      <div className="font-medium text-slate-900">{staff.name}</div>
-                      <div className="text-xs text-slate-500">
-                        {staff.phone || '-'} {staff.email ? `· ${staff.email}` : ''}
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 text-xs font-medium text-blue-700">
-                      {ROLE_LABELS[staff.role]}
-                    </td>
-                    <td className="py-3 px-4 text-xs">
-                      <span
-                        className={
-                          staff.status === 'active'
-                            ? 'text-green-700 font-medium'
-                            : 'text-red-600 font-medium'
-                        }
-                      >
-                        {staff.status === 'active' ? 'ใช้งานปกติ' : 'ระงับสิทธิ์'}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-xs text-slate-500 tabular-nums">
-                      {formatDateTimeVientiane(staff.lastLoginAt)}
-                    </td>
-                    <td className="py-3 px-4 text-right">
-                      {canEdit && (
-                        <button
-                          type="button"
-                          onClick={() => openEditStaffModal(staff)}
-                          className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-slate-100 rounded-md transition-colors cursor-pointer"
-                          title="แก้ไขบทบาทและสิทธิ์"
-                        >
-                          <Edit3 className="w-4 h-4" />
-                        </button>
-                      )}
+                {filteredStaff.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="py-10 text-center text-sm text-slate-500">
+                      ไม่พบข้อมูลพนักงานตามเงื่อนไขที่เลือก
                     </td>
                   </tr>
-                ))}
+                )}
+                {filteredStaff.map((staff) => {
+                  const grantedModulesCount = Object.values(staff.permissions ?? {}).filter(
+                    (acts) => Array.isArray(acts) && acts.length > 0,
+                  ).length;
+                  return (
+                    <tr key={staff.uid} className="hover:bg-slate-50/70">
+                      <td className="py-3 px-4">
+                        <div className="font-medium text-slate-900">{staff.name}</div>
+                        <div className="text-xs text-slate-500">
+                          {staff.phone || '-'} {staff.email ? `· ${staff.email}` : ''}
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-xs font-medium text-blue-700">
+                        {ROLE_LABELS[staff.role]}
+                      </td>
+                      <td className="py-3 px-4 text-xs text-slate-600 tabular-nums">
+                        {grantedModulesCount} / {MENU_ITEMS.length} โมดูล
+                      </td>
+                      <td className="py-3 px-4 text-xs">
+                        <span
+                          className={
+                            staff.status === 'active'
+                              ? 'text-green-700 font-medium'
+                              : 'text-red-600 font-medium'
+                          }
+                        >
+                          {staff.status === 'active' ? 'ใช้งานปกติ' : 'ระงับสิทธิ์'}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-xs text-slate-500 tabular-nums">
+                        {formatDateTimeVientiane(staff.lastLoginAt)}
+                      </td>
+                      <td className="py-3 px-4 text-right">
+                        {canEdit && (
+                          <div className="inline-flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => openEditStaffModal(staff)}
+                              className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-slate-100 rounded-md transition-colors cursor-pointer"
+                              title="แก้ไขบทบาทและสิทธิ์"
+                            >
+                              <Edit3 className="w-4 h-4" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleToggleStaffStatus(staff)}
+                              className={`p-1.5 rounded-md transition-colors cursor-pointer ${
+                                staff.status === 'active'
+                                  ? 'text-slate-500 hover:text-red-600 hover:bg-red-50'
+                                  : 'text-slate-500 hover:text-green-700 hover:bg-green-50'
+                              }`}
+                              title={staff.status === 'active' ? 'ระงับสิทธิ์' : 'เปิดใช้งาน'}
+                            >
+                              <Power className="w-4 h-4" />
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -376,13 +603,22 @@ export function StaffManagementPage() {
                 <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs text-slate-500">
                   <span className="tabular-nums">{formatDateTimeVientiane(staff.lastLoginAt)}</span>
                   {canEdit && (
-                    <button
-                      type="button"
-                      onClick={() => openEditStaffModal(staff)}
-                      className="px-2.5 py-1 text-slate-700 border border-slate-200 rounded-md"
-                    >
-                      แก้ไขสิทธิ์
-                    </button>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => openEditStaffModal(staff)}
+                        className="px-2.5 py-1 text-slate-700 border border-slate-200 rounded-md cursor-pointer"
+                      >
+                        แก้ไขสิทธิ์
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleToggleStaffStatus(staff)}
+                        className="px-2.5 py-1 text-slate-700 border border-slate-200 rounded-md cursor-pointer"
+                      >
+                        {staff.status === 'active' ? 'ระงับ' : 'เปิดใช้'}
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
@@ -391,16 +627,83 @@ export function StaffManagementPage() {
         </>
       )}
 
+      {/* Roles & Default Permissions Overview Tab */}
+      {activeTab === 'roles' && (
+        <div className="bg-white border border-slate-200 rounded-xl overflow-x-auto">
+          <table className="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr className="border-b border-slate-200 bg-slate-50 text-slate-600 font-semibold">
+                <th className="py-3 px-4 sticky left-0 bg-slate-50 min-w-[180px]">โมดูลในระบบ</th>
+                {(Object.keys(ROLE_LABELS) as UserRole[]).map((role) => (
+                  <th key={role} className="py-3 px-3 min-w-[130px]">
+                    {ROLE_LABELS[role].split(' (')[0]}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {MENU_ITEMS.map((item) => (
+                <tr key={item.key} className="hover:bg-slate-50/70">
+                  <td className="py-2.5 px-4 font-medium text-slate-900 sticky left-0 bg-white">
+                    {item.label}
+                  </td>
+                  {(Object.keys(ROLE_LABELS) as UserRole[]).map((role) => {
+                    const acts = DEFAULT_ROLE_PERMISSIONS[role]?.[item.key] ?? [];
+                    return (
+                      <td key={role} className="py-2.5 px-3 text-slate-600">
+                        {acts.length === 0 ? (
+                          <span className="text-slate-300">-</span>
+                        ) : acts.length === ALL_ACTIONS.length ? (
+                          <span className="font-semibold text-blue-700">ทั้งหมด (7)</span>
+                        ) : (
+                          <span>{acts.map((a) => ACTION_LABELS[a]).join(', ')}</span>
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
       {/* Audit Log Tab */}
       {activeTab === 'audit' && (
         <div className="space-y-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative flex-1 min-w-[220px] max-w-sm">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={auditSearch}
+                onChange={(e) => setAuditSearch(e.target.value)}
+                placeholder="ค้นหา Action ผู้ดำเนินการ หรือรหัสเอกสาร..."
+                className="w-full pl-9 pr-3 py-2 text-xs sm:text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-blue-600"
+              />
+            </div>
+            <select
+              value={auditEntityFilter}
+              onChange={(e) => setAuditEntityFilter(e.target.value)}
+              className="px-3 py-2 text-xs sm:text-sm bg-white border border-slate-200 rounded-lg"
+            >
+              <option value="all">ทุกประเภทข้อมูล</option>
+              {auditEntities.map((ent) => (
+                <option key={ent} value={ent}>
+                  {ent}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
             <div className="divide-y divide-slate-100">
-              {auditLogs.map((log) => (
+              {filteredAuditLogs.map((log) => (
                 <div key={log.auditId} className="p-4 text-xs space-y-1.5">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="font-semibold text-slate-900">
-                      {log.action} · <span className="text-blue-700">{log.entityType}</span>
+                      {log.action} · <span className="text-blue-700">{log.entityType}</span>{' '}
+                      <span className="font-mono text-slate-400 font-normal">({log.entityId})</span>
                     </div>
                     <div className="text-slate-500 tabular-nums">
                       {formatDateTimeVientiane(log.createdAt)}
@@ -425,8 +728,10 @@ export function StaffManagementPage() {
                   )}
                 </div>
               ))}
-              {auditLogs.length === 0 && (
-                <div className="p-8 text-center text-sm text-slate-500">ยังไม่มีประวัติการใช้งาน</div>
+              {filteredAuditLogs.length === 0 && (
+                <div className="p-8 text-center text-sm text-slate-500">
+                  ไม่พบประวัติการใช้งานตามเงื่อนไขที่ค้นหา
+                </div>
               )}
             </div>
           </div>
@@ -435,7 +740,7 @@ export function StaffManagementPage() {
             <div className="text-center">
               <button
                 type="button"
-                onClick={() => setAuditLimit((prev) => prev + 25)}
+                onClick={() => setAuditLimit((prev) => prev + 50)}
                 className="px-4 py-2 text-xs font-medium text-blue-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer"
               >
                 โหลดประวัติเพิ่มเติม
@@ -448,7 +753,7 @@ export function StaffManagementPage() {
       {/* Create / Edit Staff Modal */}
       {modalMode && (
         <div className="fixed inset-0 z-50 bg-slate-900/40 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="w-full max-w-2xl bg-white border border-slate-200 rounded-xl p-6 my-8">
+          <div className="w-full max-w-3xl bg-white border border-slate-200 rounded-xl p-6 my-8">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
               <div className="flex items-center gap-2">
                 <UserPlus className="w-5 h-5 text-blue-600" />
@@ -461,7 +766,7 @@ export function StaffManagementPage() {
               <button
                 type="button"
                 onClick={() => setModalMode(null)}
-                className="p-1 text-slate-400 hover:text-slate-700"
+                className="p-1 text-slate-400 hover:text-slate-700 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -543,19 +848,33 @@ export function StaffManagementPage() {
               </div>
 
               <div className="border-t border-slate-100 pt-3">
-                <button
-                  type="button"
-                  onClick={() => setShowPermissionMatrix((prev) => !prev)}
-                  className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:underline cursor-pointer"
-                >
-                  <Shield className="w-3.5 h-3.5" />
-                  {showPermissionMatrix
-                    ? 'ซ่อนตารางกำหนดสิทธิ์รายโมดูล'
-                    : 'ปรับแต่งสิทธิ์รายโมดูล (View / Create / Edit / Delete / Approve / Export / Manage)'}
-                </button>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowPermissionMatrix((prev) => !prev)}
+                    className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:underline cursor-pointer"
+                  >
+                    <Shield className="w-3.5 h-3.5" />
+                    {showPermissionMatrix
+                      ? 'ซ่อนตารางกำหนดสิทธิ์รายโมดูล'
+                      : 'ปรับแต่งสิทธิ์รายโมดูล (7 ระดับ)'}
+                  </button>
+                  {showPermissionMatrix && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setFormPermissions(structuredClone(DEFAULT_ROLE_PERMISSIONS[formRole]))
+                      }
+                      className="inline-flex items-center gap-1 text-xs font-medium text-slate-600 hover:text-blue-600 cursor-pointer"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      รีเซ็ตสิทธิ์ตามค่าเริ่มต้นของบทบาท
+                    </button>
+                  )}
+                </div>
 
                 {showPermissionMatrix && (
-                  <div className="mt-3 max-h-60 overflow-y-auto border border-slate-200 rounded-lg">
+                  <div className="mt-3 max-h-64 overflow-y-auto border border-slate-200 rounded-lg">
                     <table className="w-full text-left text-xs border-collapse">
                       <thead className="bg-slate-50 sticky top-0 border-b border-slate-200">
                         <tr>
@@ -565,27 +884,41 @@ export function StaffManagementPage() {
                               {ACTION_LABELS[act]}
                             </th>
                           ))}
+                          <th className="py-2 px-2 text-center font-medium text-slate-500">ทั้งหมด</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
-                        {MENU_ITEMS.map((item) => (
-                          <tr key={item.key}>
-                            <td className="py-1.5 px-3 font-medium text-slate-700">{item.label}</td>
-                            {ALL_ACTIONS.map((act) => {
-                              const checked = (formPermissions[item.key] ?? []).includes(act);
-                              return (
-                                <td key={act} className="py-1.5 px-1.5 text-center">
-                                  <input
-                                    type="checkbox"
-                                    checked={checked}
-                                    onChange={() => togglePermission(item.key, act)}
-                                    className="rounded border-slate-300 text-blue-600"
-                                  />
-                                </td>
-                              );
-                            })}
-                          </tr>
-                        ))}
+                        {MENU_ITEMS.map((item) => {
+                          const currentActs = formPermissions[item.key] ?? [];
+                          const hasAll = ALL_ACTIONS.every((a) => currentActs.includes(a));
+                          return (
+                            <tr key={item.key}>
+                              <td className="py-1.5 px-3 font-medium text-slate-700">{item.label}</td>
+                              {ALL_ACTIONS.map((act) => {
+                                const checked = currentActs.includes(act);
+                                return (
+                                  <td key={act} className="py-1.5 px-1.5 text-center">
+                                    <input
+                                      type="checkbox"
+                                      checked={checked}
+                                      onChange={() => togglePermission(item.key, act)}
+                                      className="rounded border-slate-300 text-blue-600 cursor-pointer"
+                                    />
+                                  </td>
+                                );
+                              })}
+                              <td className="py-1.5 px-2 text-center">
+                                <button
+                                  type="button"
+                                  onClick={() => toggleModuleAllActions(item.key)}
+                                  className="text-[11px] font-medium text-blue-600 hover:underline cursor-pointer"
+                                >
+                                  {hasAll ? 'ล้าง' : 'เลือก'}
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>

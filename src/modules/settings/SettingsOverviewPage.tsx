@@ -1,6 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { doc, serverTimestamp, writeBatch } from 'firebase/firestore';
-import { CheckCircle2, Save } from 'lucide-react';
+import {
+  Bell,
+  Boxes,
+  CheckCircle2,
+  Coins,
+  Printer,
+  Save,
+  Store,
+} from 'lucide-react';
 import { db } from '../../core/firebase/config';
 import { OperationType, handleFirestoreError } from '../../core/firebase/errorHandler';
 import { useFirebase } from '../../core/firebase/FirebaseProvider';
@@ -9,21 +17,43 @@ import { hasPermission } from '../../core/rbac/permissions';
 
 export function SettingsOverviewPage() {
   const { userProfile, organization, activeBranch, activeBranchId, settings } = useFirebase();
+
+  // Store Profile
   const [storeName, setStoreName] = useState('');
   const [storePhone, setStorePhone] = useState('');
   const [storeAddress, setStoreAddress] = useState('');
+  const [logoUrl, setLogoUrl] = useState('');
+
+  // Receipt Settings
   const [paperSize, setPaperSize] = useState<'80mm' | '58mm'>('80mm');
   const [receiptPrefix, setReceiptPrefix] = useState('INV');
+  const [headerText, setHeaderText] = useState('');
   const [footerText, setFooterText] = useState('');
+  const [showQr, setShowQr] = useState(true);
+  const [showTaxId, setShowTaxId] = useState(false);
+
+  // Currency & Tax Settings
+  const [roundingMode, setRoundingMode] = useState<'integer' | 'nearest_100' | 'nearest_500'>(
+    'integer',
+  );
   const [taxEnabled, setTaxEnabled] = useState(false);
   const [taxRate, setTaxRate] = useState('0');
+  const [taxInclusive, setTaxInclusive] = useState(false);
   const [taxId, setTaxId] = useState('');
-  const [roundingMode, setRoundingMode] = useState<'integer' | 'nearest_100' | 'nearest_500'>('integer');
+
+  // Inventory & Notification Settings
+  const [allowNegativeStock, setAllowNegativeStock] = useState(false);
+  const [expiryWarningDays, setExpiryWarningDays] = useState('30');
+  const [highExpenseThresholdPercent, setHighExpenseThresholdPercent] = useState('30');
+
   const [saving, setSaving] = useState(false);
   const [savedNotice, setSavedNotice] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const canManage = hasPermission(userProfile, 'settings', 'edit') || userProfile?.role === 'owner' || userProfile?.role === 'super_admin';
+  const canManage =
+    hasPermission(userProfile, 'settings', 'edit') ||
+    userProfile?.role === 'owner' ||
+    userProfile?.role === 'super_admin';
 
   useEffect(() => {
     if (organization) {
@@ -32,13 +62,23 @@ export function SettingsOverviewPage() {
     if (settings) {
       setStorePhone(settings.storeProfile?.phone || activeBranch?.phone || '');
       setStoreAddress(settings.storeProfile?.address || activeBranch?.address || '');
+      setLogoUrl(settings.storeProfile?.logoUrl || '');
       setPaperSize(settings.receiptSettings?.paperSize ?? '80mm');
       setReceiptPrefix(settings.receiptSettings?.prefix ?? 'INV');
-      setFooterText(settings.receiptSettings?.footerText ?? '');
+      setHeaderText(settings.receiptSettings?.headerText ?? organization?.name ?? '');
+      setFooterText(settings.receiptSettings?.footerText ?? 'ขอบคุณที่ใช้บริการ');
+      setShowQr(settings.receiptSettings?.showQr ?? true);
+      setShowTaxId(Boolean(settings.receiptSettings?.showTaxId));
+      setRoundingMode(settings.currencySettings?.roundingMode ?? 'integer');
       setTaxEnabled(Boolean(settings.taxSettings?.taxEnabled));
       setTaxRate(String(settings.taxSettings?.taxRate ?? 0));
+      setTaxInclusive(Boolean(settings.taxSettings?.taxInclusive));
       setTaxId(settings.taxSettings?.taxId ?? '');
-      setRoundingMode(settings.currencySettings?.roundingMode ?? 'integer');
+      setAllowNegativeStock(Boolean(settings.inventorySettings?.allowNegativeStock));
+      setExpiryWarningDays(String(settings.notificationSettings?.expiryWarningDays ?? 30));
+      setHighExpenseThresholdPercent(
+        String(settings.notificationSettings?.highExpenseThresholdPercent ?? 30),
+      );
     } else if (activeBranch) {
       setStorePhone(activeBranch.phone || '');
       setStoreAddress(activeBranch.address || '');
@@ -53,7 +93,14 @@ export function SettingsOverviewPage() {
     setSavedNotice(false);
     setErrorMsg(null);
 
-    const parsedTaxRate = taxEnabled ? Math.max(0, Math.min(100, Number(taxRate) || 0)) : 0;
+    const parsedTaxRate = taxEnabled
+      ? Math.max(0, Math.min(100, Number(taxRate) || 0))
+      : 0;
+    const parsedExpiryDays = Math.max(1, Math.min(365, Math.round(Number(expiryWarningDays) || 30)));
+    const parsedExpensePct = Math.max(
+      1,
+      Math.min(500, Math.round(Number(highExpenseThresholdPercent) || 30)),
+    );
 
     try {
       const batch = writeBatch(db);
@@ -61,6 +108,11 @@ export function SettingsOverviewPage() {
       const resolvedStoreName = storeName.trim().slice(0, 120) || organization.name;
       const resolvedPhone = storePhone.trim().slice(0, 30);
       const resolvedAddress = storeAddress.trim().slice(0, 300);
+      const resolvedLogoUrl = logoUrl.trim().slice(0, 500);
+      const resolvedHeaderText = headerText.trim().slice(0, 120) || resolvedStoreName;
+      const resolvedFooterText = footerText.trim().slice(0, 200);
+      const resolvedPrefix = receiptPrefix.trim().toUpperCase().slice(0, 10) || 'INV';
+      const resolvedTaxId = taxId.trim().slice(0, 40);
 
       if (resolvedStoreName !== organization.name) {
         batch.update(doc(db, 'organizations', organization.organizationId), {
@@ -81,28 +133,36 @@ export function SettingsOverviewPage() {
       batch.update(doc(db, 'settings', organization.organizationId), {
         storeProfile: {
           name: resolvedStoreName,
-          logoUrl: settings.storeProfile?.logoUrl ?? '',
+          logoUrl: resolvedLogoUrl,
           address: resolvedAddress,
           phone: resolvedPhone,
         },
         receiptSettings: {
-          ...settings.receiptSettings,
-          prefix: receiptPrefix.trim().toUpperCase().slice(0, 10) || 'INV',
+          prefix: resolvedPrefix,
           paperSize,
-          headerText: resolvedStoreName,
-          footerText: footerText.trim().slice(0, 200),
-          showTaxId: taxEnabled,
+          headerText: resolvedHeaderText,
+          footerText: resolvedFooterText,
+          showQr,
+          showTaxId: taxEnabled && showTaxId,
         },
         taxSettings: {
-          ...settings.taxSettings,
           taxEnabled,
           taxRate: parsedTaxRate,
-          taxId: taxId.trim().slice(0, 40),
+          taxInclusive,
+          taxId: resolvedTaxId,
         },
         currencySettings: {
           code: 'LAK',
           symbol: '₭',
           roundingMode,
+        },
+        notificationSettings: {
+          expiryWarningDays: parsedExpiryDays,
+          highExpenseThresholdPercent: parsedExpensePct,
+        },
+        inventorySettings: {
+          allowNegativeStock,
+          costingMethod: 'WAC',
         },
         updatedAt: serverTimestamp(),
       });
@@ -116,19 +176,23 @@ export function SettingsOverviewPage() {
         before: {
           storeName: organization.name,
           phone: settings.storeProfile?.phone ?? '',
-          address: settings.storeProfile?.address ?? '',
           taxEnabled: settings.taxSettings?.taxEnabled,
           taxRate: settings.taxSettings?.taxRate,
           paperSize: settings.receiptSettings?.paperSize,
+          allowNegativeStock: settings.inventorySettings?.allowNegativeStock ?? false,
+          expiryWarningDays: settings.notificationSettings?.expiryWarningDays ?? 30,
         },
         after: {
           storeName: resolvedStoreName,
           phone: resolvedPhone,
-          address: resolvedAddress,
           taxEnabled,
           taxRate: parsedTaxRate,
+          taxInclusive,
           paperSize,
           roundingMode,
+          allowNegativeStock,
+          expiryWarningDays: parsedExpiryDays,
+          highExpenseThresholdPercent: parsedExpensePct,
         },
       });
 
@@ -146,9 +210,11 @@ export function SettingsOverviewPage() {
   };
 
   return (
-    <div className="max-w-3xl space-y-5">
+    <div className="max-w-4xl space-y-5">
       <div>
-        <h2 className="text-base font-semibold text-slate-900">ตั้งค่าร้านค้า ใบเสร็จ และภาษี</h2>
+        <h2 className="text-base font-semibold text-slate-900">
+          ตั้งค่าร้านค้า ใบเสร็จ ภาษี และนโยบายระบบ
+        </h2>
         <p className="text-xs text-slate-500">
           ระบบร้านค้าเดี่ยว (1 สาขา) · สกุลเงินหลัก: LAK (กีบ) · เขตเวลา: Asia/Vientiane · รูปแบบวันที่: DD/MM/YYYY
         </p>
@@ -163,148 +229,354 @@ export function SettingsOverviewPage() {
       {savedNotice && (
         <div className="p-3 rounded-lg bg-green-50 border border-green-200 text-xs text-green-800 flex items-center gap-2">
           <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" />
-          บันทึกการตั้งค่าและประวัติการแก้ไขเรียบร้อยแล้ว
+          บันทึกการตั้งค่าและประวัติการแก้ไขลง Audit Log เรียบร้อยแล้ว
         </div>
       )}
 
-      <form onSubmit={handleSave} className="bg-white border border-slate-200 rounded-xl p-6 space-y-5">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1">ชื่อร้านค้า</label>
-            <input
-              type="text"
-              disabled={!canManage}
-              maxLength={120}
-              value={storeName}
-              onChange={(e) => setStoreName(e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg disabled:bg-slate-50"
-            />
+      <form onSubmit={handleSave} className="space-y-5">
+        {/* Section 1: Store Profile */}
+        <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-4">
+          <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
+            <Store className="w-4 h-4 text-blue-600" />
+            <h3 className="text-sm font-semibold text-slate-900">ข้อมูลร้านค้า</h3>
           </div>
-          <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1">เบอร์โทรศัพท์ร้าน</label>
-            <input
-              type="text"
-              disabled={!canManage}
-              maxLength={30}
-              value={storePhone}
-              onChange={(e) => setStorePhone(e.target.value)}
-              placeholder="020-xxxx-xxxx"
-              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg disabled:bg-slate-50"
-            />
-          </div>
-          <div className="sm:col-span-2">
-            <label className="block text-xs font-medium text-slate-700 mb-1">ที่อยู่ร้านค้า</label>
-            <input
-              type="text"
-              disabled={!canManage}
-              maxLength={300}
-              value={storeAddress}
-              onChange={(e) => setStoreAddress(e.target.value)}
-              placeholder="ที่อยู่ร้านสำหรับแสดงบนใบเสร็จ"
-              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg disabled:bg-slate-50"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1">คำนำหน้าเลขใบเสร็จ</label>
-            <input
-              type="text"
-              disabled={!canManage}
-              maxLength={10}
-              value={receiptPrefix}
-              onChange={(e) => setReceiptPrefix(e.target.value.toUpperCase())}
-              className="w-full px-3 py-2 text-sm font-mono border border-slate-200 rounded-lg disabled:bg-slate-50"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1">ขนาดกระดาษใบเสร็จ</label>
-            <select
-              disabled={!canManage}
-              value={paperSize}
-              onChange={(e) => setPaperSize(e.target.value as '80mm' | '58mm')}
-              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white disabled:bg-slate-50"
-            >
-              <option value="80mm">80mm</option>
-              <option value="58mm">58mm</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1">การปัดเศษเงิน (LAK)</label>
-            <select
-              disabled={!canManage}
-              value={roundingMode}
-              onChange={(e) =>
-                setRoundingMode(e.target.value as 'integer' | 'nearest_100' | 'nearest_500')
-              }
-              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white disabled:bg-slate-50"
-            >
-              <option value="integer">จำนวนเต็ม (1 ₭)</option>
-              <option value="nearest_100">ปัดหลัก 100 ₭</option>
-              <option value="nearest_500">ปัดหลัก 500 ₭</option>
-            </select>
-          </div>
-        </div>
 
-        <div>
-          <label className="block text-xs font-medium text-slate-700 mb-1">ข้อความท้ายใบเสร็จ</label>
-          <input
-            type="text"
-            disabled={!canManage}
-            maxLength={200}
-            value={footerText}
-            onChange={(e) => setFooterText(e.target.value)}
-            className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg disabled:bg-slate-50"
-          />
-        </div>
-
-        <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 space-y-3">
-          <div className="flex items-center justify-between gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <div className="text-sm font-medium text-slate-900">ตั้งค่าภาษี (ตามกฎหมายที่ยืนยัน)</div>
-              <div className="text-xs text-slate-500">
-                ระบบจะคิดภาษีเฉพาะเมื่อเปิดใช้งานและกำหนดอัตราที่ถูกต้องแล้วเท่านั้น
+              <label className="block text-xs font-medium text-slate-700 mb-1">ชื่อร้านค้า *</label>
+              <input
+                type="text"
+                required
+                disabled={!canManage}
+                maxLength={120}
+                value={storeName}
+                onChange={(e) => setStoreName(e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg disabled:bg-slate-50"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1">
+                เบอร์โทรศัพท์ร้าน
+              </label>
+              <input
+                type="text"
+                disabled={!canManage}
+                maxLength={30}
+                value={storePhone}
+                onChange={(e) => setStorePhone(e.target.value)}
+                placeholder="020-xxxx-xxxx"
+                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg disabled:bg-slate-50"
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-medium text-slate-700 mb-1">
+                ที่อยู่ร้านค้า (สำหรับหัวใบเสร็จ)
+              </label>
+              <input
+                type="text"
+                disabled={!canManage}
+                maxLength={300}
+                value={storeAddress}
+                onChange={(e) => setStoreAddress(e.target.value)}
+                placeholder="บ้าน ถนน เมือง แขวง"
+                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg disabled:bg-slate-50"
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-medium text-slate-700 mb-1">
+                URL โลโก้ร้าน (ถ้ามี)
+              </label>
+              <div className="flex items-center gap-3">
+                <input
+                  type="url"
+                  disabled={!canManage}
+                  maxLength={500}
+                  value={logoUrl}
+                  onChange={(e) => setLogoUrl(e.target.value)}
+                  placeholder="https://example.com/logo.png"
+                  className="flex-1 px-3 py-2 text-sm border border-slate-200 rounded-lg disabled:bg-slate-50"
+                />
+                {logoUrl.trim() && (
+                  <img
+                    src={logoUrl.trim()}
+                    alt="โลโก้ร้าน"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                    className="w-10 h-10 object-contain rounded border border-slate-200 bg-white shrink-0"
+                  />
+                )}
               </div>
             </div>
-            <label className="inline-flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer">
+          </div>
+        </div>
+
+        {/* Section 2: Receipt Settings */}
+        <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-4">
+          <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
+            <Printer className="w-4 h-4 text-blue-600" />
+            <h3 className="text-sm font-semibold text-slate-900">รูปแบบใบเสร็จรับเงิน</h3>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1">
+                คำนำหน้าเลขที่บิล
+              </label>
+              <input
+                type="text"
+                disabled={!canManage}
+                maxLength={10}
+                value={receiptPrefix}
+                onChange={(e) => setReceiptPrefix(e.target.value.toUpperCase())}
+                className="w-full px-3 py-2 text-sm font-mono border border-slate-200 rounded-lg disabled:bg-slate-50"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1">
+                ขนาดกระดาษเครื่องพิมพ์ความร้อน
+              </label>
+              <select
+                disabled={!canManage}
+                value={paperSize}
+                onChange={(e) => setPaperSize(e.target.value as '80mm' | '58mm')}
+                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white disabled:bg-slate-50"
+              >
+                <option value="80mm">80mm (มาตรฐาน)</option>
+                <option value="58mm">58mm (ขนาดเล็ก)</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1">
+                ข้อความหัวใบเสร็จ
+              </label>
+              <input
+                type="text"
+                disabled={!canManage}
+                maxLength={120}
+                value={headerText}
+                onChange={(e) => setHeaderText(e.target.value)}
+                placeholder="ข้อความบรรทัดบนของใบเสร็จ"
+                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg disabled:bg-slate-50"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1">
+                ข้อความท้ายใบเสร็จ
+              </label>
+              <input
+                type="text"
+                disabled={!canManage}
+                maxLength={200}
+                value={footerText}
+                onChange={(e) => setFooterText(e.target.value)}
+                placeholder="เช่น ขอบคุณที่ใช้บริการ"
+                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg disabled:bg-slate-50"
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-5 pt-1">
+            <label className="inline-flex items-center gap-2 text-xs sm:text-sm text-slate-700 cursor-pointer">
               <input
                 type="checkbox"
                 disabled={!canManage}
-                checked={taxEnabled}
-                onChange={(e) => setTaxEnabled(e.target.checked)}
+                checked={showQr}
+                onChange={(e) => setShowQr(e.target.checked)}
                 className="w-4 h-4 rounded border-slate-300 text-blue-600"
               />
-              เปิดใช้งานภาษี
+              แสดงบาร์โค้ดเลขที่บิลท้ายใบเสร็จ
+            </label>
+            <label className="inline-flex items-center gap-2 text-xs sm:text-sm text-slate-700 cursor-pointer">
+              <input
+                type="checkbox"
+                disabled={!canManage || !taxEnabled}
+                checked={taxEnabled && showTaxId}
+                onChange={(e) => setShowTaxId(e.target.checked)}
+                className="w-4 h-4 rounded border-slate-300 text-blue-600 disabled:opacity-50"
+              />
+              แสดงเลขประจำตัวผู้เสียภาษี (TIN) บนใบเสร็จ
             </label>
           </div>
-          {taxEnabled && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-              <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">อัตราภาษี (%)</label>
-                <input
-                  type="number"
-                  disabled={!canManage}
-                  min={0}
-                  max={100}
-                  step="0.01"
-                  value={taxRate}
-                  onChange={(e) => setTaxRate(e.target.value)}
-                  className="w-full px-3 py-1.5 text-sm bg-white border border-slate-200 rounded-lg tabular-nums"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
-                  เลขประจำตัวผู้เสียภาษี (TIN)
-                </label>
-                <input
-                  type="text"
-                  disabled={!canManage}
-                  maxLength={40}
-                  value={taxId}
-                  onChange={(e) => setTaxId(e.target.value)}
-                  className="w-full px-3 py-1.5 text-sm bg-white border border-slate-200 rounded-lg font-mono"
-                />
-              </div>
+        </div>
+
+        {/* Section 3: Currency & Tax */}
+        <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-4">
+          <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
+            <Coins className="w-4 h-4 text-blue-600" />
+            <h3 className="text-sm font-semibold text-slate-900">สกุลเงิน (LAK) และภาษี</h3>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1">
+                สกุลเงินหลักของระบบ
+              </label>
+              <input
+                type="text"
+                disabled
+                value="LAK (₭ · กีบลาว)"
+                className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg text-slate-600"
+              />
             </div>
-          )}
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1">
+                การปัดเศษยอดขาย (LAK)
+              </label>
+              <select
+                disabled={!canManage}
+                value={roundingMode}
+                onChange={(e) =>
+                  setRoundingMode(e.target.value as 'integer' | 'nearest_100' | 'nearest_500')
+                }
+                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white disabled:bg-slate-50"
+              >
+                <option value="integer">จำนวนเต็ม (1 ₭)</option>
+                <option value="nearest_100">ปัดหลัก 100 ₭</option>
+                <option value="nearest_500">ปัดหลัก 500 ₭</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 space-y-3">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <div className="text-sm font-medium text-slate-900">
+                  ตั้งค่าภาษี (เปิดใช้งานตามกฎหมายที่ร้านค้ายื่นจดทะเบียน)
+                </div>
+                <div className="text-xs text-slate-500">
+                  ระบบจะคำนวณภาษีเฉพาะเมื่อเปิดใช้งานและกำหนดอัตราที่ถูกต้องแล้วเท่านั้น
+                </div>
+              </div>
+              <label className="inline-flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer shrink-0">
+                <input
+                  type="checkbox"
+                  disabled={!canManage}
+                  checked={taxEnabled}
+                  onChange={(e) => setTaxEnabled(e.target.checked)}
+                  className="w-4 h-4 rounded border-slate-300 text-blue-600"
+                />
+                เปิดใช้งานภาษี
+              </label>
+            </div>
+            {taxEnabled && (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">
+                    อัตราภาษี (%)
+                  </label>
+                  <input
+                    type="number"
+                    disabled={!canManage}
+                    min={0}
+                    max={100}
+                    step="0.01"
+                    value={taxRate}
+                    onChange={(e) => setTaxRate(e.target.value)}
+                    className="w-full px-3 py-1.5 text-sm bg-white border border-slate-200 rounded-lg tabular-nums"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">
+                    รูปแบบการคิดภาษี
+                  </label>
+                  <select
+                    disabled={!canManage}
+                    value={taxInclusive ? 'inclusive' : 'exclusive'}
+                    onChange={(e) => setTaxInclusive(e.target.value === 'inclusive')}
+                    className="w-full px-3 py-1.5 text-sm bg-white border border-slate-200 rounded-lg"
+                  >
+                    <option value="exclusive">บวกเพิ่มจากราคาสินค้า (Exclusive)</option>
+                    <option value="inclusive">รวมในราคาสินค้าแล้ว (Inclusive)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">
+                    เลขประจำตัวผู้เสียภาษี (TIN)
+                  </label>
+                  <input
+                    type="text"
+                    disabled={!canManage}
+                    maxLength={40}
+                    value={taxId}
+                    onChange={(e) => setTaxId(e.target.value)}
+                    className="w-full px-3 py-1.5 text-sm bg-white border border-slate-200 rounded-lg font-mono"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Section 4: Inventory & Notifications */}
+        <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-4">
+          <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
+            <Boxes className="w-4 h-4 text-blue-600" />
+            <h3 className="text-sm font-semibold text-slate-900">นโยบายคลังสินค้าและการแจ้งเตือน</h3>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1">
+                วิธีคำนวณต้นทุนสินค้า
+              </label>
+              <input
+                type="text"
+                disabled
+                value="WAC (Weighted Average Cost · ถัวเฉลี่ยถ่วงน้ำหนัก)"
+                className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg text-slate-600"
+              />
+            </div>
+
+            <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-200">
+              <div>
+                <div className="text-xs font-semibold text-slate-900">
+                  อนุญาตให้ขายเมื่อสต็อกติดลบ
+                </div>
+                <div className="text-[11px] text-slate-500">
+                  หากปิดไว้ ระบบ POS จะป้องกันการขายเกินจำนวนคงเหลือจริง
+                </div>
+              </div>
+              <input
+                type="checkbox"
+                disabled={!canManage}
+                checked={allowNegativeStock}
+                onChange={(e) => setAllowNegativeStock(e.target.checked)}
+                className="w-4 h-4 rounded border-slate-300 text-blue-600 shrink-0 cursor-pointer"
+              />
+            </div>
+
+            <div>
+              <label className="flex items-center gap-1.5 text-xs font-medium text-slate-700 mb-1">
+                <Bell className="w-3.5 h-3.5 text-blue-600" />
+                แจ้งเตือนสินค้าใกล้หมดอายุล่วงหน้า (วัน)
+              </label>
+              <input
+                type="number"
+                disabled={!canManage}
+                min={1}
+                max={365}
+                value={expiryWarningDays}
+                onChange={(e) => setExpiryWarningDays(e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg tabular-nums disabled:bg-slate-50"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1">
+                เกณฑ์แจ้งเตือนค่าใช้จ่ายสูงผิดปกติ (%)
+              </label>
+              <input
+                type="number"
+                disabled={!canManage}
+                min={1}
+                max={500}
+                value={highExpenseThresholdPercent}
+                onChange={(e) => setHighExpenseThresholdPercent(e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg tabular-nums disabled:bg-slate-50"
+              />
+            </div>
+          </div>
         </div>
 
         {canManage && (
@@ -312,10 +584,10 @@ export function SettingsOverviewPage() {
             <button
               type="submit"
               disabled={saving}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-semibold rounded-lg transition-colors cursor-pointer"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-semibold rounded-lg transition-colors cursor-pointer"
             >
               <Save className="w-4 h-4" />
-              {saving ? 'กำลังบันทึก...' : 'บันทึกการตั้งค่า'}
+              {saving ? 'กำลังบันทึก...' : 'บันทึกการตั้งค่าทั้งหมด'}
             </button>
           </div>
         )}

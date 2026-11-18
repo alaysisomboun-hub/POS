@@ -41,6 +41,7 @@ export function ReceiptPrintModal({
   );
 
   const displayStoreName = settings?.storeProfile?.name?.trim() || storeName;
+  const logoUrl = settings?.storeProfile?.logoUrl?.trim() || '';
   const address = settings?.storeProfile?.address?.trim() || '';
   const phone = settings?.storeProfile?.phone?.trim() || '';
   const headerText = settings?.receiptSettings?.headerText?.trim() || '';
@@ -102,6 +103,16 @@ export function ReceiptPrintModal({
           >
             {/* Store Header */}
             <div className="text-center space-y-0.5 pb-2 border-b border-dashed border-slate-300">
+              {logoUrl && (
+                <img
+                  src={logoUrl}
+                  alt={displayStoreName}
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                  className="h-10 max-w-[120px] object-contain mx-auto mb-1"
+                />
+              )}
               <div className="font-bold text-sm leading-tight">{displayStoreName}</div>
               {headerText && headerText !== displayStoreName && (
                 <div className="text-[11px] text-slate-700">{headerText}</div>
