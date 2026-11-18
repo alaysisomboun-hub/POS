@@ -173,10 +173,6 @@
         "permissions": {
           "type": "object"
         },
-        "invitationId": {
-          "type": "string",
-          "maxLength": 64
-        },
         "status": {
           "type": "string",
           "enum": ["active", "suspended"]
@@ -203,89 +199,6 @@
         "status",
         "createdAt",
         "lastLoginAt"
-      ]
-    },
-    "UserInvitation": {
-      "title": "UserInvitation",
-      "description": "คำเชิญพนักงานเข้าสู่องค์กรพร้อมกำหนดบทบาทและสาขาล่วงหน้าอย่างปลอดภัย",
-      "type": "object",
-      "properties": {
-        "invitationId": {
-          "type": "string",
-          "maxLength": 64,
-          "pattern": "^[a-zA-Z0-9_\\-]+$"
-        },
-        "organizationId": {
-          "type": "string",
-          "maxLength": 64,
-          "pattern": "^[a-zA-Z0-9_\\-]+$"
-        },
-        "ownerUid": {
-          "type": "string",
-          "maxLength": 128,
-          "pattern": "^[a-zA-Z0-9_\\-]+$"
-        },
-        "email": {
-          "type": "string",
-          "maxLength": 160
-        },
-        "name": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 120
-        },
-        "role": {
-          "type": "string",
-          "enum": [
-            "super_admin",
-            "owner",
-            "branch_manager",
-            "cashier",
-            "warehouse_staff",
-            "purchasing_staff",
-            "accountant"
-          ]
-        },
-        "branchIds": {
-          "type": "array"
-        },
-        "permissions": {
-          "type": "object"
-        },
-        "status": {
-          "type": "string",
-          "enum": ["pending", "accepted", "revoked"]
-        },
-        "invitedBy": {
-          "type": "string",
-          "maxLength": 128
-        },
-        "acceptedByUid": {
-          "type": "string",
-          "maxLength": 128
-        },
-        "createdAt": {
-          "type": "string",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "format": "date-time"
-        }
-      },
-      "required": [
-        "invitationId",
-        "organizationId",
-        "ownerUid",
-        "email",
-        "name",
-        "role",
-        "branchIds",
-        "permissions",
-        "status",
-        "invitedBy",
-        "createdAt",
-        "updatedAt"
       ]
     },
     "AuditLog": {
@@ -425,10 +338,6 @@
     "/users/{uid}": {
       "schema": { "$ref": "#/entities/UserProfile" },
       "description": "บัญชีผู้ใช้งาน บทบาท และสิทธิ์ RBAC"
-    },
-    "/invitations/{invitationId}": {
-      "schema": { "$ref": "#/entities/UserInvitation" },
-      "description": "คำเชิญพนักงานเข้าใช้งานระบบ"
     },
     "/auditLogs/{auditId}": {
       "schema": { "$ref": "#/entities/AuditLog" },

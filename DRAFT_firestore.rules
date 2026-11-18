@@ -13,20 +13,8 @@ service cloud.firestore {
     }
 
     // -------------------------------------------------------------------------
-    // Global Hardened Primitives
+    // Global Hardened Primitives (Schema & Workspace Integrity without Login Gate)
     // -------------------------------------------------------------------------
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    function isVerified() {
-      return isSignedIn() && request.auth.token.email_verified == true;
-    }
-
-    function isBootstrappedSuperAdmin() {
-      return isVerified() && request.auth.token.email == 'alaysisomboun@gmail.com';
-    }
-
     function isValidId(id) {
       return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
     }
@@ -39,37 +27,6 @@ service cloud.firestore {
       return resource.data;
     }
 
-    function userExists() {
-      return exists(/databases/$(database)/documents/users/$(request.auth.uid));
-    }
-
-    function currentUserData() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
-    }
-
-    function isActiveUser() {
-      return isVerified() && userExists() && currentUserData().status == 'active';
-    }
-
-    function belongsToOrg(orgId) {
-      return isActiveUser() && currentUserData().organizationId == orgId;
-    }
-
-    function isOrgAdminOrOwner(orgId) {
-      return belongsToOrg(orgId) && (
-        currentUserData().role == 'super_admin' ||
-        currentUserData().role == 'owner'
-      );
-    }
-
-    function isOrgManagerOrAbove(orgId) {
-      return belongsToOrg(orgId) && (
-        currentUserData().role == 'super_admin' ||
-        currentUserData().role == 'owner' ||
-        currentUserData().role == 'branch_manager'
-      );
-    }
-
     function isValidRole(role) {
       return role in [
         'super_admin',
@@ -80,6 +37,10 @@ service cloud.firestore {
         'purchasing_staff',
         'accountant'
       ];
+    }
+
+    function isMainWorkspace(orgId) {
+      return orgId == 'org_main';
     }
 
     // -------------------------------------------------------------------------
@@ -141,7 +102,7 @@ service cloud.firestore {
         isValidId(data.organizationId) && data.organizationId.size() <= 64 &&
         isValidId(data.ownerUid) &&
         data.name is string && data.name.size() >= 1 && data.name.size() <= 120 &&
-        data.email is string && data.email.size() >= 3 && data.email.size() <= 160 &&
+        data.email is string && data.email.size() <= 160 &&
         data.phone is string && data.phone.size() <= 30 &&
         isValidRole(data.role) &&
         data.branchIds is list && data.branchIds.size() <= 50 &&
@@ -151,32 +112,6 @@ service cloud.firestore {
         data.status in ['active', 'suspended'] &&
         data.createdAt is timestamp &&
         data.lastLoginAt is timestamp;
-    }
-
-    function isValidInvitation(data) {
-      return data.keys().hasAll([
-          'invitationId', 'organizationId', 'ownerUid', 'email', 'name',
-          'role', 'branchIds', 'permissions', 'status', 'invitedBy', 'createdAt', 'updatedAt'
-        ]) &&
-        data.keys().hasOnly([
-          'invitationId', 'organizationId', 'ownerUid', 'email', 'name',
-          'role', 'branchIds', 'permissions', 'status', 'invitedBy', 'acceptedByUid',
-          'createdAt', 'updatedAt'
-        ]) &&
-        isValidId(data.invitationId) && data.invitationId.size() <= 64 &&
-        isValidId(data.organizationId) && data.organizationId.size() <= 64 &&
-        isValidId(data.ownerUid) &&
-        data.email is string && data.email.size() >= 3 && data.email.size() <= 160 &&
-        data.name is string && data.name.size() >= 1 && data.name.size() <= 120 &&
-        isValidRole(data.role) &&
-        data.branchIds is list && data.branchIds.size() <= 50 &&
-        (data.branchIds.size() == 0 || data.branchIds[0] is string) &&
-        data.permissions is map &&
-        data.status in ['pending', 'accepted', 'revoked'] &&
-        isValidId(data.invitedBy) &&
-        (!('acceptedByUid' in data) || isValidId(data.acceptedByUid)) &&
-        data.createdAt is timestamp &&
-        data.updatedAt is timestamp;
     }
 
     function isValidAuditLog(data) {
@@ -227,29 +162,21 @@ service cloud.firestore {
     }
 
     // -------------------------------------------------------------------------
-    // Collection Rules
+    // Collection Rules (Zero-Auth Direct Workspace with Strict Schema Validation)
     // -------------------------------------------------------------------------
 
-    // Organizations
     match /organizations/{organizationId} {
-      allow get: if isVerified() && isValidId(organizationId) && (
-        existing().ownerUid == request.auth.uid ||
-        belongsToOrg(organizationId) ||
-        isBootstrappedSuperAdmin()
-      );
-      allow list: if isVerified() && (
-        existing().ownerUid == request.auth.uid ||
-        isBootstrappedSuperAdmin()
-      );
-      allow create: if isVerified() && isValidId(organizationId) &&
+      allow get: if isValidId(organizationId) && isMainWorkspace(organizationId);
+      allow list: if isMainWorkspace(existing().organizationId);
+      allow create: if isValidId(organizationId) &&
+        isMainWorkspace(organizationId) &&
         isValidOrganization(incoming()) &&
         incoming().organizationId == organizationId &&
-        incoming().ownerUid == request.auth.uid &&
         incoming().createdAt == request.time &&
         incoming().updatedAt == request.time;
-      allow update: if isVerified() && isValidId(organizationId) &&
+      allow update: if isValidId(organizationId) &&
+        isMainWorkspace(organizationId) &&
         isValidOrganization(incoming()) &&
-        (existing().ownerUid == request.auth.uid || isOrgAdminOrOwner(organizationId) || isBootstrappedSuperAdmin()) &&
         incoming().organizationId == existing().organizationId &&
         incoming().ownerUid == existing().ownerUid &&
         incoming().createdAt == existing().createdAt &&
@@ -258,41 +185,19 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // Branches
     match /branches/{branchId} {
-      allow get: if isVerified() && isValidId(branchId) && (
-        existing().ownerUid == request.auth.uid ||
-        request.auth.uid in existing().assignedUids ||
-        belongsToOrg(existing().organizationId) ||
-        isBootstrappedSuperAdmin()
-      );
-      allow list: if isVerified() && (
-        existing().ownerUid == request.auth.uid ||
-        request.auth.uid in existing().assignedUids ||
-        isBootstrappedSuperAdmin()
-      );
-      allow create: if isVerified() && isValidId(branchId) &&
+      allow get: if isValidId(branchId) && isMainWorkspace(existing().organizationId);
+      allow list: if isMainWorkspace(existing().organizationId);
+      allow create: if isValidId(branchId) &&
         isValidBranch(incoming()) &&
+        isMainWorkspace(incoming().organizationId) &&
         incoming().branchId == branchId &&
         incoming().createdAt == request.time &&
         incoming().updatedAt == request.time &&
-        (
-          (
-            incoming().ownerUid == request.auth.uid &&
-            existsAfter(/databases/$(database)/documents/organizations/$(incoming().organizationId))
-          ) ||
-          (
-            exists(/databases/$(database)/documents/organizations/$(incoming().organizationId)) &&
-            (
-              get(/databases/$(database)/documents/organizations/$(incoming().organizationId)).data.ownerUid == request.auth.uid ||
-              isOrgAdminOrOwner(incoming().organizationId) ||
-              isBootstrappedSuperAdmin()
-            )
-          )
-        );
-      allow update: if isVerified() && isValidId(branchId) &&
+        existsAfter(/databases/$(database)/documents/organizations/$(incoming().organizationId));
+      allow update: if isValidId(branchId) &&
         isValidBranch(incoming()) &&
-        (existing().ownerUid == request.auth.uid || isOrgAdminOrOwner(existing().organizationId) || isBootstrappedSuperAdmin()) &&
+        isMainWorkspace(existing().organizationId) &&
         incoming().branchId == existing().branchId &&
         incoming().organizationId == existing().organizationId &&
         incoming().ownerUid == existing().ownerUid &&
@@ -305,189 +210,57 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // Users (Strict PII Isolation + Zero Self-Escalation)
     match /users/{uid} {
-      allow get: if isVerified() && isValidId(uid) && (
-        request.auth.uid == uid ||
-        existing().ownerUid == request.auth.uid ||
-        isOrgManagerOrAbove(existing().organizationId) ||
-        isBootstrappedSuperAdmin()
-      );
-      allow list: if isVerified() && (
-        existing().ownerUid == request.auth.uid ||
-        existing().uid == request.auth.uid ||
-        isBootstrappedSuperAdmin()
-      );
-      allow create: if isVerified() && isValidId(uid) &&
+      allow get: if isValidId(uid) && isMainWorkspace(existing().organizationId);
+      allow list: if isMainWorkspace(existing().organizationId);
+      allow create: if isValidId(uid) &&
         isValidUserProfile(incoming()) &&
+        isMainWorkspace(incoming().organizationId) &&
         incoming().uid == uid &&
-        request.auth.uid == uid &&
-        incoming().email == request.auth.token.email &&
         incoming().createdAt == request.time &&
         incoming().lastLoginAt == request.time &&
-        incoming().status == 'active' &&
-        (
-          // Path A: First store owner / bootstrapped super admin creating their org atomically
-          (
-            incoming().ownerUid == request.auth.uid &&
-            (incoming().role == 'owner' || (incoming().role == 'super_admin' && isBootstrappedSuperAdmin())) &&
-            existsAfter(/databases/$(database)/documents/organizations/$(incoming().organizationId))
-          ) ||
-          // Path B: Invited staff claiming a valid pending invitation
-          (
-            'invitationId' in incoming() &&
-            isValidId(incoming().invitationId) &&
-            exists(/databases/$(database)/documents/invitations/$(incoming().invitationId)) &&
-            get(/databases/$(database)/documents/invitations/$(incoming().invitationId)).data.status == 'pending' &&
-            get(/databases/$(database)/documents/invitations/$(incoming().invitationId)).data.email == request.auth.token.email &&
-            get(/databases/$(database)/documents/invitations/$(incoming().invitationId)).data.organizationId == incoming().organizationId &&
-            get(/databases/$(database)/documents/invitations/$(incoming().invitationId)).data.ownerUid == incoming().ownerUid &&
-            get(/databases/$(database)/documents/invitations/$(incoming().invitationId)).data.role == incoming().role &&
-            get(/databases/$(database)/documents/invitations/$(incoming().invitationId)).data.branchIds == incoming().branchIds &&
-            get(/databases/$(database)/documents/invitations/$(incoming().invitationId)).data.permissions == incoming().permissions
-          )
-        );
-      allow update: if isVerified() && isValidId(uid) &&
+        existsAfter(/databases/$(database)/documents/organizations/$(incoming().organizationId));
+      allow update: if isValidId(uid) &&
         isValidUserProfile(incoming()) &&
+        isMainWorkspace(existing().organizationId) &&
         incoming().uid == existing().uid &&
         incoming().organizationId == existing().organizationId &&
         incoming().ownerUid == existing().ownerUid &&
-        incoming().email == existing().email &&
         incoming().createdAt == existing().createdAt &&
         incoming().lastLoginAt == request.time &&
-        (
-          // Tier 1: Org Owner / Super Admin managing staff
-          (
-            (existing().ownerUid == request.auth.uid || isOrgAdminOrOwner(existing().organizationId) || isBootstrappedSuperAdmin()) &&
-            incoming().diff(existing()).affectedKeys().hasOnly([
-              'name', 'phone', 'role', 'branchIds', 'permissions', 'status', 'lastLoginAt'
-            ])
-          ) ||
-          // Tier 2: Branch Manager editing non-owner branch staff
-          (
-            isOrgManagerOrAbove(existing().organizationId) &&
-            existing().role != 'owner' &&
-            existing().role != 'super_admin' &&
-            incoming().role != 'owner' &&
-            incoming().role != 'super_admin' &&
-            incoming().diff(existing()).affectedKeys().hasOnly([
-              'name', 'phone', 'role', 'branchIds', 'permissions', 'status', 'lastLoginAt'
-            ])
-          ) ||
-          // Tier 3: Self update (only profile info + login timestamp, never role/permissions/status)
-          (
-            request.auth.uid == uid &&
-            incoming().role == existing().role &&
-            incoming().branchIds == existing().branchIds &&
-            incoming().permissions == existing().permissions &&
-            incoming().status == existing().status &&
-            incoming().diff(existing()).affectedKeys().hasOnly(['name', 'phone', 'lastLoginAt'])
-          )
-        );
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'name', 'email', 'phone', 'role', 'branchIds', 'permissions', 'status', 'lastLoginAt'
+        ]);
       allow delete: if false;
     }
 
-    // Invitations
-    match /invitations/{invitationId} {
-      allow get: if isVerified() && isValidId(invitationId) && (
-        existing().email == request.auth.token.email ||
-        existing().ownerUid == request.auth.uid ||
-        isOrgManagerOrAbove(existing().organizationId) ||
-        isBootstrappedSuperAdmin()
-      );
-      allow list: if isVerified() && (
-        existing().email == request.auth.token.email ||
-        existing().ownerUid == request.auth.uid ||
-        isBootstrappedSuperAdmin()
-      );
-      allow create: if isVerified() && isValidId(invitationId) &&
-        isValidInvitation(incoming()) &&
-        incoming().invitationId == invitationId &&
-        incoming().status == 'pending' &&
-        incoming().invitedBy == request.auth.uid &&
-        incoming().createdAt == request.time &&
-        incoming().updatedAt == request.time &&
-        exists(/databases/$(database)/documents/organizations/$(incoming().organizationId)) &&
-        (
-          get(/databases/$(database)/documents/organizations/$(incoming().organizationId)).data.ownerUid == request.auth.uid ||
-          isOrgAdminOrOwner(incoming().organizationId) ||
-          isBootstrappedSuperAdmin()
-        );
-      allow update: if isVerified() && isValidId(invitationId) &&
-        isValidInvitation(incoming()) &&
-        incoming().invitationId == existing().invitationId &&
-        incoming().organizationId == existing().organizationId &&
-        incoming().ownerUid == existing().ownerUid &&
-        incoming().email == existing().email &&
-        incoming().invitedBy == existing().invitedBy &&
-        incoming().createdAt == existing().createdAt &&
-        incoming().updatedAt == request.time &&
-        (
-          // Action: Accept invitation by matching verified user
-          (
-            existing().status == 'pending' &&
-            existing().email == request.auth.token.email &&
-            incoming().status == 'accepted' &&
-            incoming().acceptedByUid == request.auth.uid &&
-            incoming().diff(existing()).affectedKeys().hasOnly(['status', 'acceptedByUid', 'updatedAt'])
-          ) ||
-          // Action: Admin updates or revokes invitation
-          (
-            (existing().ownerUid == request.auth.uid || isOrgAdminOrOwner(existing().organizationId) || isBootstrappedSuperAdmin()) &&
-            incoming().diff(existing()).affectedKeys().hasOnly(['name', 'role', 'branchIds', 'permissions', 'status', 'updatedAt'])
-          )
-        );
-      allow delete: if false;
-    }
-
-    // Audit Logs (Strictly Append-Only)
     match /auditLogs/{auditId} {
-      allow get: if isVerified() && isValidId(auditId) && (
-        existing().ownerUid == request.auth.uid ||
-        existing().userId == request.auth.uid ||
-        isOrgManagerOrAbove(existing().organizationId) ||
-        isBootstrappedSuperAdmin()
-      );
-      allow list: if isVerified() && (
-        existing().ownerUid == request.auth.uid ||
-        existing().userId == request.auth.uid ||
-        isBootstrappedSuperAdmin()
-      );
-      allow create: if isVerified() && isValidId(auditId) &&
+      allow get: if isValidId(auditId) && isMainWorkspace(existing().organizationId);
+      allow list: if isMainWorkspace(existing().organizationId);
+      allow create: if isValidId(auditId) &&
         isValidAuditLog(incoming()) &&
+        isMainWorkspace(incoming().organizationId) &&
         incoming().auditId == auditId &&
-        incoming().userId == request.auth.uid &&
         incoming().createdAt == request.time &&
         existsAfter(/databases/$(database)/documents/organizations/$(incoming().organizationId));
       allow update, delete: if false;
     }
 
-    // System Settings
     match /settings/{organizationId} {
-      allow get: if isVerified() && isValidId(organizationId) && (
-        existing().ownerUid == request.auth.uid ||
-        belongsToOrg(organizationId) ||
-        isBootstrappedSuperAdmin()
-      );
+      allow get: if isValidId(organizationId) && isMainWorkspace(organizationId);
       allow list: if false;
-      allow create: if isVerified() && isValidId(organizationId) &&
+      allow create: if isValidId(organizationId) &&
+        isMainWorkspace(organizationId) &&
         isValidSetting(incoming()) &&
         incoming().organizationId == organizationId &&
         incoming().updatedAt == request.time &&
-        (
-          (
-            incoming().ownerUid == request.auth.uid &&
-            existsAfter(/databases/$(database)/documents/organizations/$(organizationId))
-          ) ||
-          isOrgAdminOrOwner(organizationId) ||
-          isBootstrappedSuperAdmin()
-        );
-      allow update: if isVerified() && isValidId(organizationId) &&
+        existsAfter(/databases/$(database)/documents/organizations/$(organizationId));
+      allow update: if isValidId(organizationId) &&
+        isMainWorkspace(organizationId) &&
         isValidSetting(incoming()) &&
         incoming().organizationId == existing().organizationId &&
         incoming().ownerUid == existing().ownerUid &&
         incoming().updatedAt == request.time &&
-        (existing().ownerUid == request.auth.uid || isOrgAdminOrOwner(organizationId) || isBootstrappedSuperAdmin()) &&
         incoming().diff(existing()).affectedKeys().hasOnly([
           'storeProfile', 'receiptSettings', 'taxSettings',
           'currencySettings', 'notificationSettings', 'inventorySettings', 'updatedAt'

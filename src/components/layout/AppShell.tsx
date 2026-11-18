@@ -11,7 +11,6 @@ import {
   FileSpreadsheet,
   FolderTree,
   LayoutDashboard,
-  LogOut,
   Menu,
   Package,
   PackageMinus,
@@ -74,7 +73,6 @@ export function AppShell({ activeModule, onSelectModule, children }: AppShellPro
     branches,
     activeBranch,
     setActiveBranchId,
-    signOut,
   } = useFirebase();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -85,7 +83,7 @@ export function AppShell({ activeModule, onSelectModule, children }: AppShellPro
       const found = g.items.find((i) => i.key === activeModule);
       if (found) return found.label;
     }
-    return 'ระบบบริหารร้านค้า';
+    return 'Dashboard';
   }, [menuGroups, activeModule]);
 
   const handleNavClick = (key: ModuleKey) => {
@@ -214,15 +212,6 @@ export function AppShell({ activeModule, onSelectModule, children }: AppShellPro
                 </select>
               </div>
             )}
-
-            <button
-              type="button"
-              onClick={signOut}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
-            >
-              <LogOut className="w-4 h-4 text-slate-500" />
-              <span className="hidden sm:inline">ออกจากระบบ</span>
-            </button>
           </div>
         </header>
 

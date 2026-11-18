@@ -10,7 +10,7 @@ import {
   where,
   writeBatch,
 } from 'firebase/firestore';
-import { Edit3, History, MailPlus, Search, Shield, UserPlus, X } from 'lucide-react';
+import { Edit3, History, Search, Shield, UserPlus, X } from 'lucide-react';
 import { db } from '../../core/firebase/config';
 import { OperationType, handleFirestoreError } from '../../core/firebase/errorHandler';
 import { useFirebase } from '../../core/firebase/FirebaseProvider';
@@ -30,24 +30,22 @@ import type {
   ModuleKey,
   PermissionAction,
   PermissionsMap,
-  UserInvitation,
   UserProfile,
   UserRole,
 } from '../../core/firebase/types';
 
-type TabKey = 'staff' | 'invitations' | 'audit';
+type TabKey = 'staff' | 'audit';
 
 export function StaffManagementPage() {
   const { userProfile, branches } = useFirebase();
   const [activeTab, setActiveTab] = useState<TabKey>('staff');
   const [staffList, setStaffList] = useState<UserProfile[]>([]);
-  const [invitations, setInvitations] = useState<UserInvitation[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [auditLimit, setAuditLimit] = useState(25);
   const [search, setSearch] = useState('');
 
-  // Modal state for Invite or Edit Staff
-  const [modalMode, setModalMode] = useState<'invite' | 'edit_staff' | null>(null);
+  // Modal state for Create or Edit Staff
+  const [modalMode, setModalMode] = useState<'create_staff' | 'edit_staff' | null>(null);
   const [editingStaff, setEditingStaff] = useState<UserProfile | null>(null);
   const [formEmail, setFormEmail] = useState('');
   const [formName, setFormName] = useState('');
@@ -78,22 +76,8 @@ export function StaffManagementPage() {
       (error) => handleFirestoreError(error, OperationType.LIST, 'users'),
     );
 
-    const invQ = query(
-      collection(db, 'invitations'),
-      where('organizationId', '==', orgId),
-      orderBy('createdAt', 'desc'),
-    );
-    const unsubInv = onSnapshot(
-      invQ,
-      (snap) => {
-        setInvitations(snap.docs.map((d) => d.data() as UserInvitation));
-      },
-      (error) => handleFirestoreError(error, OperationType.LIST, 'invitations'),
-    );
-
     return () => {
       unsubUsers();
-      unsubInv();
     };
   }, [userProfile]);
 
@@ -128,11 +112,12 @@ export function StaffManagementPage() {
       (s) =>
         s.name.toLowerCase().includes(q) ||
         s.email.toLowerCase().includes(q) ||
+        s.phone.toLowerCase().includes(q) ||
         ROLE_LABELS[s.role].toLowerCase().includes(q),
     );
   }, [staffList, search]);
 
-  const openInviteModal = () => {
+  const openCreateStaffModal = () => {
     setEditingStaff(null);
     setFormEmail('');
     setFormName('');
@@ -143,7 +128,7 @@ export function StaffManagementPage() {
     setFormPermissions(structuredClone(DEFAULT_ROLE_PERMISSIONS.cashier));
     setShowPermissionMatrix(false);
     setErrorMsg(null);
-    setModalMode('invite');
+    setModalMode('create_staff');
   };
 
   const openEditStaffModal = (staff: UserProfile) => {
@@ -186,7 +171,7 @@ export function StaffManagementPage() {
     });
   };
 
-  const handleSaveInviteOrStaff = async (e: React.FormEvent) => {
+  const handleSaveStaff = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!userProfile) return;
 
@@ -201,41 +186,36 @@ export function StaffManagementPage() {
     try {
       const batch = writeBatch(db);
 
-      if (modalMode === 'invite') {
-        const cleanEmail = formEmail.trim().toLowerCase();
-        if (!cleanEmail || !cleanEmail.includes('@')) {
-          setErrorMsg('กรุณากรอกอีเมล Google ที่ถูกต้อง');
-          setSaving(false);
-          return;
-        }
-        const invitationId = generateSafeId('inv');
-        batch.set(doc(db, 'invitations', invitationId), {
-          invitationId,
+      if (modalMode === 'create_staff') {
+        const uid = generateSafeId('usr');
+        batch.set(doc(db, 'users', uid), {
+          uid,
           organizationId: userProfile.organizationId,
           ownerUid: userProfile.ownerUid,
-          email: cleanEmail.slice(0, 160),
           name: formName.trim().slice(0, 120),
+          email: formEmail.trim().toLowerCase().slice(0, 160),
+          phone: formPhone.trim().slice(0, 30),
           role: formRole,
           branchIds: formBranchIds,
           permissions: formPermissions,
-          status: 'pending',
-          invitedBy: userProfile.uid,
+          status: formStatus,
           createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
+          lastLoginAt: serverTimestamp(),
         });
 
         appendAuditLogToBatch(batch, {
           user: userProfile,
           branchId: formBranchIds[0] ?? null,
-          action: 'CREATE_INVITATION',
-          entityType: 'invitations',
-          entityId: invitationId,
+          action: 'CREATE_STAFF',
+          entityType: 'users',
+          entityId: uid,
           before: null,
-          after: { email: cleanEmail, role: formRole, branchIds: formBranchIds },
+          after: { name: formName.trim(), role: formRole, branchIds: formBranchIds },
         });
       } else if (modalMode === 'edit_staff' && editingStaff) {
         batch.update(doc(db, 'users', editingStaff.uid), {
           name: formName.trim().slice(0, 120),
+          email: formEmail.trim().toLowerCase().slice(0, 160),
           phone: formPhone.trim().slice(0, 30),
           role: formRole,
           branchIds: formBranchIds,
@@ -267,39 +247,12 @@ export function StaffManagementPage() {
       setModalMode(null);
     } catch (error) {
       try {
-        handleFirestoreError(
-          error,
-          OperationType.WRITE,
-          modalMode === 'invite' ? 'invitations' : 'users',
-        );
+        handleFirestoreError(error, OperationType.WRITE, 'users');
       } catch (err) {
-        setErrorMsg(err instanceof Error ? err.message : 'ไม่สามารถบันทึกข้อมูลได้');
+        setErrorMsg(err instanceof Error ? err.message : 'ไม่สามารถบันทึกข้อมูลพนักงานได้');
       }
     } finally {
       setSaving(false);
-    }
-  };
-
-  const handleRevokeInvitation = async (inv: UserInvitation) => {
-    if (!userProfile) return;
-    try {
-      const batch = writeBatch(db);
-      batch.update(doc(db, 'invitations', inv.invitationId), {
-        status: 'revoked',
-        updatedAt: serverTimestamp(),
-      });
-      appendAuditLogToBatch(batch, {
-        user: userProfile,
-        branchId: inv.branchIds[0] ?? null,
-        action: 'REVOKE_INVITATION',
-        entityType: 'invitations',
-        entityId: inv.invitationId,
-        before: { status: inv.status },
-        after: { status: 'revoked' },
-      });
-      await batch.commit();
-    } catch (error) {
-      handleFirestoreError(error, OperationType.UPDATE, `invitations/${inv.invitationId}`);
     }
   };
 
@@ -318,17 +271,6 @@ export function StaffManagementPage() {
             }`}
           >
             พนักงาน ({staffList.length})
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('invitations')}
-            className={`px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-colors whitespace-nowrap cursor-pointer ${
-              activeTab === 'invitations'
-                ? 'bg-white text-slate-900 shadow-xs'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            คำเชิญ ({invitations.filter((i) => i.status === 'pending').length})
           </button>
           <button
             type="button"
@@ -352,7 +294,7 @@ export function StaffManagementPage() {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="ค้นหาชื่อ อีเมล บทบาท..."
+                placeholder="ค้นหาชื่อ เบอร์โทร บทบาท..."
                 className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-blue-600"
               />
             </div>
@@ -360,11 +302,11 @@ export function StaffManagementPage() {
           {canCreate && (
             <button
               type="button"
-              onClick={openInviteModal}
+              onClick={openCreateStaffModal}
               className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer"
             >
               <UserPlus className="w-4 h-4" />
-              เชิญพนักงาน
+              เพิ่มพนักงาน
             </button>
           )}
         </div>
@@ -381,7 +323,7 @@ export function StaffManagementPage() {
                   <th className="py-3 px-4">บทบาท (Role)</th>
                   <th className="py-3 px-4">สาขาที่รับผิดชอบ</th>
                   <th className="py-3 px-4">สถานะ</th>
-                  <th className="py-3 px-4">เข้าใช้งานล่าสุด</th>
+                  <th className="py-3 px-4">อัปเดตล่าสุด</th>
                   <th className="py-3 px-4 text-right">จัดการ</th>
                 </tr>
               </thead>
@@ -391,7 +333,7 @@ export function StaffManagementPage() {
                     <td className="py-3 px-4">
                       <div className="font-medium text-slate-900">{staff.name}</div>
                       <div className="text-xs text-slate-500">
-                        {staff.email} {staff.phone ? `· ${staff.phone}` : ''}
+                        {staff.phone || '-'} {staff.email ? `· ${staff.email}` : ''}
                       </div>
                     </td>
                     <td className="py-3 px-4 text-xs font-medium text-blue-700">
@@ -415,7 +357,7 @@ export function StaffManagementPage() {
                       {formatDateTimeVientiane(staff.lastLoginAt)}
                     </td>
                     <td className="py-3 px-4 text-right">
-                      {canEdit && staff.uid !== userProfile?.ownerUid && (
+                      {canEdit && (
                         <button
                           type="button"
                           onClick={() => openEditStaffModal(staff)}
@@ -438,7 +380,9 @@ export function StaffManagementPage() {
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <div className="font-semibold text-slate-900">{staff.name}</div>
-                    <div className="text-xs text-slate-500">{staff.email}</div>
+                    <div className="text-xs text-slate-500">
+                      {staff.phone || '-'} {staff.email ? `· ${staff.email}` : ''}
+                    </div>
                   </div>
                   <span
                     className={`text-xs font-medium ${
@@ -451,7 +395,7 @@ export function StaffManagementPage() {
                 <div className="text-xs font-medium text-blue-700">{ROLE_LABELS[staff.role]}</div>
                 <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs text-slate-500">
                   <span className="tabular-nums">{formatDateTimeVientiane(staff.lastLoginAt)}</span>
-                  {canEdit && staff.uid !== userProfile?.ownerUid && (
+                  {canEdit && (
                     <button
                       type="button"
                       onClick={() => openEditStaffModal(staff)}
@@ -465,58 +409,6 @@ export function StaffManagementPage() {
             ))}
           </div>
         </>
-      )}
-
-      {/* Invitations Tab */}
-      {activeTab === 'invitations' && (
-        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-          <div className="divide-y divide-slate-100">
-            {invitations.map((inv) => (
-              <div
-                key={inv.invitationId}
-                className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
-              >
-                <div>
-                  <div className="font-medium text-sm text-slate-900">
-                    {inv.name} · <span className="text-slate-600">{inv.email}</span>
-                  </div>
-                  <div className="text-xs text-slate-500 mt-0.5">
-                    {ROLE_LABELS[inv.role]} · สถานะ:{' '}
-                    <span
-                      className={
-                        inv.status === 'pending'
-                          ? 'text-amber-700 font-medium'
-                          : inv.status === 'accepted'
-                            ? 'text-green-700 font-medium'
-                            : 'text-slate-500'
-                      }
-                    >
-                      {inv.status === 'pending'
-                        ? 'รอพนักงานเข้าสู่ระบบด้วย Google'
-                        : inv.status === 'accepted'
-                          ? 'ตอบรับแล้ว'
-                          : 'ยกเลิกแล้ว'}
-                    </span>
-                  </div>
-                </div>
-                {inv.status === 'pending' && canEdit && (
-                  <button
-                    type="button"
-                    onClick={() => handleRevokeInvitation(inv)}
-                    className="px-3 py-1.5 text-xs font-medium text-red-600 border border-red-200 rounded-lg hover:bg-red-50 self-start sm:self-center cursor-pointer"
-                  >
-                    ยกเลิกคำเชิญ
-                  </button>
-                )}
-              </div>
-            ))}
-            {invitations.length === 0 && (
-              <div className="p-8 text-center text-sm text-slate-500">
-                ยังไม่มีประวัติคำเชิญพนักงาน กดปุ่ม &ldquo;เชิญพนักงาน&rdquo; เพื่อเพิ่มบัญชีใหม่
-              </div>
-            )}
-          </div>
-        </div>
       )}
 
       {/* Audit Log Tab */}
@@ -573,17 +465,17 @@ export function StaffManagementPage() {
         </div>
       )}
 
-      {/* Invite / Edit Modal */}
+      {/* Create / Edit Staff Modal */}
       {modalMode && (
         <div className="fixed inset-0 z-50 bg-slate-900/40 flex items-center justify-center p-4 overflow-y-auto">
           <div className="w-full max-w-2xl bg-white border border-slate-200 rounded-xl p-6 my-8">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
               <div className="flex items-center gap-2">
-                <MailPlus className="w-5 h-5 text-blue-600" />
+                <UserPlus className="w-5 h-5 text-blue-600" />
                 <h3 className="text-base font-semibold text-slate-900">
-                  {modalMode === 'invite'
-                    ? 'เชิญพนักงานเข้าใช้งานระบบ'
-                    : 'แก้ไขบทบาทและสิทธิ์พนักงาน'}
+                  {modalMode === 'create_staff'
+                    ? 'เพิ่มพนักงานใหม่'
+                    : 'แก้ไขข้อมูลและสิทธิ์พนักงาน'}
                 </h3>
               </div>
               <button
@@ -601,22 +493,8 @@ export function StaffManagementPage() {
               </div>
             )}
 
-            <form onSubmit={handleSaveInviteOrStaff} className="space-y-4">
+            <form onSubmit={handleSaveStaff} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
-                    อีเมล Google ของพนักงาน *
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    disabled={modalMode === 'edit_staff'}
-                    value={formEmail}
-                    onChange={(e) => setFormEmail(e.target.value)}
-                    placeholder="staff@gmail.com"
-                    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg disabled:bg-slate-50"
-                  />
-                </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1">
                     ชื่อ-นามสกุล *
@@ -632,6 +510,31 @@ export function StaffManagementPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1">
+                    เบอร์โทรศัพท์
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={30}
+                    value={formPhone}
+                    onChange={(e) => setFormPhone(e.target.value)}
+                    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">
+                    อีเมล (ถ้ามี)
+                  </label>
+                  <input
+                    type="email"
+                    maxLength={160}
+                    value={formEmail}
+                    onChange={(e) => setFormEmail(e.target.value)}
+                    placeholder="staff@store.com"
+                    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">
                     บทบาท (Role) *
                   </label>
                   <select
@@ -639,37 +542,29 @@ export function StaffManagementPage() {
                     onChange={(e) => handleRoleSelect(e.target.value as UserRole)}
                     className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white"
                   >
-                    {(Object.keys(ROLE_LABELS) as UserRole[])
-                      .filter((r) => r !== 'super_admin' || userProfile?.role === 'super_admin')
-                      .map((role) => (
-                        <option key={role} value={role}>
-                          {ROLE_LABELS[role]}
-                        </option>
-                      ))}
+                    {(Object.keys(ROLE_LABELS) as UserRole[]).map((role) => (
+                      <option key={role} value={role}>
+                        {ROLE_LABELS[role]}
+                      </option>
+                    ))}
                   </select>
                 </div>
-                {modalMode === 'edit_staff' ? (
-                  <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1">สถานะบัญชี</label>
-                    <select
-                      value={formStatus}
-                      onChange={(e) => setFormStatus(e.target.value as 'active' | 'suspended')}
-                      className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white"
-                    >
-                      <option value="active">ใช้งานปกติ</option>
-                      <option value="suspended">ระงับสิทธิ์</option>
-                    </select>
-                  </div>
-                ) : (
-                  <div className="text-xs text-slate-500 flex items-end pb-2">
-                    พนักงานจะเข้าสู่ระบบด้วยอีเมล Google นี้เพื่อรับสิทธิ์อัตโนมัติ
-                  </div>
-                )}
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">สถานะบัญชี</label>
+                  <select
+                    value={formStatus}
+                    onChange={(e) => setFormStatus(e.target.value as 'active' | 'suspended')}
+                    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white"
+                  >
+                    <option value="active">ใช้งานปกติ</option>
+                    <option value="suspended">ระงับสิทธิ์</option>
+                  </select>
+                </div>
               </div>
 
               <div>
                 <label className="block text-xs font-medium text-slate-700 mb-1.5">
-                  สาขาที่อนุญาตให้เข้าถึง *
+                  สาขาที่รับผิดชอบ *
                 </label>
                 <div className="flex flex-wrap gap-2">
                   {branches.map((b) => {
