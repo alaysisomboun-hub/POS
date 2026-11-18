@@ -445,6 +445,7 @@ export function BackupRestorePage() {
             'minStockBaseQty',
             'reorderQtyBaseQty',
             'taxable',
+            'imageUrl',
             'notes',
             'status',
           ],

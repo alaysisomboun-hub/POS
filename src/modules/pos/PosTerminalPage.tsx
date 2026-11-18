@@ -28,6 +28,7 @@ import { useFirebase } from '../../core/firebase/FirebaseProvider';
 import { hasPermission } from '../../core/rbac/permissions';
 import { formatDateTimeVientiane } from '../../core/utils/date';
 import { formatLak } from '../../core/utils/money';
+import { BarcodeQrScannerModal } from '../../components/scanner/BarcodeQrScannerModal';
 import { ReceiptPrintModal } from './ReceiptPrintModal';
 import {
   computeBillTotals,
@@ -114,6 +115,7 @@ export function PosTerminalPage() {
 
   // Completed Receipt Modal
   const [completedSale, setCompletedSale] = useState<SaleOrder | null>(null);
+  const [posScannerOpen, setPosScannerOpen] = useState(false);
 
   const canCreateSale = hasPermission(userProfile, 'pos', 'create');
   const canEditPrice = hasPermission(userProfile, 'pos', 'edit');
@@ -381,19 +383,17 @@ export function PosTerminalPage() {
     });
   };
 
-  const handleBarcodeSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const raw = searchText.trim();
-    if (!raw) return;
+  const tryAddScannedCodeToCart = (rawCode: string, allowSingleFilteredFallback = false): boolean => {
+    const raw = rawCode.trim();
+    if (!raw) return false;
     const lower = raw.toLowerCase();
 
-    // 1. Exact unit barcode match
     for (const prod of products) {
       const matchedUnit = prod.units.find((u) => u.barcode.trim().toLowerCase() === lower);
       if (matchedUnit) {
         addProductUnitToCart(prod, matchedUnit);
         setSearchText('');
-        return;
+        return true;
       }
       if (
         prod.barcode.trim().toLowerCase() === lower ||
@@ -404,19 +404,18 @@ export function PosTerminalPage() {
         if (baseUnit) {
           addProductUnitToCart(prod, baseUnit);
           setSearchText('');
-          return;
+          return true;
         }
       }
     }
 
-    // 2. Single filtered match fallback on Enter
-    if (filteredProducts.length === 1) {
+    if (allowSingleFilteredFallback && filteredProducts.length === 1) {
       const prod = filteredProducts[0];
       const baseUnit = prod.units.find((u) => u.isBaseUnit) ?? prod.units[0];
       if (baseUnit) {
         addProductUnitToCart(prod, baseUnit);
         setSearchText('');
-        return;
+        return true;
       }
     }
 
@@ -424,6 +423,12 @@ export function PosTerminalPage() {
       type: 'err',
       text: `ไม่พบสินค้าที่ตรงกับรหัส/บาร์โค้ด "${raw}"`,
     });
+    return false;
+  };
+
+  const handleBarcodeSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    tryAddScannedCodeToCart(searchText, true);
   };
 
   const updateCartQty = (lineKey: string, nextQty: number) => {
@@ -720,6 +725,15 @@ export function PosTerminalPage() {
                   />
                 </div>
                 <button
+                  type="button"
+                  onClick={() => setPosScannerOpen(true)}
+                  className="px-3 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg whitespace-nowrap inline-flex items-center gap-1.5 cursor-pointer"
+                  title="สแกนบาร์โค้ด / QR ด้วยกล้อง"
+                >
+                  <QrCode className="w-4 h-4" />
+                  สแกนกล้อง
+                </button>
+                <button
                   type="submit"
                   className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg whitespace-nowrap cursor-pointer"
                 >
@@ -801,30 +815,41 @@ export function PosTerminalPage() {
                     onClick={() => baseUnit && addProductUnitToCart(prod, baseUnit)}
                     className="text-left space-y-1 cursor-pointer group"
                   >
-                    <div className="flex items-start justify-between gap-2">
-                      <span className="text-xs font-mono text-slate-400 truncate">
-                        {prod.sku}
-                      </span>
-                      <span
-                        className={`text-[11px] font-semibold tabular-nums shrink-0 ${
-                          isOut
-                            ? 'text-red-600'
-                            : isLow
-                              ? 'text-amber-600'
-                              : 'text-slate-500'
-                        }`}
-                      >
-                        คงเหลือ {qtyOnHand.toLocaleString('en-US')} {prod.baseUnitName}
-                      </span>
-                    </div>
-                    <div className="text-sm font-semibold text-slate-900 group-hover:text-blue-700 line-clamp-2 leading-snug">
-                      {prod.name}
-                    </div>
-                    <div className="text-base font-bold text-blue-700 tabular-nums pt-0.5">
-                      {formatLak(displayPrice)}{' '}
-                      <span className="text-xs font-normal text-slate-500">
-                        / {baseUnit?.unitName ?? prod.baseUnitName}
-                      </span>
+                    <div className="flex items-start gap-2.5">
+                      {prod.imageUrl && (
+                        <img
+                          src={prod.imageUrl}
+                          alt={prod.name}
+                          className="w-11 h-11 rounded-lg object-cover border border-slate-200 shrink-0 bg-slate-50"
+                        />
+                      )}
+                      <div className="min-w-0 flex-1 space-y-1">
+                        <div className="flex items-start justify-between gap-2">
+                          <span className="text-xs font-mono text-slate-400 truncate">
+                            {prod.sku}
+                          </span>
+                          <span
+                            className={`text-[11px] font-semibold tabular-nums shrink-0 ${
+                              isOut
+                                ? 'text-red-600'
+                                : isLow
+                                  ? 'text-amber-600'
+                                  : 'text-slate-500'
+                            }`}
+                          >
+                            คงเหลือ {qtyOnHand.toLocaleString('en-US')} {prod.baseUnitName}
+                          </span>
+                        </div>
+                        <div className="text-sm font-semibold text-slate-900 group-hover:text-blue-700 line-clamp-2 leading-snug">
+                          {prod.name}
+                        </div>
+                        <div className="text-base font-bold text-blue-700 tabular-nums pt-0.5">
+                          {formatLak(displayPrice)}{' '}
+                          <span className="text-xs font-normal text-slate-500">
+                            / {baseUnit?.unitName ?? prod.baseUnitName}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </button>
 
@@ -1509,6 +1534,18 @@ export function PosTerminalPage() {
           settings={settings}
           storeName={organization?.name ?? 'Grocery POS'}
           onClose={() => setCompletedSale(null)}
+        />
+      )}
+
+      {posScannerOpen && (
+        <BarcodeQrScannerModal
+          title="สแกนบาร์โค้ด / QR Code เพื่อขายสินค้า"
+          subtitle="สแกนรหัสสินค้าเพื่อเพิ่มลงตะกร้าขายหน้าร้านทันที"
+          onDetected={(code) => {
+            setPosScannerOpen(false);
+            tryAddScannedCodeToCart(code, false);
+          }}
+          onClose={() => setPosScannerOpen(false)}
         />
       )}
     </div>

@@ -222,6 +222,7 @@ export interface Product {
   minStockBaseQty: number;
   reorderQtyBaseQty: number;
   taxable: boolean;
+  imageUrl?: string;
   notes: string;
   status: 'active' | 'inactive';
   createdAt: Timestamp;

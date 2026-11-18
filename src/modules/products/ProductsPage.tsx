@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   collection,
   doc,
@@ -10,9 +10,13 @@ import {
 } from 'firebase/firestore';
 import {
   Barcode,
+  CheckCircle2,
   Edit3,
+  ImagePlus,
+  Package,
   PackagePlus,
   Plus,
+  QrCode,
   Search,
   Trash2,
   Wand2,
@@ -25,7 +29,9 @@ import { appendAuditLogToBatch } from '../../core/firebase/auditService';
 import { hasPermission } from '../../core/rbac/permissions';
 import { generateEan13InternalBarcode, generateSkuCode } from '../../core/utils/barcode';
 import { generateSafeId } from '../../core/utils/id';
+import { compressProductImageFile } from '../../core/utils/image';
 import { formatLak } from '../../core/utils/money';
+import { BarcodeQrScannerModal } from '../../components/scanner/BarcodeQrScannerModal';
 import { formatMultiUnitBreakdown } from '../inventory/stockService';
 import { BarcodeLabelModal } from './BarcodeLabelModal';
 import type {
@@ -49,6 +55,14 @@ export function ProductsPage() {
   const [statusFilter, setStatusFilter] = useState<'active' | 'inactive' | 'all'>('active');
 
   const [labelProduct, setLabelProduct] = useState<Product | null>(null);
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [unitScanIndex, setUnitScanIndex] = useState<number | null>(null);
+  const [scanNotice, setScanNotice] = useState<{
+    type: 'new' | 'existing';
+    code: string;
+    message: string;
+  } | null>(null);
+  const nameInputRef = useRef<HTMLInputElement | null>(null);
 
   // Add / Edit Product Modal State
   const [modalOpen, setModalOpen] = useState(false);
@@ -65,6 +79,9 @@ export function ProductsPage() {
   const [openingStockQty, setOpeningStockQty] = useState('0');
   const [openingLotNumber, setOpeningLotNumber] = useState('');
   const [openingExpiryDate, setOpeningExpiryDate] = useState('');
+  const [editStockQty, setEditStockQty] = useState('0');
+  const [imageUrl, setImageUrl] = useState('');
+  const [imageUploading, setImageUploading] = useState(false);
   const [trackExpiry, setTrackExpiry] = useState(false);
   const [taxable, setTaxable] = useState(false);
   const [notes, setNotes] = useState('');
@@ -176,7 +193,7 @@ export function ProductsPage() {
     });
   }, [products, search, categoryFilter, statusFilter]);
 
-  const openCreateModal = () => {
+  const openCreateModal = (scannedBarcode?: string) => {
     setEditingProduct(null);
     setSku(generateSkuCode('PRD'));
     setName('');
@@ -190,6 +207,8 @@ export function ProductsPage() {
     setOpeningStockQty('0');
     setOpeningLotNumber('');
     setOpeningExpiryDate('');
+    setEditStockQty('0');
+    setImageUrl('');
     setTrackExpiry(false);
     setTaxable(false);
     setNotes('');
@@ -199,18 +218,22 @@ export function ProductsPage() {
         unitId: generateSafeId('unt'),
         unitName: 'ชิ้น',
         conversionFactor: 1,
-        barcode: generateEan13InternalBarcode(),
+        barcode: scannedBarcode ? scannedBarcode.trim().slice(0, 64) : generateEan13InternalBarcode(),
         retailPrice: 0,
         wholesalePrice: 0,
         memberPrice: 0,
         isBaseUnit: true,
       },
     ]);
+    if (!scannedBarcode) {
+      setScanNotice(null);
+    }
     setErrorMsg(null);
     setModalOpen(true);
+    setTimeout(() => nameInputRef.current?.focus(), 120);
   };
 
-  const openEditModal = (prod: Product) => {
+  const openEditModal = (prod: Product, fromScan = false) => {
     setEditingProduct(prod);
     setSku(prod.sku);
     setName(prod.name);
@@ -224,14 +247,122 @@ export function ProductsPage() {
     setOpeningStockQty('0');
     setOpeningLotNumber('');
     setOpeningExpiryDate('');
+    const currentBal = balances.get(prod.productId)?.qtyOnHandBase ?? 0;
+    setEditStockQty(String(currentBal));
+    setImageUrl(prod.imageUrl || '');
     setTrackExpiry(prod.trackExpiry);
     setTaxable(prod.taxable);
     setNotes(prod.notes || '');
     setStatus(prod.status);
     setUnits(structuredClone(prod.units));
+    if (!fromScan) {
+      setScanNotice(null);
+    }
     setErrorMsg(null);
     setModalOpen(true);
   };
+
+  const findProductByCode = (rawCode: string): Product | undefined => {
+    const lower = rawCode.trim().toLowerCase();
+    if (!lower) return undefined;
+    return products.find(
+      (p) =>
+        p.barcode.trim().toLowerCase() === lower ||
+        p.sku.trim().toLowerCase() === lower ||
+        p.barcodes.some((b) => b.trim().toLowerCase() === lower) ||
+        p.units.some((u) => u.barcode.trim().toLowerCase() === lower),
+    );
+  };
+
+  const handleScannedCode = (rawCode: string) => {
+    const cleanCode = rawCode.trim().slice(0, 64);
+    if (!cleanCode) return;
+    setScannerOpen(false);
+
+    const existing = findProductByCode(cleanCode);
+    if (existing) {
+      if (!canEdit) {
+        setSearch(cleanCode);
+        setScanNotice({
+          type: 'existing',
+          code: cleanCode,
+          message: `พบสินค้า "${existing.name}" (รหัส ${cleanCode}) ในระบบ`,
+        });
+        return;
+      }
+      setScanNotice({
+        type: 'existing',
+        code: cleanCode,
+        message: `พบรหัสสินค้า "${cleanCode}" ในระบบแล้ว (${existing.name}) — สามารถแก้ไขรายละเอียดหรือจำนวนสต็อกได้ทันที`,
+      });
+      openEditModal(existing, true);
+      return;
+    }
+
+    if (!canCreate) {
+      setErrorMsg(`ไม่พบรหัส "${cleanCode}" ในระบบ และบัญชีนี้ไม่มีสิทธิ์เพิ่มสินค้าใหม่`);
+      return;
+    }
+
+    setScanNotice({
+      type: 'new',
+      code: cleanCode,
+      message: `สแกนรหัสสินค้าใหม่สำเร็จ: ${cleanCode} — กรุณากรอกข้อมูลสินค้าเพิ่มเติมแล้วกดบันทึก`,
+    });
+    openCreateModal(cleanCode);
+  };
+
+  // Global USB / Bluetooth HID barcode scanner listener when browsing ProductsPage
+  useEffect(() => {
+    if (modalOpen || scannerOpen || Boolean(labelProduct)) return;
+
+    let buffer = '';
+    let lastTime = 0;
+    let fastKeystrokes = 0;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      const target = e.target as HTMLElement | null;
+      const isTextInput =
+        target &&
+        (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT');
+
+      const now = Date.now();
+      const delta = now - lastTime;
+
+      if (e.key === 'Enter') {
+        if (buffer.length >= 4 && fastKeystrokes >= 3) {
+          e.preventDefault();
+          const scanned = buffer;
+          buffer = '';
+          fastKeystrokes = 0;
+          if (isTextInput && target instanceof HTMLInputElement && target.dataset.productSearch === 'true') {
+            setSearch('');
+          }
+          handleScannedCode(scanned);
+          return;
+        }
+        buffer = '';
+        fastKeystrokes = 0;
+        return;
+      }
+
+      if (e.key.length === 1) {
+        if (delta <= 70) {
+          buffer += e.key;
+          fastKeystrokes += 1;
+        } else {
+          buffer = e.key;
+          fastKeystrokes = 0;
+        }
+        lastTime = now;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modalOpen, scannerOpen, labelProduct, products, canCreate, canEdit]);
 
   const addUnitRow = () => {
     if (units.length >= 10) return;
@@ -313,23 +444,41 @@ export function ProductsPage() {
       new Set(normalizedUnits.map((u) => u.barcode).filter(Boolean)),
     ).slice(0, 15);
 
-    // Check barcode conflicts against other products
-    for (const code of allBarcodes) {
+    const seenLowerCodes = new Set<string>();
+    for (const u of normalizedUnits) {
+      const code = u.barcode.trim();
+      if (!code) continue;
+      const lower = code.toLowerCase();
+      if (seenLowerCodes.has(lower)) {
+        setErrorMsg(`บาร์โค้ด/QR "${code}" ซ้ำกันระหว่างหน่วยขายภายในสินค้าเดียวกัน`);
+        return;
+      }
+      seenLowerCodes.add(lower);
+
       const conflict = products.find(
         (p) =>
           p.productId !== editingProduct?.productId &&
-          (p.barcode === code || p.barcodes.includes(code)),
+          (p.barcode.trim().toLowerCase() === lower ||
+            p.barcodes.some((b) => b.trim().toLowerCase() === lower) ||
+            p.units.some((pu) => pu.barcode.trim().toLowerCase() === lower)),
       );
       if (conflict) {
-        setErrorMsg(`บาร์โค้ด "${code}" ซ้ำกับสินค้า "${conflict.name}"`);
+        setErrorMsg(`รหัส Barcode / QR Code "${code}" ซ้ำกับสินค้า "${conflict.name}" ในระบบ`);
         return;
       }
+    }
+
+    const cleanImageUrl = imageUrl.trim();
+    if (cleanImageUrl.length > 45000) {
+      setErrorMsg('รูปภาพสินค้ามีขนาดใหญ่เกินกำหนด กรุณาอัปโหลดใหม่หรือใช้ URL รูปภาพ');
+      return;
     }
 
     const parsedCost = Math.max(0, Math.round(Number(costPriceLak) || 0));
     const parsedMin = Math.max(0, Math.round(Number(minStockBaseQty) || 0));
     const parsedReorder = Math.max(0, Math.round(Number(reorderQtyBaseQty) || 0));
     const parsedOpening = Math.max(0, Math.round(Number(openingStockQty) || 0));
+    const parsedEditStock = Math.max(0, Math.round(Number(editStockQty) || 0));
 
     setSaving(true);
     setErrorMsg(null);
@@ -358,20 +507,75 @@ export function ProductsPage() {
           minStockBaseQty: parsedMin,
           reorderQtyBaseQty: parsedReorder,
           taxable,
+          imageUrl: cleanImageUrl,
           notes: notes.trim().slice(0, 500),
           status,
           updatedAt: serverTimestamp(),
         });
 
         const existingBalance = balances.get(editingProduct.productId);
+        const prevQty = existingBalance?.qtyOnHandBase ?? 0;
+        const stockDelta = parsedEditStock - prevQty;
+
         if (existingBalance) {
           batch.update(doc(db, 'inventory', existingBalance.inventoryId), {
             skuSnapshot: cleanSku,
             productNameSnapshot: cleanName,
             baseUnitNameSnapshot: baseUnit.unitName,
+            qtyOnHandBase: parsedEditStock,
             minStockBaseQty: parsedMin,
             storageLocationName: cleanLocationName,
+            ...(stockDelta !== 0 ? { lastMovementAt: serverTimestamp() } : {}),
             updatedAt: serverTimestamp(),
+          });
+        } else {
+          const inventoryId = `${activeBranchId}_${editingProduct.productId}`;
+          batch.set(doc(db, 'inventory', inventoryId), {
+            inventoryId,
+            organizationId: userProfile.organizationId,
+            branchId: activeBranchId,
+            ownerUid: userProfile.ownerUid,
+            productId: editingProduct.productId,
+            skuSnapshot: cleanSku,
+            productNameSnapshot: cleanName,
+            baseUnitNameSnapshot: baseUnit.unitName,
+            qtyOnHandBase: parsedEditStock,
+            reservedQtyBase: 0,
+            avgCostLak: parsedCost,
+            minStockBaseQty: parsedMin,
+            storageLocationName: cleanLocationName,
+            lastMovementAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+          });
+        }
+
+        if (stockDelta !== 0) {
+          const movementId = generateSafeId('mov');
+          const absDelta = Math.abs(stockDelta);
+          batch.set(doc(db, 'stockMovements', movementId), {
+            movementId,
+            organizationId: userProfile.organizationId,
+            branchId: activeBranchId,
+            ownerUid: userProfile.ownerUid,
+            productId: editingProduct.productId,
+            skuSnapshot: cleanSku,
+            productNameSnapshot: cleanName,
+            lotId: null,
+            lotNumberSnapshot: null,
+            movementType: stockDelta > 0 ? 'adjustment_in' : 'adjustment_out',
+            unitName: baseUnit.unitName,
+            conversionFactor: 1,
+            inputQty: absDelta,
+            baseQtyDelta: stockDelta,
+            balanceBeforeBase: prevQty,
+            balanceAfterBase: parsedEditStock,
+            unitCostBaseLak: parsedCost,
+            totalCostLak: Math.round(absDelta * parsedCost),
+            reason: 'ปรับปรุงยอดสต็อกจากหน้าแก้ไขสินค้า',
+            referenceNo: 'EDIT-PRD',
+            performedByUid: userProfile.uid,
+            performedByName: userProfile.name.slice(0, 120),
+            createdAt: serverTimestamp(),
           });
         }
 
@@ -419,6 +623,7 @@ export function ProductsPage() {
           minStockBaseQty: parsedMin,
           reorderQtyBaseQty: parsedReorder,
           taxable,
+          imageUrl: cleanImageUrl,
           notes: notes.trim().slice(0, 500),
           status,
           createdAt: serverTimestamp(),
@@ -536,6 +741,7 @@ export function ProductsPage() {
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
+              data-product-search="true"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="ค้นหาชื่อ SKU หรือสแกนบาร์โค้ด..."
@@ -576,16 +782,29 @@ export function ProductsPage() {
           </div>
         </div>
 
-        {canCreate && (
-          <button
-            type="button"
-            onClick={openCreateModal}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer"
-          >
-            <PackagePlus className="w-4 h-4" />
-            เพิ่มสินค้าใหม่
-          </button>
-        )}
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          {(canCreate || canEdit) && (
+            <button
+              type="button"
+              onClick={() => setScannerOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap cursor-pointer"
+            >
+              <QrCode className="w-4 h-4" />
+              สแกนบาร์โค้ด / QR Code
+            </button>
+          )}
+
+          {canCreate && (
+            <button
+              type="button"
+              onClick={() => openCreateModal()}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap cursor-pointer"
+            >
+              <PackagePlus className="w-4 h-4" />
+              เพิ่มสินค้าใหม่
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Desktop Table */}
@@ -624,9 +843,24 @@ export function ProductsPage() {
               return (
                 <tr key={prod.productId} className="hover:bg-slate-50/70">
                   <td className="py-3 px-4">
-                    <div className="font-semibold text-slate-900">{prod.name}</div>
-                    <div className="text-xs text-slate-500 font-mono">
-                      {prod.sku} {prod.barcode ? `· ${prod.barcode}` : ''}
+                    <div className="flex items-center gap-3">
+                      {prod.imageUrl ? (
+                        <img
+                          src={prod.imageUrl}
+                          alt={prod.name}
+                          className="w-10 h-10 rounded-lg object-cover border border-slate-200 shrink-0 bg-slate-50"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-lg border border-slate-200 bg-slate-50 flex items-center justify-center text-slate-400 shrink-0">
+                          <Package className="w-4 h-4" />
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <div className="font-semibold text-slate-900 truncate">{prod.name}</div>
+                        <div className="text-xs text-slate-500 font-mono truncate">
+                          {prod.sku} {prod.barcode ? `· ${prod.barcode}` : ''}
+                        </div>
+                      </div>
                     </div>
                   </td>
                   <td className="py-3 px-4 text-xs text-slate-600">
@@ -695,10 +929,23 @@ export function ProductsPage() {
           return (
             <div key={prod.productId} className="bg-white border border-slate-200 rounded-xl p-4 space-y-2">
               <div className="flex items-start justify-between gap-2">
-                <div>
-                  <div className="font-semibold text-slate-900 text-sm">{prod.name}</div>
-                  <div className="text-xs text-slate-500 font-mono">
-                    {prod.sku} · {prod.barcode || 'ไม่มีบาร์โค้ด'}
+                <div className="flex items-center gap-2.5 min-w-0">
+                  {prod.imageUrl ? (
+                    <img
+                      src={prod.imageUrl}
+                      alt={prod.name}
+                      className="w-10 h-10 rounded-lg object-cover border border-slate-200 shrink-0 bg-slate-50"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-lg border border-slate-200 bg-slate-50 flex items-center justify-center text-slate-400 shrink-0">
+                      <Package className="w-4 h-4" />
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <div className="font-semibold text-slate-900 text-sm truncate">{prod.name}</div>
+                    <div className="text-xs text-slate-500 font-mono truncate">
+                      {prod.sku} · {prod.barcode || 'ไม่มีบาร์โค้ด'}
+                    </div>
                   </div>
                 </div>
                 <div className="text-right tabular-nums">
@@ -749,6 +996,19 @@ export function ProductsPage() {
               </button>
             </div>
 
+            {scanNotice && (
+              <div
+                className={`mb-4 p-3 rounded-lg border text-xs flex items-center gap-2 ${
+                  scanNotice.type === 'new'
+                    ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                    : 'bg-blue-50 border-blue-200 text-blue-800'
+                }`}
+              >
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
+                <span>{scanNotice.message}</span>
+              </div>
+            )}
+
             {errorMsg && (
               <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700">
                 {errorMsg}
@@ -783,6 +1043,7 @@ export function ProductsPage() {
                 <div className="sm:col-span-2">
                   <label className="block text-xs font-medium text-slate-700 mb-1">ชื่อสินค้า *</label>
                   <input
+                    ref={nameInputRef}
                     type="text"
                     required
                     maxLength={160}
@@ -934,10 +1195,18 @@ export function ProductsPage() {
                               />
                               <button
                                 type="button"
+                                onClick={() => setUnitScanIndex(idx)}
+                                className="px-2 py-1 text-slate-600 border border-slate-200 rounded hover:bg-slate-50 cursor-pointer"
+                                title="สแกนบาร์โค้ด / QR ด้วยกล้อง"
+                              >
+                                <QrCode className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
                                 onClick={() =>
                                   updateUnitRow(idx, { barcode: generateEan13InternalBarcode() })
                                 }
-                                className="px-2 py-1 text-slate-500 border border-slate-200 rounded hover:bg-slate-50"
+                                className="px-2 py-1 text-slate-500 border border-slate-200 rounded hover:bg-slate-50 cursor-pointer"
                                 title="สร้างบาร์โค้ด EAN-13 อัตโนมัติ"
                               >
                                 <Wand2 className="w-3.5 h-3.5" />
@@ -1047,7 +1316,25 @@ export function ProductsPage() {
                 </div>
               </div>
 
-              {!editingProduct && (
+              {editingProduct ? (
+                <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">
+                      จำนวนสินค้าในสต็อก ({units[0]?.unitName || 'หน่วยฐาน'})
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={editStockQty}
+                      onChange={(e) => setEditStockQty(e.target.value)}
+                      className="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg tabular-nums"
+                    />
+                  </div>
+                  <div className="text-xs text-slate-500 leading-relaxed">
+                    หากแก้ไขจำนวนสต็อก ระบบจะปรับยอดคงเหลือและบันทึกความเคลื่อนไหว (Stock Ledger) ให้อัตโนมัติเมื่อกดบันทึก
+                  </div>
+                </div>
+              ) : (
                 <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-slate-700 mb-1">
@@ -1087,6 +1374,80 @@ export function ProductsPage() {
                   </div>
                 </div>
               )}
+
+              {/* Product Image URL or Camera/File Upload */}
+              <div className="p-4 rounded-xl border border-slate-200 bg-white space-y-3">
+                <label className="block text-xs font-semibold text-slate-800">
+                  รูปภาพสินค้า (ถ่ายรูป / อัปโหลด หรือใส่ลิงก์ URL)
+                </label>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                  {imageUrl ? (
+                    <img
+                      src={imageUrl}
+                      alt={name || 'รูปสินค้า'}
+                      className="w-20 h-20 rounded-xl object-cover border border-slate-200 bg-slate-50 shrink-0"
+                    />
+                  ) : (
+                    <div className="w-20 h-20 rounded-xl border border-dashed border-slate-300 bg-slate-50 flex flex-col items-center justify-center text-slate-400 shrink-0 text-[11px]">
+                      <Package className="w-5 h-5 mb-1" />
+                      ไม่มีรูป
+                    </div>
+                  )}
+
+                  <div className="flex-1 w-full space-y-2">
+                    <div className="flex flex-wrap gap-2">
+                      <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs font-medium text-slate-700 cursor-pointer">
+                        <ImagePlus className="w-4 h-4 text-blue-600" />
+                        {imageUploading ? 'กำลังย่อรูปภาพ...' : 'เลือกรูป / ถ่ายภาพ'}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          capture="environment"
+                          disabled={imageUploading}
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            e.target.value = '';
+                            if (!file) return;
+                            setImageUploading(true);
+                            setErrorMsg(null);
+                            try {
+                              const compressed = await compressProductImageFile(file);
+                              setImageUrl(compressed);
+                            } catch (err) {
+                              setErrorMsg(
+                                err instanceof Error ? err.message : 'ไม่สามารถอัปโหลดรูปภาพได้',
+                              );
+                            } finally {
+                              setImageUploading(false);
+                            }
+                          }}
+                          className="hidden"
+                        />
+                      </label>
+                      {imageUrl && (
+                        <button
+                          type="button"
+                          onClick={() => setImageUrl('')}
+                          className="px-3 py-1.5 rounded-lg border border-rose-200 text-xs font-medium text-rose-700 hover:bg-rose-50 cursor-pointer"
+                        >
+                          ลบรูป
+                        </button>
+                      )}
+                    </div>
+                    <input
+                      type="text"
+                      value={imageUrl.startsWith('data:image/') ? '' : imageUrl}
+                      onChange={(e) => setImageUrl(e.target.value.slice(0, 500))}
+                      placeholder={
+                        imageUrl.startsWith('data:image/')
+                          ? 'อัปโหลดรูปภาพเรียบร้อยแล้ว (หรือวางลิงก์ URL ทับได้)'
+                          : 'หรือวางลิงก์รูปภาพสินค้า https://...'
+                      }
+                      className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg"
+                    />
+                  </div>
+                </div>
+              </div>
 
               <div className="flex flex-wrap items-center gap-6">
                 <label className="inline-flex items-center gap-2 text-xs font-medium text-slate-700 cursor-pointer">
@@ -1130,7 +1491,7 @@ export function ProductsPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={saving}
+                  disabled={saving || imageUploading}
                   className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-60 rounded-lg cursor-pointer"
                 >
                   {saving ? 'กำลังบันทึก...' : 'บันทึกสินค้า'}
@@ -1139,6 +1500,25 @@ export function ProductsPage() {
             </form>
           </div>
         </div>
+      )}
+
+      {scannerOpen && (
+        <BarcodeQrScannerModal
+          onDetected={handleScannedCode}
+          onClose={() => setScannerOpen(false)}
+        />
+      )}
+
+      {unitScanIndex !== null && (
+        <BarcodeQrScannerModal
+          title="สแกนบาร์โค้ด / QR สำหรับหน่วยขาย"
+          subtitle={`กำหนดรหัสให้หน่วย "${units[unitScanIndex]?.unitName || 'หน่วยสินค้า'}"`}
+          onDetected={(code) => {
+            updateUnitRow(unitScanIndex, { barcode: code.trim().slice(0, 64) });
+            setUnitScanIndex(null);
+          }}
+          onClose={() => setUnitScanIndex(null)}
+        />
       )}
 
       {labelProduct && (

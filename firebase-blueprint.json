@@ -175,6 +175,7 @@
         "minStockBaseQty": { "type": "number" },
         "reorderQtyBaseQty": { "type": "number" },
         "taxable": { "type": "boolean" },
+        "imageUrl": { "type": "string", "maxLength": 45000 },
         "notes": { "type": "string", "maxLength": 500 },
         "status": { "type": "string", "enum": ["active", "inactive"] },
         "createdAt": { "type": "string", "format": "date-time" },

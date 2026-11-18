@@ -222,7 +222,7 @@ service cloud.firestore {
           'categoryId', 'subCategoryId', 'storageLocationId', 'storageLocationName',
           'baseUnitName', 'barcode', 'barcodes', 'units', 'trackExpiry',
           'costPriceLak', 'retailPriceLak', 'wholesalePriceLak', 'memberPriceLak',
-          'minStockBaseQty', 'reorderQtyBaseQty', 'taxable', 'notes', 'status',
+          'minStockBaseQty', 'reorderQtyBaseQty', 'taxable', 'imageUrl', 'notes', 'status',
           'createdAt', 'updatedAt'
         ]) &&
         isValidId(data.productId) && data.productId.size() <= 64 &&
@@ -249,6 +249,7 @@ service cloud.firestore {
         data.minStockBaseQty is number && data.minStockBaseQty >= 0 &&
         data.reorderQtyBaseQty is number && data.reorderQtyBaseQty >= 0 &&
         data.taxable is bool &&
+        (!('imageUrl' in data) || (data.imageUrl is string && data.imageUrl.size() <= 45000)) &&
         data.notes is string && data.notes.size() <= 500 &&
         data.status in ['active', 'inactive'] &&
         data.createdAt is timestamp &&
@@ -951,7 +952,7 @@ service cloud.firestore {
           'storageLocationName', 'baseUnitName', 'barcode', 'barcodes', 'units',
           'trackExpiry', 'costPriceLak', 'retailPriceLak', 'wholesalePriceLak',
           'memberPriceLak', 'minStockBaseQty', 'reorderQtyBaseQty', 'taxable',
-          'notes', 'status', 'updatedAt'
+          'imageUrl', 'notes', 'status', 'updatedAt'
         ]);
       allow delete: if false;
     }
