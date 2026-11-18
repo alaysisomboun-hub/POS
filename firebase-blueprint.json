@@ -1,0 +1,442 @@
+{
+  "entities": {
+    "Organization": {
+      "title": "Organization",
+      "description": "ข้อมูลองค์กรหรือร้านค้าหลัก รองรับหลายสาขา สกุลเงิน LAK และเขตเวลา Asia/Vientiane",
+      "type": "object",
+      "properties": {
+        "organizationId": {
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "รหัสองค์กร"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "description": "ชื่อร้านค้าหรือองค์กร"
+        },
+        "ownerUid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "UID ของเจ้าขององค์กร"
+        },
+        "currency": {
+          "type": "string",
+          "enum": ["LAK"],
+          "description": "สกุลเงินหลัก"
+        },
+        "timezone": {
+          "type": "string",
+          "enum": ["Asia/Vientiane"],
+          "description": "เขตเวลาหลัก"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["organizationId", "name", "ownerUid", "currency", "timezone", "createdAt", "updatedAt"]
+    },
+    "Branch": {
+      "title": "Branch",
+      "description": "ข้อมูลสาขาของร้านค้า",
+      "type": "object",
+      "properties": {
+        "branchId": {
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "organizationId": {
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "ownerUid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "branchCode": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 20,
+          "pattern": "^[A-Z0-9\\-]+$"
+        },
+        "branchName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "address": {
+          "type": "string",
+          "maxLength": 300
+        },
+        "phone": {
+          "type": "string",
+          "maxLength": 30
+        },
+        "managerId": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "assignedUids": {
+          "type": "array"
+        },
+        "isMainBranch": {
+          "type": "boolean"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["active", "inactive"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "branchId",
+        "organizationId",
+        "ownerUid",
+        "branchCode",
+        "branchName",
+        "address",
+        "phone",
+        "managerId",
+        "assignedUids",
+        "isMainBranch",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "ข้อมูลผู้ใช้งาน บทบาท สาขา และสิทธิ์ RBAC",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "organizationId": {
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "ownerUid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "email": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "phone": {
+          "type": "string",
+          "maxLength": 30
+        },
+        "role": {
+          "type": "string",
+          "enum": [
+            "super_admin",
+            "owner",
+            "branch_manager",
+            "cashier",
+            "warehouse_staff",
+            "purchasing_staff",
+            "accountant"
+          ]
+        },
+        "branchIds": {
+          "type": "array"
+        },
+        "permissions": {
+          "type": "object"
+        },
+        "invitationId": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "status": {
+          "type": "string",
+          "enum": ["active", "suspended"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "lastLoginAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "uid",
+        "organizationId",
+        "ownerUid",
+        "name",
+        "email",
+        "phone",
+        "role",
+        "branchIds",
+        "permissions",
+        "status",
+        "createdAt",
+        "lastLoginAt"
+      ]
+    },
+    "UserInvitation": {
+      "title": "UserInvitation",
+      "description": "คำเชิญพนักงานเข้าสู่องค์กรพร้อมกำหนดบทบาทและสาขาล่วงหน้าอย่างปลอดภัย",
+      "type": "object",
+      "properties": {
+        "invitationId": {
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "organizationId": {
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "ownerUid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "role": {
+          "type": "string",
+          "enum": [
+            "super_admin",
+            "owner",
+            "branch_manager",
+            "cashier",
+            "warehouse_staff",
+            "purchasing_staff",
+            "accountant"
+          ]
+        },
+        "branchIds": {
+          "type": "array"
+        },
+        "permissions": {
+          "type": "object"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "accepted", "revoked"]
+        },
+        "invitedBy": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "acceptedByUid": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "invitationId",
+        "organizationId",
+        "ownerUid",
+        "email",
+        "name",
+        "role",
+        "branchIds",
+        "permissions",
+        "status",
+        "invitedBy",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "AuditLog": {
+      "title": "AuditLog",
+      "description": "ประวัติการดำเนินการและเปลี่ยนแปลงข้อมูลแบบ Append-only",
+      "type": "object",
+      "properties": {
+        "auditId": {
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "organizationId": {
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "ownerUid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "branchId": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "userId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "userNameSnapshot": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "userRoleSnapshot": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "action": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "entityType": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "entityId": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "before": {
+          "type": "object"
+        },
+        "after": {
+          "type": "object"
+        },
+        "deviceInfo": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "auditId",
+        "organizationId",
+        "ownerUid",
+        "userId",
+        "userNameSnapshot",
+        "userRoleSnapshot",
+        "action",
+        "entityType",
+        "entityId",
+        "deviceInfo",
+        "createdAt"
+      ]
+    },
+    "SystemSetting": {
+      "title": "SystemSetting",
+      "description": "การตั้งค่าร้านค้า ใบเสร็จ ภาษี สกุลเงิน และคลังสินค้า",
+      "type": "object",
+      "properties": {
+        "organizationId": {
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "ownerUid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "receiptSettings": {
+          "type": "object"
+        },
+        "taxSettings": {
+          "type": "object"
+        },
+        "currencySettings": {
+          "type": "object"
+        },
+        "notificationSettings": {
+          "type": "object"
+        },
+        "inventorySettings": {
+          "type": "object"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "organizationId",
+        "ownerUid",
+        "receiptSettings",
+        "taxSettings",
+        "currencySettings",
+        "notificationSettings",
+        "inventorySettings",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/organizations/{organizationId}": {
+      "schema": { "$ref": "#/entities/Organization" },
+      "description": "ข้อมูลองค์กรหลักของร้านค้า"
+    },
+    "/branches/{branchId}": {
+      "schema": { "$ref": "#/entities/Branch" },
+      "description": "สาขาทั้งหมดขององค์กร"
+    },
+    "/users/{uid}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "บัญชีผู้ใช้งาน บทบาท และสิทธิ์ RBAC"
+    },
+    "/invitations/{invitationId}": {
+      "schema": { "$ref": "#/entities/UserInvitation" },
+      "description": "คำเชิญพนักงานเข้าใช้งานระบบ"
+    },
+    "/auditLogs/{auditId}": {
+      "schema": { "$ref": "#/entities/AuditLog" },
+      "description": "ประวัติการใช้งานและเปลี่ยนแปลงข้อมูลแบบแก้ไขไม่ได้"
+    },
+    "/settings/{organizationId}": {
+      "schema": { "$ref": "#/entities/SystemSetting" },
+      "description": "การตั้งค่าหลักขององค์กร"
+    }
+  }
+}

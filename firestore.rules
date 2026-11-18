@@ -1,0 +1,498 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Global Safety Net (Default Deny)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Health check document for startup getDocFromServer check
+    match /test/connection {
+      allow get: if true;
+      allow list, write: if false;
+    }
+
+    // -------------------------------------------------------------------------
+    // Global Hardened Primitives
+    // -------------------------------------------------------------------------
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isBootstrappedSuperAdmin() {
+      return isVerified() && request.auth.token.email == 'alaysisomboun@gmail.com';
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function userExists() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function currentUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isActiveUser() {
+      return isVerified() && userExists() && currentUserData().status == 'active';
+    }
+
+    function belongsToOrg(orgId) {
+      return isActiveUser() && currentUserData().organizationId == orgId;
+    }
+
+    function isOrgAdminOrOwner(orgId) {
+      return belongsToOrg(orgId) && (
+        currentUserData().role == 'super_admin' ||
+        currentUserData().role == 'owner'
+      );
+    }
+
+    function isOrgManagerOrAbove(orgId) {
+      return belongsToOrg(orgId) && (
+        currentUserData().role == 'super_admin' ||
+        currentUserData().role == 'owner' ||
+        currentUserData().role == 'branch_manager'
+      );
+    }
+
+    function isValidRole(role) {
+      return role in [
+        'super_admin',
+        'owner',
+        'branch_manager',
+        'cashier',
+        'warehouse_staff',
+        'purchasing_staff',
+        'accountant'
+      ];
+    }
+
+    // -------------------------------------------------------------------------
+    // Entity Validation Blueprints
+    // -------------------------------------------------------------------------
+    function isValidOrganization(data) {
+      return data.keys().hasAll([
+          'organizationId', 'name', 'ownerUid', 'currency', 'timezone', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'organizationId', 'name', 'ownerUid', 'currency', 'timezone', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.organizationId) && data.organizationId.size() <= 64 &&
+        data.name is string && data.name.size() >= 1 && data.name.size() <= 120 &&
+        isValidId(data.ownerUid) &&
+        data.currency == 'LAK' &&
+        data.timezone == 'Asia/Vientiane' &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidBranch(data) {
+      return data.keys().hasAll([
+          'branchId', 'organizationId', 'ownerUid', 'branchCode', 'branchName',
+          'address', 'phone', 'managerId', 'assignedUids', 'isMainBranch', 'status',
+          'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'branchId', 'organizationId', 'ownerUid', 'branchCode', 'branchName',
+          'address', 'phone', 'managerId', 'assignedUids', 'isMainBranch', 'status',
+          'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.branchId) && data.branchId.size() <= 64 &&
+        isValidId(data.organizationId) && data.organizationId.size() <= 64 &&
+        isValidId(data.ownerUid) &&
+        data.branchCode is string && data.branchCode.size() >= 1 && data.branchCode.size() <= 20 && data.branchCode.matches('^[A-Z0-9\\-]+$') &&
+        data.branchName is string && data.branchName.size() >= 1 && data.branchName.size() <= 120 &&
+        data.address is string && data.address.size() <= 300 &&
+        data.phone is string && data.phone.size() <= 30 &&
+        data.managerId is string && data.managerId.size() <= 128 &&
+        data.assignedUids is list && data.assignedUids.size() <= 50 &&
+        (data.assignedUids.size() == 0 || data.assignedUids[0] is string) &&
+        data.isMainBranch is bool &&
+        data.status in ['active', 'inactive'] &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidUserProfile(data) {
+      return data.keys().hasAll([
+          'uid', 'organizationId', 'ownerUid', 'name', 'email', 'phone',
+          'role', 'branchIds', 'permissions', 'status', 'createdAt', 'lastLoginAt'
+        ]) &&
+        data.keys().hasOnly([
+          'uid', 'organizationId', 'ownerUid', 'name', 'email', 'phone',
+          'role', 'branchIds', 'permissions', 'invitationId', 'status', 'createdAt', 'lastLoginAt'
+        ]) &&
+        isValidId(data.uid) &&
+        isValidId(data.organizationId) && data.organizationId.size() <= 64 &&
+        isValidId(data.ownerUid) &&
+        data.name is string && data.name.size() >= 1 && data.name.size() <= 120 &&
+        data.email is string && data.email.size() >= 3 && data.email.size() <= 160 &&
+        data.phone is string && data.phone.size() <= 30 &&
+        isValidRole(data.role) &&
+        data.branchIds is list && data.branchIds.size() <= 50 &&
+        (data.branchIds.size() == 0 || data.branchIds[0] is string) &&
+        data.permissions is map &&
+        (!('invitationId' in data) || (data.invitationId is string && data.invitationId.size() <= 64)) &&
+        data.status in ['active', 'suspended'] &&
+        data.createdAt is timestamp &&
+        data.lastLoginAt is timestamp;
+    }
+
+    function isValidInvitation(data) {
+      return data.keys().hasAll([
+          'invitationId', 'organizationId', 'ownerUid', 'email', 'name',
+          'role', 'branchIds', 'permissions', 'status', 'invitedBy', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'invitationId', 'organizationId', 'ownerUid', 'email', 'name',
+          'role', 'branchIds', 'permissions', 'status', 'invitedBy', 'acceptedByUid',
+          'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.invitationId) && data.invitationId.size() <= 64 &&
+        isValidId(data.organizationId) && data.organizationId.size() <= 64 &&
+        isValidId(data.ownerUid) &&
+        data.email is string && data.email.size() >= 3 && data.email.size() <= 160 &&
+        data.name is string && data.name.size() >= 1 && data.name.size() <= 120 &&
+        isValidRole(data.role) &&
+        data.branchIds is list && data.branchIds.size() <= 50 &&
+        (data.branchIds.size() == 0 || data.branchIds[0] is string) &&
+        data.permissions is map &&
+        data.status in ['pending', 'accepted', 'revoked'] &&
+        isValidId(data.invitedBy) &&
+        (!('acceptedByUid' in data) || isValidId(data.acceptedByUid)) &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidAuditLog(data) {
+      return data.keys().hasAll([
+          'auditId', 'organizationId', 'ownerUid', 'userId',
+          'userNameSnapshot', 'userRoleSnapshot', 'action', 'entityType',
+          'entityId', 'deviceInfo', 'createdAt'
+        ]) &&
+        data.keys().hasOnly([
+          'auditId', 'organizationId', 'ownerUid', 'branchId', 'userId',
+          'userNameSnapshot', 'userRoleSnapshot', 'action', 'entityType',
+          'entityId', 'before', 'after', 'deviceInfo', 'createdAt'
+        ]) &&
+        isValidId(data.auditId) && data.auditId.size() <= 64 &&
+        isValidId(data.organizationId) && data.organizationId.size() <= 64 &&
+        isValidId(data.ownerUid) &&
+        (!('branchId' in data) || data.branchId == null || (data.branchId is string && data.branchId.size() <= 64)) &&
+        isValidId(data.userId) &&
+        data.userNameSnapshot is string && data.userNameSnapshot.size() <= 120 &&
+        data.userRoleSnapshot is string && data.userRoleSnapshot.size() <= 40 &&
+        data.action is string && data.action.size() >= 1 && data.action.size() <= 80 &&
+        data.entityType is string && data.entityType.size() >= 1 && data.entityType.size() <= 60 &&
+        data.entityId is string && data.entityId.size() >= 1 && data.entityId.size() <= 128 &&
+        (!('before' in data) || data.before == null || data.before is map) &&
+        (!('after' in data) || data.after == null || data.after is map) &&
+        data.deviceInfo is string && data.deviceInfo.size() <= 200 &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidSetting(data) {
+      return data.keys().hasAll([
+          'organizationId', 'ownerUid', 'receiptSettings', 'taxSettings',
+          'currencySettings', 'notificationSettings', 'inventorySettings', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'organizationId', 'ownerUid', 'storeProfile', 'receiptSettings', 'taxSettings',
+          'currencySettings', 'notificationSettings', 'inventorySettings', 'updatedAt'
+        ]) &&
+        isValidId(data.organizationId) && data.organizationId.size() <= 64 &&
+        isValidId(data.ownerUid) &&
+        (!('storeProfile' in data) || data.storeProfile is map) &&
+        data.receiptSettings is map &&
+        data.taxSettings is map &&
+        data.currencySettings is map &&
+        data.notificationSettings is map &&
+        data.inventorySettings is map &&
+        data.updatedAt is timestamp;
+    }
+
+    // -------------------------------------------------------------------------
+    // Collection Rules
+    // -------------------------------------------------------------------------
+
+    // Organizations
+    match /organizations/{organizationId} {
+      allow get: if isVerified() && isValidId(organizationId) && (
+        existing().ownerUid == request.auth.uid ||
+        belongsToOrg(organizationId) ||
+        isBootstrappedSuperAdmin()
+      );
+      allow list: if isVerified() && (
+        existing().ownerUid == request.auth.uid ||
+        isBootstrappedSuperAdmin()
+      );
+      allow create: if isVerified() && isValidId(organizationId) &&
+        isValidOrganization(incoming()) &&
+        incoming().organizationId == organizationId &&
+        incoming().ownerUid == request.auth.uid &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isVerified() && isValidId(organizationId) &&
+        isValidOrganization(incoming()) &&
+        (existing().ownerUid == request.auth.uid || isOrgAdminOrOwner(organizationId) || isBootstrappedSuperAdmin()) &&
+        incoming().organizationId == existing().organizationId &&
+        incoming().ownerUid == existing().ownerUid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['name', 'updatedAt']);
+      allow delete: if false;
+    }
+
+    // Branches
+    match /branches/{branchId} {
+      allow get: if isVerified() && isValidId(branchId) && (
+        existing().ownerUid == request.auth.uid ||
+        request.auth.uid in existing().assignedUids ||
+        belongsToOrg(existing().organizationId) ||
+        isBootstrappedSuperAdmin()
+      );
+      allow list: if isVerified() && (
+        existing().ownerUid == request.auth.uid ||
+        request.auth.uid in existing().assignedUids ||
+        isBootstrappedSuperAdmin()
+      );
+      allow create: if isVerified() && isValidId(branchId) &&
+        isValidBranch(incoming()) &&
+        incoming().branchId == branchId &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        (
+          (
+            incoming().ownerUid == request.auth.uid &&
+            existsAfter(/databases/$(database)/documents/organizations/$(incoming().organizationId))
+          ) ||
+          (
+            exists(/databases/$(database)/documents/organizations/$(incoming().organizationId)) &&
+            (
+              get(/databases/$(database)/documents/organizations/$(incoming().organizationId)).data.ownerUid == request.auth.uid ||
+              isOrgAdminOrOwner(incoming().organizationId) ||
+              isBootstrappedSuperAdmin()
+            )
+          )
+        );
+      allow update: if isVerified() && isValidId(branchId) &&
+        isValidBranch(incoming()) &&
+        (existing().ownerUid == request.auth.uid || isOrgAdminOrOwner(existing().organizationId) || isBootstrappedSuperAdmin()) &&
+        incoming().branchId == existing().branchId &&
+        incoming().organizationId == existing().organizationId &&
+        incoming().ownerUid == existing().ownerUid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'branchCode', 'branchName', 'address', 'phone',
+          'managerId', 'assignedUids', 'isMainBranch', 'status', 'updatedAt'
+        ]);
+      allow delete: if false;
+    }
+
+    // Users (Strict PII Isolation + Zero Self-Escalation)
+    match /users/{uid} {
+      allow get: if isVerified() && isValidId(uid) && (
+        request.auth.uid == uid ||
+        existing().ownerUid == request.auth.uid ||
+        isOrgManagerOrAbove(existing().organizationId) ||
+        isBootstrappedSuperAdmin()
+      );
+      allow list: if isVerified() && (
+        existing().ownerUid == request.auth.uid ||
+        existing().uid == request.auth.uid ||
+        isBootstrappedSuperAdmin()
+      );
+      allow create: if isVerified() && isValidId(uid) &&
+        isValidUserProfile(incoming()) &&
+        incoming().uid == uid &&
+        request.auth.uid == uid &&
+        incoming().email == request.auth.token.email &&
+        incoming().createdAt == request.time &&
+        incoming().lastLoginAt == request.time &&
+        incoming().status == 'active' &&
+        (
+          // Path A: First store owner / bootstrapped super admin creating their org atomically
+          (
+            incoming().ownerUid == request.auth.uid &&
+            (incoming().role == 'owner' || (incoming().role == 'super_admin' && isBootstrappedSuperAdmin())) &&
+            existsAfter(/databases/$(database)/documents/organizations/$(incoming().organizationId))
+          ) ||
+          // Path B: Invited staff claiming a valid pending invitation
+          (
+            'invitationId' in incoming() &&
+            isValidId(incoming().invitationId) &&
+            exists(/databases/$(database)/documents/invitations/$(incoming().invitationId)) &&
+            get(/databases/$(database)/documents/invitations/$(incoming().invitationId)).data.status == 'pending' &&
+            get(/databases/$(database)/documents/invitations/$(incoming().invitationId)).data.email == request.auth.token.email &&
+            get(/databases/$(database)/documents/invitations/$(incoming().invitationId)).data.organizationId == incoming().organizationId &&
+            get(/databases/$(database)/documents/invitations/$(incoming().invitationId)).data.ownerUid == incoming().ownerUid &&
+            get(/databases/$(database)/documents/invitations/$(incoming().invitationId)).data.role == incoming().role &&
+            get(/databases/$(database)/documents/invitations/$(incoming().invitationId)).data.branchIds == incoming().branchIds &&
+            get(/databases/$(database)/documents/invitations/$(incoming().invitationId)).data.permissions == incoming().permissions
+          )
+        );
+      allow update: if isVerified() && isValidId(uid) &&
+        isValidUserProfile(incoming()) &&
+        incoming().uid == existing().uid &&
+        incoming().organizationId == existing().organizationId &&
+        incoming().ownerUid == existing().ownerUid &&
+        incoming().email == existing().email &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().lastLoginAt == request.time &&
+        (
+          // Tier 1: Org Owner / Super Admin managing staff
+          (
+            (existing().ownerUid == request.auth.uid || isOrgAdminOrOwner(existing().organizationId) || isBootstrappedSuperAdmin()) &&
+            incoming().diff(existing()).affectedKeys().hasOnly([
+              'name', 'phone', 'role', 'branchIds', 'permissions', 'status', 'lastLoginAt'
+            ])
+          ) ||
+          // Tier 2: Branch Manager editing non-owner branch staff
+          (
+            isOrgManagerOrAbove(existing().organizationId) &&
+            existing().role != 'owner' &&
+            existing().role != 'super_admin' &&
+            incoming().role != 'owner' &&
+            incoming().role != 'super_admin' &&
+            incoming().diff(existing()).affectedKeys().hasOnly([
+              'name', 'phone', 'role', 'branchIds', 'permissions', 'status', 'lastLoginAt'
+            ])
+          ) ||
+          // Tier 3: Self update (only profile info + login timestamp, never role/permissions/status)
+          (
+            request.auth.uid == uid &&
+            incoming().role == existing().role &&
+            incoming().branchIds == existing().branchIds &&
+            incoming().permissions == existing().permissions &&
+            incoming().status == existing().status &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['name', 'phone', 'lastLoginAt'])
+          )
+        );
+      allow delete: if false;
+    }
+
+    // Invitations
+    match /invitations/{invitationId} {
+      allow get: if isVerified() && isValidId(invitationId) && (
+        existing().email == request.auth.token.email ||
+        existing().ownerUid == request.auth.uid ||
+        isOrgManagerOrAbove(existing().organizationId) ||
+        isBootstrappedSuperAdmin()
+      );
+      allow list: if isVerified() && (
+        existing().email == request.auth.token.email ||
+        existing().ownerUid == request.auth.uid ||
+        isBootstrappedSuperAdmin()
+      );
+      allow create: if isVerified() && isValidId(invitationId) &&
+        isValidInvitation(incoming()) &&
+        incoming().invitationId == invitationId &&
+        incoming().status == 'pending' &&
+        incoming().invitedBy == request.auth.uid &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        exists(/databases/$(database)/documents/organizations/$(incoming().organizationId)) &&
+        (
+          get(/databases/$(database)/documents/organizations/$(incoming().organizationId)).data.ownerUid == request.auth.uid ||
+          isOrgAdminOrOwner(incoming().organizationId) ||
+          isBootstrappedSuperAdmin()
+        );
+      allow update: if isVerified() && isValidId(invitationId) &&
+        isValidInvitation(incoming()) &&
+        incoming().invitationId == existing().invitationId &&
+        incoming().organizationId == existing().organizationId &&
+        incoming().ownerUid == existing().ownerUid &&
+        incoming().email == existing().email &&
+        incoming().invitedBy == existing().invitedBy &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (
+          // Action: Accept invitation by matching verified user
+          (
+            existing().status == 'pending' &&
+            existing().email == request.auth.token.email &&
+            incoming().status == 'accepted' &&
+            incoming().acceptedByUid == request.auth.uid &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['status', 'acceptedByUid', 'updatedAt'])
+          ) ||
+          // Action: Admin updates or revokes invitation
+          (
+            (existing().ownerUid == request.auth.uid || isOrgAdminOrOwner(existing().organizationId) || isBootstrappedSuperAdmin()) &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['name', 'role', 'branchIds', 'permissions', 'status', 'updatedAt'])
+          )
+        );
+      allow delete: if false;
+    }
+
+    // Audit Logs (Strictly Append-Only)
+    match /auditLogs/{auditId} {
+      allow get: if isVerified() && isValidId(auditId) && (
+        existing().ownerUid == request.auth.uid ||
+        existing().userId == request.auth.uid ||
+        isOrgManagerOrAbove(existing().organizationId) ||
+        isBootstrappedSuperAdmin()
+      );
+      allow list: if isVerified() && (
+        existing().ownerUid == request.auth.uid ||
+        existing().userId == request.auth.uid ||
+        isBootstrappedSuperAdmin()
+      );
+      allow create: if isVerified() && isValidId(auditId) &&
+        isValidAuditLog(incoming()) &&
+        incoming().auditId == auditId &&
+        incoming().userId == request.auth.uid &&
+        incoming().createdAt == request.time &&
+        existsAfter(/databases/$(database)/documents/organizations/$(incoming().organizationId));
+      allow update, delete: if false;
+    }
+
+    // System Settings
+    match /settings/{organizationId} {
+      allow get: if isVerified() && isValidId(organizationId) && (
+        existing().ownerUid == request.auth.uid ||
+        belongsToOrg(organizationId) ||
+        isBootstrappedSuperAdmin()
+      );
+      allow list: if false;
+      allow create: if isVerified() && isValidId(organizationId) &&
+        isValidSetting(incoming()) &&
+        incoming().organizationId == organizationId &&
+        incoming().updatedAt == request.time &&
+        (
+          (
+            incoming().ownerUid == request.auth.uid &&
+            existsAfter(/databases/$(database)/documents/organizations/$(organizationId))
+          ) ||
+          isOrgAdminOrOwner(organizationId) ||
+          isBootstrappedSuperAdmin()
+        );
+      allow update: if isVerified() && isValidId(organizationId) &&
+        isValidSetting(incoming()) &&
+        incoming().organizationId == existing().organizationId &&
+        incoming().ownerUid == existing().ownerUid &&
+        incoming().updatedAt == request.time &&
+        (existing().ownerUid == request.auth.uid || isOrgAdminOrOwner(organizationId) || isBootstrappedSuperAdmin()) &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'storeProfile', 'receiptSettings', 'taxSettings',
+          'currencySettings', 'notificationSettings', 'inventorySettings', 'updatedAt'
+        ]);
+      allow delete: if false;
+    }
+  }
+}
