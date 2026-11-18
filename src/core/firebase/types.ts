@@ -418,4 +418,219 @@ export interface PosHeldBill {
   updatedAt: Timestamp;
 }
 
+export interface MembershipTier {
+  tierId: string;
+  organizationId: string;
+  ownerUid: string;
+  name: string;
+  discountPercent: number;
+  pointsPer1000Lak: number;
+  minSpendLak: number;
+  description: string;
+  status: 'active' | 'inactive';
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
 
+export interface Promotion {
+  promotionId: string;
+  organizationId: string;
+  branchId: string;
+  ownerUid: string;
+  code: string;
+  name: string;
+  promoType: 'percent_bill' | 'fixed_bill';
+  discountValue: number;
+  minSpendLak: number;
+  startDate: string;
+  endDate: string;
+  status: 'active' | 'inactive';
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export interface Customer {
+  customerId: string;
+  organizationId: string;
+  branchId: string;
+  ownerUid: string;
+  code: string;
+  name: string;
+  phone: string;
+  email: string;
+  address: string;
+  tierId: string | null;
+  tierName: string;
+  pointsBalance: number;
+  creditLimitLak: number;
+  creditBalanceLak: number;
+  totalSpentLak: number;
+  notes: string;
+  status: 'active' | 'inactive';
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export interface Supplier {
+  supplierId: string;
+  organizationId: string;
+  ownerUid: string;
+  code: string;
+  name: string;
+  contactName: string;
+  phone: string;
+  email: string;
+  address: string;
+  paymentTermDays: number;
+  payableBalanceLak: number;
+  notes: string;
+  status: 'active' | 'inactive';
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export interface PurchaseOrderItem {
+  productId: string;
+  sku: string;
+  name: string;
+  unitId: string;
+  unitName: string;
+  conversionFactor: number;
+  qty: number;
+  baseQty: number;
+  unitCostLak: number;
+  lineTotalLak: number;
+  lotNumber: string;
+  expiryDate: string | null;
+}
+
+export interface PurchaseOrder {
+  poId: string;
+  poNumber: string;
+  organizationId: string;
+  branchId: string;
+  ownerUid: string;
+  supplierId: string;
+  supplierName: string;
+  items: PurchaseOrderItem[];
+  subtotalLak: number;
+  discountLak: number;
+  shippingFeeLak: number;
+  taxAmountLak: number;
+  grandTotalLak: number;
+  paymentType: 'cash' | 'credit';
+  paidAmountLak: number;
+  creditDueLak: number;
+  dueDate: string | null;
+  status: 'ordered' | 'received' | 'cancelled';
+  notes: string;
+  createdByUid: string;
+  createdByName: string;
+  receivedAt: Timestamp | null;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export interface ArPayment {
+  paymentId: string;
+  organizationId: string;
+  branchId: string;
+  ownerUid: string;
+  customerId: string;
+  customerName: string;
+  saleId: string | null;
+  invoiceNumber: string;
+  amountLak: number;
+  paymentMethod: 'cash' | 'transfer' | 'qr';
+  notes: string;
+  recordedByUid: string;
+  recordedByName: string;
+  createdAt: Timestamp;
+}
+
+export interface ApPayment {
+  paymentId: string;
+  organizationId: string;
+  branchId: string;
+  ownerUid: string;
+  supplierId: string;
+  supplierName: string;
+  poId: string | null;
+  poNumber: string;
+  amountLak: number;
+  paymentMethod: 'cash' | 'transfer' | 'qr';
+  notes: string;
+  recordedByUid: string;
+  recordedByName: string;
+  createdAt: Timestamp;
+}
+
+export type IncomeCategory = 'sales' | 'ar_collection' | 'other_income';
+
+export interface IncomeEntry {
+  entryId: string;
+  organizationId: string;
+  branchId: string;
+  ownerUid: string;
+  category: IncomeCategory;
+  title: string;
+  amountLak: number;
+  paymentMethod: 'cash' | 'transfer' | 'qr';
+  referenceNo: string;
+  notes: string;
+  entryDate: string;
+  recordedByUid: string;
+  recordedByName: string;
+  createdAt: Timestamp;
+}
+
+export type ExpenseCategory =
+  | 'inventory_purchase'
+  | 'rent'
+  | 'utilities'
+  | 'salary'
+  | 'transport'
+  | 'marketing'
+  | 'maintenance_other';
+
+export interface ExpenseEntry {
+  entryId: string;
+  organizationId: string;
+  branchId: string;
+  ownerUid: string;
+  category: ExpenseCategory;
+  title: string;
+  amountLak: number;
+  paymentMethod: 'cash' | 'transfer' | 'qr';
+  referenceNo: string;
+  notes: string;
+  entryDate: string;
+  recordedByUid: string;
+  recordedByName: string;
+  createdAt: Timestamp;
+}
+
+export interface JournalLine {
+  accountCode: string;
+  accountName: string;
+  debitLak: number;
+  creditLak: number;
+}
+
+export interface JournalEntry {
+  journalId: string;
+  entryNumber: string;
+  organizationId: string;
+  branchId: string;
+  ownerUid: string;
+  entryDate: string;
+  description: string;
+  sourceType: 'manual' | 'sale' | 'purchase' | 'expense' | 'income' | 'ar_payment' | 'ap_payment';
+  referenceNo: string;
+  lines: JournalLine[];
+  totalDebitLak: number;
+  totalCreditLak: number;
+  createdByUid: string;
+  createdByName: string;
+  createdAt: Timestamp;
+}

@@ -383,6 +383,240 @@
         "priceTier", "customerName", "billDiscountLak", "items", "notes",
         "status", "createdByUid", "createdByName", "createdAt", "updatedAt"
       ]
+    },
+    "MembershipTier": {
+      "title": "MembershipTier",
+      "description": "ระดับสมาชิก ส่วนลด และอัตราการสะสมคะแนน",
+      "type": "object",
+      "properties": {
+        "tierId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "organizationId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerUid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "discountPercent": { "type": "number" },
+        "pointsPer1000Lak": { "type": "number" },
+        "minSpendLak": { "type": "number" },
+        "description": { "type": "string", "maxLength": 300 },
+        "status": { "type": "string", "enum": ["active", "inactive"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["tierId", "organizationId", "ownerUid", "name", "discountPercent", "pointsPer1000Lak", "minSpendLak", "description", "status", "createdAt", "updatedAt"]
+    },
+    "Promotion": {
+      "title": "Promotion",
+      "description": "โปรโมชั่นส่วนลดตามเงื่อนไขและช่วงเวลา",
+      "type": "object",
+      "properties": {
+        "promotionId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "organizationId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "branchId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerUid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "code": { "type": "string", "maxLength": 40 },
+        "name": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "promoType": { "type": "string", "enum": ["percent_bill", "fixed_bill"] },
+        "discountValue": { "type": "number" },
+        "minSpendLak": { "type": "number" },
+        "startDate": { "type": "string", "maxLength": 20 },
+        "endDate": { "type": "string", "maxLength": 20 },
+        "status": { "type": "string", "enum": ["active", "inactive"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["promotionId", "organizationId", "branchId", "ownerUid", "code", "name", "promoType", "discountValue", "minSpendLak", "startDate", "endDate", "status", "createdAt", "updatedAt"]
+    },
+    "Customer": {
+      "title": "Customer",
+      "description": "ข้อมูลลูกค้า สมาชิก คะแนนสะสม และวงเงินเครดิต",
+      "type": "object",
+      "properties": {
+        "customerId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "organizationId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "branchId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerUid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "code": { "type": "string", "maxLength": 30 },
+        "name": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "phone": { "type": "string", "maxLength": 30 },
+        "email": { "type": "string", "maxLength": 160 },
+        "address": { "type": "string", "maxLength": 300 },
+        "tierId": { "type": "string", "maxLength": 64 },
+        "tierName": { "type": "string", "maxLength": 80 },
+        "pointsBalance": { "type": "number" },
+        "creditLimitLak": { "type": "number" },
+        "creditBalanceLak": { "type": "number" },
+        "totalSpentLak": { "type": "number" },
+        "notes": { "type": "string", "maxLength": 300 },
+        "status": { "type": "string", "enum": ["active", "inactive"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["customerId", "organizationId", "branchId", "ownerUid", "code", "name", "phone", "email", "address", "tierName", "pointsBalance", "creditLimitLak", "creditBalanceLak", "totalSpentLak", "notes", "status", "createdAt", "updatedAt"]
+    },
+    "Supplier": {
+      "title": "Supplier",
+      "description": "ข้อมูลซัพพลายเออร์ เงื่อนไขชำระเงิน และยอดเจ้าหนี้คงค้าง",
+      "type": "object",
+      "properties": {
+        "supplierId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "organizationId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerUid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "code": { "type": "string", "maxLength": 30 },
+        "name": { "type": "string", "minLength": 1, "maxLength": 140 },
+        "contactName": { "type": "string", "maxLength": 100 },
+        "phone": { "type": "string", "maxLength": 30 },
+        "email": { "type": "string", "maxLength": 160 },
+        "address": { "type": "string", "maxLength": 300 },
+        "paymentTermDays": { "type": "number" },
+        "payableBalanceLak": { "type": "number" },
+        "notes": { "type": "string", "maxLength": 300 },
+        "status": { "type": "string", "enum": ["active", "inactive"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["supplierId", "organizationId", "ownerUid", "code", "name", "contactName", "phone", "email", "address", "paymentTermDays", "payableBalanceLak", "notes", "status", "createdAt", "updatedAt"]
+    },
+    "PurchaseOrder": {
+      "title": "PurchaseOrder",
+      "description": "ใบสั่งซื้อสินค้า (PO) และการรับสินค้าเข้าคลังแบบ WAC",
+      "type": "object",
+      "properties": {
+        "poId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "poNumber": { "type": "string", "maxLength": 40 },
+        "organizationId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "branchId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerUid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "supplierId": { "type": "string", "maxLength": 64 },
+        "supplierName": { "type": "string", "maxLength": 140 },
+        "items": { "type": "array" },
+        "subtotalLak": { "type": "number" },
+        "discountLak": { "type": "number" },
+        "shippingFeeLak": { "type": "number" },
+        "taxAmountLak": { "type": "number" },
+        "grandTotalLak": { "type": "number" },
+        "paymentType": { "type": "string", "enum": ["cash", "credit"] },
+        "paidAmountLak": { "type": "number" },
+        "creditDueLak": { "type": "number" },
+        "dueDate": { "type": "string", "maxLength": 20 },
+        "status": { "type": "string", "enum": ["ordered", "received", "cancelled"] },
+        "notes": { "type": "string", "maxLength": 300 },
+        "createdByUid": { "type": "string", "maxLength": 128 },
+        "createdByName": { "type": "string", "maxLength": 120 },
+        "receivedAt": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["poId", "poNumber", "organizationId", "branchId", "ownerUid", "supplierId", "supplierName", "items", "subtotalLak", "discountLak", "shippingFeeLak", "taxAmountLak", "grandTotalLak", "paymentType", "paidAmountLak", "creditDueLak", "status", "notes", "createdByUid", "createdByName", "createdAt", "updatedAt"]
+    },
+    "ArPayment": {
+      "title": "ArPayment",
+      "description": "รายการรับชำระหนี้ลูกหนี้การค้า",
+      "type": "object",
+      "properties": {
+        "paymentId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "organizationId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "branchId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerUid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "customerId": { "type": "string", "maxLength": 64 },
+        "customerName": { "type": "string", "maxLength": 120 },
+        "saleId": { "type": "string", "maxLength": 64 },
+        "invoiceNumber": { "type": "string", "maxLength": 40 },
+        "amountLak": { "type": "number" },
+        "paymentMethod": { "type": "string", "enum": ["cash", "transfer", "qr"] },
+        "notes": { "type": "string", "maxLength": 300 },
+        "recordedByUid": { "type": "string", "maxLength": 128 },
+        "recordedByName": { "type": "string", "maxLength": 120 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["paymentId", "organizationId", "branchId", "ownerUid", "customerId", "customerName", "invoiceNumber", "amountLak", "paymentMethod", "notes", "recordedByUid", "recordedByName", "createdAt"]
+    },
+    "ApPayment": {
+      "title": "ApPayment",
+      "description": "รายการจ่ายชำระหนี้ซัพพลายเออร์",
+      "type": "object",
+      "properties": {
+        "paymentId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "organizationId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "branchId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerUid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "supplierId": { "type": "string", "maxLength": 64 },
+        "supplierName": { "type": "string", "maxLength": 140 },
+        "poId": { "type": "string", "maxLength": 64 },
+        "poNumber": { "type": "string", "maxLength": 40 },
+        "amountLak": { "type": "number" },
+        "paymentMethod": { "type": "string", "enum": ["cash", "transfer", "qr"] },
+        "notes": { "type": "string", "maxLength": 300 },
+        "recordedByUid": { "type": "string", "maxLength": 128 },
+        "recordedByName": { "type": "string", "maxLength": 120 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["paymentId", "organizationId", "branchId", "ownerUid", "supplierId", "supplierName", "poNumber", "amountLak", "paymentMethod", "notes", "recordedByUid", "recordedByName", "createdAt"]
+    },
+    "IncomeEntry": {
+      "title": "IncomeEntry",
+      "description": "บันทึกรายรับของร้านค้า",
+      "type": "object",
+      "properties": {
+        "entryId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "organizationId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "branchId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerUid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "category": { "type": "string", "enum": ["sales", "ar_collection", "other_income"] },
+        "title": { "type": "string", "minLength": 1, "maxLength": 160 },
+        "amountLak": { "type": "number" },
+        "paymentMethod": { "type": "string", "enum": ["cash", "transfer", "qr"] },
+        "referenceNo": { "type": "string", "maxLength": 60 },
+        "notes": { "type": "string", "maxLength": 300 },
+        "entryDate": { "type": "string", "maxLength": 20 },
+        "recordedByUid": { "type": "string", "maxLength": 128 },
+        "recordedByName": { "type": "string", "maxLength": 120 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["entryId", "organizationId", "branchId", "ownerUid", "category", "title", "amountLak", "paymentMethod", "referenceNo", "notes", "entryDate", "recordedByUid", "recordedByName", "createdAt"]
+    },
+    "ExpenseEntry": {
+      "title": "ExpenseEntry",
+      "description": "บันทึกรายจ่ายดำเนินงาน 7 หมวดหมู่ของร้าน",
+      "type": "object",
+      "properties": {
+        "entryId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "organizationId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "branchId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerUid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "category": { "type": "string", "enum": ["inventory_purchase", "rent", "utilities", "salary", "transport", "marketing", "maintenance_other"] },
+        "title": { "type": "string", "minLength": 1, "maxLength": 160 },
+        "amountLak": { "type": "number" },
+        "paymentMethod": { "type": "string", "enum": ["cash", "transfer", "qr"] },
+        "referenceNo": { "type": "string", "maxLength": 60 },
+        "notes": { "type": "string", "maxLength": 300 },
+        "entryDate": { "type": "string", "maxLength": 20 },
+        "recordedByUid": { "type": "string", "maxLength": 128 },
+        "recordedByName": { "type": "string", "maxLength": 120 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["entryId", "organizationId", "branchId", "ownerUid", "category", "title", "amountLak", "paymentMethod", "referenceNo", "notes", "entryDate", "recordedByUid", "recordedByName", "createdAt"]
+    },
+    "JournalEntry": {
+      "title": "JournalEntry",
+      "description": "สมุดรายวันทั่วไปบัญชีคู่ (Double-entry Accounting)",
+      "type": "object",
+      "properties": {
+        "journalId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "entryNumber": { "type": "string", "maxLength": 40 },
+        "organizationId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "branchId": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "ownerUid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "entryDate": { "type": "string", "maxLength": 20 },
+        "description": { "type": "string", "maxLength": 300 },
+        "sourceType": { "type": "string", "enum": ["manual", "sale", "purchase", "expense", "income", "ar_payment", "ap_payment"] },
+        "referenceNo": { "type": "string", "maxLength": 60 },
+        "lines": { "type": "array" },
+        "totalDebitLak": { "type": "number" },
+        "totalCreditLak": { "type": "number" },
+        "createdByUid": { "type": "string", "maxLength": 128 },
+        "createdByName": { "type": "string", "maxLength": 120 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["journalId", "entryNumber", "organizationId", "branchId", "ownerUid", "entryDate", "description", "sourceType", "referenceNo", "lines", "totalDebitLak", "totalCreditLak", "createdByUid", "createdByName", "createdAt"]
     }
   },
   "firestore": {
@@ -441,6 +675,46 @@
     "/posHeldBills/{heldId}": {
       "schema": { "$ref": "#/entities/PosHeldBill" },
       "description": "บิลที่พักไว้ชั่วคราวบนหน้าจอขาย POS"
+    },
+    "/membershipTiers/{tierId}": {
+      "schema": { "$ref": "#/entities/MembershipTier" },
+      "description": "ระดับสมาชิกและอัตราส่วนลด/คะแนน"
+    },
+    "/promotions/{promotionId}": {
+      "schema": { "$ref": "#/entities/Promotion" },
+      "description": "โปรโมชั่นส่วนลดหน้าร้าน"
+    },
+    "/customers/{customerId}": {
+      "schema": { "$ref": "#/entities/Customer" },
+      "description": "ฐานข้อมูลลูกค้า สมาชิก และวงเงินเครดิต"
+    },
+    "/suppliers/{supplierId}": {
+      "schema": { "$ref": "#/entities/Supplier" },
+      "description": "ฐานข้อมูลซัพพลายเออร์"
+    },
+    "/purchaseOrders/{poId}": {
+      "schema": { "$ref": "#/entities/PurchaseOrder" },
+      "description": "ใบสั่งซื้อและการรับสินค้าเข้าคลัง"
+    },
+    "/arPayments/{paymentId}": {
+      "schema": { "$ref": "#/entities/ArPayment" },
+      "description": "ประวัติรับชำระหนี้ลูกหนี้"
+    },
+    "/apPayments/{paymentId}": {
+      "schema": { "$ref": "#/entities/ApPayment" },
+      "description": "ประวัติจ่ายชำระหนี้ซัพพลายเออร์"
+    },
+    "/incomeEntries/{entryId}": {
+      "schema": { "$ref": "#/entities/IncomeEntry" },
+      "description": "สมุดบันทึกรายรับ"
+    },
+    "/expenseEntries/{entryId}": {
+      "schema": { "$ref": "#/entities/ExpenseEntry" },
+      "description": "สมุดบันทึกรายจ่าย 7 หมวดหมู่"
+    },
+    "/journalEntries/{journalId}": {
+      "schema": { "$ref": "#/entities/JournalEntry" },
+      "description": "สมุดรายวันทั่วไปบัญชีคู่"
     }
   }
 }

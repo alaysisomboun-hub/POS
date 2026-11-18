@@ -469,6 +469,301 @@ service cloud.firestore {
         data.updatedAt is timestamp;
     }
 
+    function isValidMembershipTier(data) {
+      return data.keys().hasAll([
+          'tierId', 'organizationId', 'ownerUid', 'name', 'discountPercent',
+          'pointsPer1000Lak', 'minSpendLak', 'description', 'status',
+          'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'tierId', 'organizationId', 'ownerUid', 'name', 'discountPercent',
+          'pointsPer1000Lak', 'minSpendLak', 'description', 'status',
+          'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.tierId) && data.tierId.size() <= 64 &&
+        isValidId(data.organizationId) && data.organizationId.size() <= 64 &&
+        isValidId(data.ownerUid) &&
+        data.name is string && data.name.size() >= 1 && data.name.size() <= 80 &&
+        data.discountPercent is number && data.discountPercent >= 0 && data.discountPercent <= 100 &&
+        data.pointsPer1000Lak is number && data.pointsPer1000Lak >= 0 &&
+        data.minSpendLak is number && data.minSpendLak >= 0 &&
+        data.description is string && data.description.size() <= 300 &&
+        data.status in ['active', 'inactive'] &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidPromotion(data) {
+      return data.keys().hasAll([
+          'promotionId', 'organizationId', 'branchId', 'ownerUid', 'code',
+          'name', 'promoType', 'discountValue', 'minSpendLak', 'startDate',
+          'endDate', 'status', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'promotionId', 'organizationId', 'branchId', 'ownerUid', 'code',
+          'name', 'promoType', 'discountValue', 'minSpendLak', 'startDate',
+          'endDate', 'status', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.promotionId) && data.promotionId.size() <= 64 &&
+        isValidId(data.organizationId) && data.organizationId.size() <= 64 &&
+        isMainBranchId(data.branchId) &&
+        isValidId(data.ownerUid) &&
+        data.code is string && data.code.size() <= 40 &&
+        data.name is string && data.name.size() >= 1 && data.name.size() <= 120 &&
+        data.promoType in ['percent_bill', 'fixed_bill'] &&
+        data.discountValue is number && data.discountValue >= 0 &&
+        data.minSpendLak is number && data.minSpendLak >= 0 &&
+        data.startDate is string && data.startDate.size() <= 20 &&
+        data.endDate is string && data.endDate.size() <= 20 &&
+        data.status in ['active', 'inactive'] &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidCustomer(data) {
+      return data.keys().hasAll([
+          'customerId', 'organizationId', 'branchId', 'ownerUid', 'code',
+          'name', 'phone', 'email', 'address', 'tierId', 'tierName',
+          'pointsBalance', 'creditLimitLak', 'creditBalanceLak',
+          'totalSpentLak', 'notes', 'status', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'customerId', 'organizationId', 'branchId', 'ownerUid', 'code',
+          'name', 'phone', 'email', 'address', 'tierId', 'tierName',
+          'pointsBalance', 'creditLimitLak', 'creditBalanceLak',
+          'totalSpentLak', 'notes', 'status', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.customerId) && data.customerId.size() <= 64 &&
+        isValidId(data.organizationId) && data.organizationId.size() <= 64 &&
+        isMainBranchId(data.branchId) &&
+        isValidId(data.ownerUid) &&
+        data.code is string && data.code.size() <= 30 &&
+        data.name is string && data.name.size() >= 1 && data.name.size() <= 120 &&
+        data.phone is string && data.phone.size() <= 30 &&
+        data.email is string && data.email.size() <= 160 &&
+        data.address is string && data.address.size() <= 300 &&
+        (data.tierId == null || (data.tierId is string && data.tierId.size() <= 64)) &&
+        data.tierName is string && data.tierName.size() <= 80 &&
+        data.pointsBalance is number && data.pointsBalance >= 0 &&
+        data.creditLimitLak is number && data.creditLimitLak >= 0 &&
+        data.creditBalanceLak is number && data.creditBalanceLak >= 0 &&
+        data.totalSpentLak is number && data.totalSpentLak >= 0 &&
+        data.notes is string && data.notes.size() <= 300 &&
+        data.status in ['active', 'inactive'] &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidSupplier(data) {
+      return data.keys().hasAll([
+          'supplierId', 'organizationId', 'ownerUid', 'code', 'name',
+          'contactName', 'phone', 'email', 'address', 'paymentTermDays',
+          'payableBalanceLak', 'notes', 'status', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'supplierId', 'organizationId', 'ownerUid', 'code', 'name',
+          'contactName', 'phone', 'email', 'address', 'paymentTermDays',
+          'payableBalanceLak', 'notes', 'status', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.supplierId) && data.supplierId.size() <= 64 &&
+        isValidId(data.organizationId) && data.organizationId.size() <= 64 &&
+        isValidId(data.ownerUid) &&
+        data.code is string && data.code.size() <= 30 &&
+        data.name is string && data.name.size() >= 1 && data.name.size() <= 140 &&
+        data.contactName is string && data.contactName.size() <= 100 &&
+        data.phone is string && data.phone.size() <= 30 &&
+        data.email is string && data.email.size() <= 160 &&
+        data.address is string && data.address.size() <= 300 &&
+        data.paymentTermDays is number && data.paymentTermDays >= 0 &&
+        data.payableBalanceLak is number && data.payableBalanceLak >= 0 &&
+        data.notes is string && data.notes.size() <= 300 &&
+        data.status in ['active', 'inactive'] &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidPurchaseOrder(data) {
+      return data.keys().hasAll([
+          'poId', 'poNumber', 'organizationId', 'branchId', 'ownerUid',
+          'supplierId', 'supplierName', 'items', 'subtotalLak', 'discountLak',
+          'shippingFeeLak', 'taxAmountLak', 'grandTotalLak', 'paymentType',
+          'paidAmountLak', 'creditDueLak', 'dueDate', 'status', 'notes',
+          'createdByUid', 'createdByName', 'receivedAt', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'poId', 'poNumber', 'organizationId', 'branchId', 'ownerUid',
+          'supplierId', 'supplierName', 'items', 'subtotalLak', 'discountLak',
+          'shippingFeeLak', 'taxAmountLak', 'grandTotalLak', 'paymentType',
+          'paidAmountLak', 'creditDueLak', 'dueDate', 'status', 'notes',
+          'createdByUid', 'createdByName', 'receivedAt', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.poId) && data.poId.size() <= 64 &&
+        data.poNumber is string && data.poNumber.size() >= 1 && data.poNumber.size() <= 40 &&
+        isValidId(data.organizationId) && data.organizationId.size() <= 64 &&
+        isMainBranchId(data.branchId) &&
+        isValidId(data.ownerUid) &&
+        isValidId(data.supplierId) && data.supplierId.size() <= 64 &&
+        data.supplierName is string && data.supplierName.size() >= 1 && data.supplierName.size() <= 140 &&
+        data.items is list && data.items.size() >= 1 && data.items.size() <= 100 &&
+        data.items[0] is map &&
+        data.subtotalLak is number && data.subtotalLak >= 0 &&
+        data.discountLak is number && data.discountLak >= 0 &&
+        data.shippingFeeLak is number && data.shippingFeeLak >= 0 &&
+        data.taxAmountLak is number && data.taxAmountLak >= 0 &&
+        data.grandTotalLak is number && data.grandTotalLak >= 0 &&
+        data.paymentType in ['cash', 'credit'] &&
+        data.paidAmountLak is number && data.paidAmountLak >= 0 &&
+        data.creditDueLak is number && data.creditDueLak >= 0 &&
+        (data.dueDate == null || (data.dueDate is string && data.dueDate.size() <= 20)) &&
+        data.status in ['ordered', 'received', 'cancelled'] &&
+        data.notes is string && data.notes.size() <= 300 &&
+        isValidId(data.createdByUid) &&
+        data.createdByName is string && data.createdByName.size() <= 120 &&
+        (data.receivedAt == null || data.receivedAt is timestamp) &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidArPayment(data) {
+      return data.keys().hasAll([
+          'paymentId', 'organizationId', 'branchId', 'ownerUid', 'customerId',
+          'customerName', 'saleId', 'invoiceNumber', 'amountLak', 'paymentMethod',
+          'notes', 'recordedByUid', 'recordedByName', 'createdAt'
+        ]) &&
+        data.keys().hasOnly([
+          'paymentId', 'organizationId', 'branchId', 'ownerUid', 'customerId',
+          'customerName', 'saleId', 'invoiceNumber', 'amountLak', 'paymentMethod',
+          'notes', 'recordedByUid', 'recordedByName', 'createdAt'
+        ]) &&
+        isValidId(data.paymentId) && data.paymentId.size() <= 64 &&
+        isValidId(data.organizationId) && data.organizationId.size() <= 64 &&
+        isMainBranchId(data.branchId) &&
+        isValidId(data.ownerUid) &&
+        isValidId(data.customerId) && data.customerId.size() <= 64 &&
+        data.customerName is string && data.customerName.size() >= 1 && data.customerName.size() <= 120 &&
+        (data.saleId == null || (data.saleId is string && data.saleId.size() <= 64)) &&
+        data.invoiceNumber is string && data.invoiceNumber.size() <= 40 &&
+        data.amountLak is number && data.amountLak > 0 &&
+        data.paymentMethod in ['cash', 'transfer', 'qr'] &&
+        data.notes is string && data.notes.size() <= 300 &&
+        isValidId(data.recordedByUid) &&
+        data.recordedByName is string && data.recordedByName.size() <= 120 &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidApPayment(data) {
+      return data.keys().hasAll([
+          'paymentId', 'organizationId', 'branchId', 'ownerUid', 'supplierId',
+          'supplierName', 'poId', 'poNumber', 'amountLak', 'paymentMethod',
+          'notes', 'recordedByUid', 'recordedByName', 'createdAt'
+        ]) &&
+        data.keys().hasOnly([
+          'paymentId', 'organizationId', 'branchId', 'ownerUid', 'supplierId',
+          'supplierName', 'poId', 'poNumber', 'amountLak', 'paymentMethod',
+          'notes', 'recordedByUid', 'recordedByName', 'createdAt'
+        ]) &&
+        isValidId(data.paymentId) && data.paymentId.size() <= 64 &&
+        isValidId(data.organizationId) && data.organizationId.size() <= 64 &&
+        isMainBranchId(data.branchId) &&
+        isValidId(data.ownerUid) &&
+        isValidId(data.supplierId) && data.supplierId.size() <= 64 &&
+        data.supplierName is string && data.supplierName.size() >= 1 && data.supplierName.size() <= 140 &&
+        (data.poId == null || (data.poId is string && data.poId.size() <= 64)) &&
+        data.poNumber is string && data.poNumber.size() <= 40 &&
+        data.amountLak is number && data.amountLak > 0 &&
+        data.paymentMethod in ['cash', 'transfer', 'qr'] &&
+        data.notes is string && data.notes.size() <= 300 &&
+        isValidId(data.recordedByUid) &&
+        data.recordedByName is string && data.recordedByName.size() <= 120 &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidIncomeEntry(data) {
+      return data.keys().hasAll([
+          'entryId', 'organizationId', 'branchId', 'ownerUid', 'category',
+          'title', 'amountLak', 'paymentMethod', 'referenceNo', 'notes',
+          'entryDate', 'recordedByUid', 'recordedByName', 'createdAt'
+        ]) &&
+        data.keys().hasOnly([
+          'entryId', 'organizationId', 'branchId', 'ownerUid', 'category',
+          'title', 'amountLak', 'paymentMethod', 'referenceNo', 'notes',
+          'entryDate', 'recordedByUid', 'recordedByName', 'createdAt'
+        ]) &&
+        isValidId(data.entryId) && data.entryId.size() <= 64 &&
+        isValidId(data.organizationId) && data.organizationId.size() <= 64 &&
+        isMainBranchId(data.branchId) &&
+        isValidId(data.ownerUid) &&
+        data.category in ['sales', 'ar_collection', 'other_income'] &&
+        data.title is string && data.title.size() >= 1 && data.title.size() <= 160 &&
+        data.amountLak is number && data.amountLak > 0 &&
+        data.paymentMethod in ['cash', 'transfer', 'qr'] &&
+        data.referenceNo is string && data.referenceNo.size() <= 60 &&
+        data.notes is string && data.notes.size() <= 300 &&
+        data.entryDate is string && data.entryDate.size() >= 1 && data.entryDate.size() <= 20 &&
+        isValidId(data.recordedByUid) &&
+        data.recordedByName is string && data.recordedByName.size() <= 120 &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidExpenseEntry(data) {
+      return data.keys().hasAll([
+          'entryId', 'organizationId', 'branchId', 'ownerUid', 'category',
+          'title', 'amountLak', 'paymentMethod', 'referenceNo', 'notes',
+          'entryDate', 'recordedByUid', 'recordedByName', 'createdAt'
+        ]) &&
+        data.keys().hasOnly([
+          'entryId', 'organizationId', 'branchId', 'ownerUid', 'category',
+          'title', 'amountLak', 'paymentMethod', 'referenceNo', 'notes',
+          'entryDate', 'recordedByUid', 'recordedByName', 'createdAt'
+        ]) &&
+        isValidId(data.entryId) && data.entryId.size() <= 64 &&
+        isValidId(data.organizationId) && data.organizationId.size() <= 64 &&
+        isMainBranchId(data.branchId) &&
+        isValidId(data.ownerUid) &&
+        data.category in ['inventory_purchase', 'rent', 'utilities', 'salary', 'transport', 'marketing', 'maintenance_other'] &&
+        data.title is string && data.title.size() >= 1 && data.title.size() <= 160 &&
+        data.amountLak is number && data.amountLak > 0 &&
+        data.paymentMethod in ['cash', 'transfer', 'qr'] &&
+        data.referenceNo is string && data.referenceNo.size() <= 60 &&
+        data.notes is string && data.notes.size() <= 300 &&
+        data.entryDate is string && data.entryDate.size() >= 1 && data.entryDate.size() <= 20 &&
+        isValidId(data.recordedByUid) &&
+        data.recordedByName is string && data.recordedByName.size() <= 120 &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidJournalEntry(data) {
+      return data.keys().hasAll([
+          'journalId', 'entryNumber', 'organizationId', 'branchId', 'ownerUid',
+          'entryDate', 'description', 'sourceType', 'referenceNo', 'lines',
+          'totalDebitLak', 'totalCreditLak', 'createdByUid', 'createdByName',
+          'createdAt'
+        ]) &&
+        data.keys().hasOnly([
+          'journalId', 'entryNumber', 'organizationId', 'branchId', 'ownerUid',
+          'entryDate', 'description', 'sourceType', 'referenceNo', 'lines',
+          'totalDebitLak', 'totalCreditLak', 'createdByUid', 'createdByName',
+          'createdAt'
+        ]) &&
+        isValidId(data.journalId) && data.journalId.size() <= 64 &&
+        data.entryNumber is string && data.entryNumber.size() >= 1 && data.entryNumber.size() <= 40 &&
+        isValidId(data.organizationId) && data.organizationId.size() <= 64 &&
+        isMainBranchId(data.branchId) &&
+        isValidId(data.ownerUid) &&
+        data.entryDate is string && data.entryDate.size() >= 1 && data.entryDate.size() <= 20 &&
+        data.description is string && data.description.size() >= 1 && data.description.size() <= 300 &&
+        data.sourceType in ['manual', 'sale', 'purchase', 'expense', 'income', 'ar_payment', 'ap_payment'] &&
+        data.referenceNo is string && data.referenceNo.size() <= 60 &&
+        data.lines is list && data.lines.size() >= 2 && data.lines.size() <= 30 &&
+        data.lines[0] is map &&
+        data.totalDebitLak is number && data.totalDebitLak > 0 &&
+        data.totalCreditLak is number && data.totalCreditLak > 0 &&
+        data.totalDebitLak == data.totalCreditLak &&
+        isValidId(data.createdByUid) &&
+        data.createdByName is string && data.createdByName.size() <= 120 &&
+        data.createdAt is timestamp;
+    }
+
     // -------------------------------------------------------------------------
     // Collection Rules (Zero-Auth Direct Workspace with Strict Schema Validation)
     // -------------------------------------------------------------------------
@@ -749,7 +1044,7 @@ service cloud.firestore {
         incoming().createdAt == existing().createdAt &&
         incoming().updatedAt == request.time &&
         incoming().diff(existing()).affectedKeys().hasOnly([
-          'status', 'voidedReason', 'voidedByName', 'updatedAt'
+          'status', 'voidedReason', 'voidedByName', 'paidAmountLak', 'creditDueLak', 'updatedAt'
         ]);
       allow delete: if false;
     }
@@ -789,6 +1084,197 @@ service cloud.firestore {
         incoming().updatedAt == request.time &&
         incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']);
       allow delete: if false;
+    }
+
+    match /membershipTiers/{tierId} {
+      allow get: if isValidId(tierId) && isMainWorkspace(existing().organizationId);
+      allow list: if isMainWorkspace(existing().organizationId);
+      allow create: if isValidId(tierId) &&
+        isValidMembershipTier(incoming()) &&
+        isMainWorkspace(incoming().organizationId) &&
+        incoming().tierId == tierId &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        exists(/databases/$(database)/documents/organizations/$(incoming().organizationId));
+      allow update: if isValidId(tierId) &&
+        isValidMembershipTier(incoming()) &&
+        isMainWorkspace(existing().organizationId) &&
+        incoming().tierId == existing().tierId &&
+        incoming().organizationId == existing().organizationId &&
+        incoming().ownerUid == existing().ownerUid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'name', 'discountPercent', 'pointsPer1000Lak', 'minSpendLak',
+          'description', 'status', 'updatedAt'
+        ]);
+      allow delete: if false;
+    }
+
+    match /promotions/{promotionId} {
+      allow get: if isValidId(promotionId) && isMainWorkspace(existing().organizationId);
+      allow list: if isMainWorkspace(existing().organizationId);
+      allow create: if isValidId(promotionId) &&
+        isValidPromotion(incoming()) &&
+        isMainWorkspace(incoming().organizationId) &&
+        incoming().promotionId == promotionId &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        exists(/databases/$(database)/documents/organizations/$(incoming().organizationId));
+      allow update: if isValidId(promotionId) &&
+        isValidPromotion(incoming()) &&
+        isMainWorkspace(existing().organizationId) &&
+        incoming().promotionId == existing().promotionId &&
+        incoming().organizationId == existing().organizationId &&
+        incoming().branchId == existing().branchId &&
+        incoming().ownerUid == existing().ownerUid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'code', 'name', 'promoType', 'discountValue', 'minSpendLak',
+          'startDate', 'endDate', 'status', 'updatedAt'
+        ]);
+      allow delete: if false;
+    }
+
+    match /customers/{customerId} {
+      allow get: if isValidId(customerId) && isMainWorkspace(existing().organizationId);
+      allow list: if isMainWorkspace(existing().organizationId);
+      allow create: if isValidId(customerId) &&
+        isValidCustomer(incoming()) &&
+        isMainWorkspace(incoming().organizationId) &&
+        incoming().customerId == customerId &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        exists(/databases/$(database)/documents/organizations/$(incoming().organizationId));
+      allow update: if isValidId(customerId) &&
+        isValidCustomer(incoming()) &&
+        isMainWorkspace(existing().organizationId) &&
+        incoming().customerId == existing().customerId &&
+        incoming().organizationId == existing().organizationId &&
+        incoming().branchId == existing().branchId &&
+        incoming().ownerUid == existing().ownerUid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'code', 'name', 'phone', 'email', 'address', 'tierId', 'tierName',
+          'pointsBalance', 'creditLimitLak', 'creditBalanceLak', 'totalSpentLak',
+          'notes', 'status', 'updatedAt'
+        ]);
+      allow delete: if false;
+    }
+
+    match /suppliers/{supplierId} {
+      allow get: if isValidId(supplierId) && isMainWorkspace(existing().organizationId);
+      allow list: if isMainWorkspace(existing().organizationId);
+      allow create: if isValidId(supplierId) &&
+        isValidSupplier(incoming()) &&
+        isMainWorkspace(incoming().organizationId) &&
+        incoming().supplierId == supplierId &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        exists(/databases/$(database)/documents/organizations/$(incoming().organizationId));
+      allow update: if isValidId(supplierId) &&
+        isValidSupplier(incoming()) &&
+        isMainWorkspace(existing().organizationId) &&
+        incoming().supplierId == existing().supplierId &&
+        incoming().organizationId == existing().organizationId &&
+        incoming().ownerUid == existing().ownerUid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'code', 'name', 'contactName', 'phone', 'email', 'address',
+          'paymentTermDays', 'payableBalanceLak', 'notes', 'status', 'updatedAt'
+        ]);
+      allow delete: if false;
+    }
+
+    match /purchaseOrders/{poId} {
+      allow get: if isValidId(poId) && isMainWorkspace(existing().organizationId);
+      allow list: if isMainWorkspace(existing().organizationId);
+      allow create: if isValidId(poId) &&
+        isValidPurchaseOrder(incoming()) &&
+        isMainWorkspace(incoming().organizationId) &&
+        incoming().poId == poId &&
+        incoming().status in ['ordered', 'received'] &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        exists(/databases/$(database)/documents/organizations/$(incoming().organizationId));
+      allow update: if isValidId(poId) &&
+        isValidPurchaseOrder(incoming()) &&
+        isMainWorkspace(existing().organizationId) &&
+        existing().status != 'cancelled' &&
+        incoming().poId == existing().poId &&
+        incoming().poNumber == existing().poNumber &&
+        incoming().organizationId == existing().organizationId &&
+        incoming().branchId == existing().branchId &&
+        incoming().ownerUid == existing().ownerUid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'status', 'paidAmountLak', 'creditDueLak', 'receivedAt', 'notes', 'updatedAt'
+        ]);
+      allow delete: if false;
+    }
+
+    match /arPayments/{paymentId} {
+      allow get: if isValidId(paymentId) && isMainWorkspace(existing().organizationId);
+      allow list: if isMainWorkspace(existing().organizationId);
+      allow create: if isValidId(paymentId) &&
+        isValidArPayment(incoming()) &&
+        isMainWorkspace(incoming().organizationId) &&
+        incoming().paymentId == paymentId &&
+        incoming().createdAt == request.time &&
+        exists(/databases/$(database)/documents/organizations/$(incoming().organizationId));
+      allow update, delete: if false;
+    }
+
+    match /apPayments/{paymentId} {
+      allow get: if isValidId(paymentId) && isMainWorkspace(existing().organizationId);
+      allow list: if isMainWorkspace(existing().organizationId);
+      allow create: if isValidId(paymentId) &&
+        isValidApPayment(incoming()) &&
+        isMainWorkspace(incoming().organizationId) &&
+        incoming().paymentId == paymentId &&
+        incoming().createdAt == request.time &&
+        exists(/databases/$(database)/documents/organizations/$(incoming().organizationId));
+      allow update, delete: if false;
+    }
+
+    match /incomeEntries/{entryId} {
+      allow get: if isValidId(entryId) && isMainWorkspace(existing().organizationId);
+      allow list: if isMainWorkspace(existing().organizationId);
+      allow create: if isValidId(entryId) &&
+        isValidIncomeEntry(incoming()) &&
+        isMainWorkspace(incoming().organizationId) &&
+        incoming().entryId == entryId &&
+        incoming().createdAt == request.time &&
+        exists(/databases/$(database)/documents/organizations/$(incoming().organizationId));
+      allow update, delete: if false;
+    }
+
+    match /expenseEntries/{entryId} {
+      allow get: if isValidId(entryId) && isMainWorkspace(existing().organizationId);
+      allow list: if isMainWorkspace(existing().organizationId);
+      allow create: if isValidId(entryId) &&
+        isValidExpenseEntry(incoming()) &&
+        isMainWorkspace(incoming().organizationId) &&
+        incoming().entryId == entryId &&
+        incoming().createdAt == request.time &&
+        exists(/databases/$(database)/documents/organizations/$(incoming().organizationId));
+      allow update, delete: if false;
+    }
+
+    match /journalEntries/{journalId} {
+      allow get: if isValidId(journalId) && isMainWorkspace(existing().organizationId);
+      allow list: if isMainWorkspace(existing().organizationId);
+      allow create: if isValidId(journalId) &&
+        isValidJournalEntry(incoming()) &&
+        isMainWorkspace(incoming().organizationId) &&
+        incoming().journalId == journalId &&
+        incoming().createdAt == request.time &&
+        exists(/databases/$(database)/documents/organizations/$(incoming().organizationId));
+      allow update, delete: if false;
     }
   }
 }

@@ -16,9 +16,12 @@ import { generateSafeId } from '../../core/utils/id';
 import { roundLak, type RoundingMode } from '../../core/utils/money';
 import { getInventoryDocId } from '../inventory/stockService';
 import type {
+  Customer,
   HeldBillItem,
   InventoryBalance,
   InventoryLot,
+  JournalLine,
+  MembershipTier,
   PaymentMethodType,
   PaymentSplit,
   PosHeldBill,
@@ -63,6 +66,10 @@ function getVientianeDateStamp(): string {
   const m = parts.find((p) => p.type === 'month')?.value ?? '01';
   const d = parts.find((p) => p.type === 'day')?.value ?? '01';
   return `${y}${m}${d}`;
+}
+
+function getVientianeYmd(): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Vientiane' }).format(new Date());
 }
 
 export function generateInvoiceNumber(prefix = 'INV'): string {
@@ -178,6 +185,7 @@ export interface ExecutePosCheckoutParams {
   priceTier: PriceTier;
   customerId?: string | null;
   customerName: string;
+  membershipTier?: MembershipTier | null;
   cartItems: PosCartItemInput[];
   billDiscountLak: number;
   taxSettings?: SystemSetting['taxSettings'] | null;
@@ -200,6 +208,7 @@ export async function executePosCheckout(
     priceTier,
     customerId = null,
     customerName,
+    membershipTier = null,
     cartItems,
     billDiscountLak,
     taxSettings,
@@ -347,7 +356,28 @@ export async function executePosCheckout(
       }
     }
 
+    let customerRef: ReturnType<typeof doc> | null = null;
+    let loadedCustomer: Customer | null = null;
+    if (customerId) {
+      customerRef = doc(db, 'customers', customerId);
+      const custSnap = await tx.get(customerRef);
+      if (custSnap.exists()) {
+        loadedCustomer = custSnap.data() as Customer;
+      }
+    }
+
     // 2. VALIDATIONS
+    if (
+      loadedCustomer &&
+      creditDueLak > 0 &&
+      loadedCustomer.creditLimitLak > 0 &&
+      loadedCustomer.creditBalanceLak + creditDueLak > loadedCustomer.creditLimitLak
+    ) {
+      throw new Error(
+        `ลูกค้า "${loadedCustomer.name}" มียอดหนี้เกินวงเงินเครดิตที่กำหนด (คงเหลือได้อีก ${Math.max(0, loadedCustomer.creditLimitLak - loadedCustomer.creditBalanceLak).toLocaleString('en-US')} ₭)`,
+      );
+    }
+
     const runningBalanceByProduct = new Map<string, number>();
     const avgCostByProduct = new Map<string, number>();
 
@@ -532,6 +562,130 @@ export async function executePosCheckout(
       tx.update(heldBillRef, {
         status: 'resumed',
         updatedAt: serverTimestamp(),
+      });
+    }
+
+    if (customerRef && loadedCustomer) {
+      const pointsPer1000 = membershipTier?.pointsPer1000Lak ?? 1;
+      const earnedPoints = Math.floor(computed.grandTotalLak / 1000) * pointsPer1000;
+      tx.update(customerRef, {
+        pointsBalance: Math.max(0, Math.round(loadedCustomer.pointsBalance + earnedPoints)),
+        totalSpentLak: loadedCustomer.totalSpentLak + computed.grandTotalLak,
+        creditBalanceLak: loadedCustomer.creditBalanceLak + creditDueLak,
+        updatedAt: serverTimestamp(),
+      });
+    }
+
+    const entryDate = getVientianeYmd();
+    if (paidAmountLak > 0) {
+      const firstNonCredit = cleanPayments.find((p) => p.method !== 'credit');
+      const incomeMethod: 'cash' | 'transfer' | 'qr' =
+        firstNonCredit && firstNonCredit.method !== 'credit' ? firstNonCredit.method : 'cash';
+      const incId = generateSafeId('inc');
+      tx.set(doc(db, 'incomeEntries', incId), {
+        entryId: incId,
+        organizationId: user.organizationId,
+        branchId,
+        ownerUid: user.ownerUid,
+        category: 'sales',
+        title: `รายได้ขายหน้าร้าน ${invoiceNumber}`.slice(0, 160),
+        amountLak: paidAmountLak,
+        paymentMethod: incomeMethod,
+        referenceNo: invoiceNumber.slice(0, 60),
+        notes: `ลูกค้า: ${resolvedCustomerName}`.slice(0, 300),
+        entryDate,
+        recordedByUid: user.uid,
+        recordedByName: user.name.slice(0, 120),
+        createdAt: serverTimestamp(),
+      });
+    }
+
+    // Balanced Double-Entry Journal
+    const cashTendered = cleanPayments
+      .filter((p) => p.method === 'cash')
+      .reduce((s, p) => s + p.amountLak, 0);
+    const cashApplied = Math.min(paidAmountLak, cashTendered);
+    const bankApplied = Math.max(0, paidAmountLak - cashApplied);
+    const netRevenueLak = Math.max(0, computed.grandTotalLak - computed.taxAmountLak);
+
+    const journalLines: JournalLine[] = [];
+    if (cashApplied > 0) {
+      journalLines.push({
+        accountCode: '1110',
+        accountName: 'เงินสดในมือ',
+        debitLak: cashApplied,
+        creditLak: 0,
+      });
+    }
+    if (bankApplied > 0) {
+      journalLines.push({
+        accountCode: '1120',
+        accountName: 'เงินฝากธนาคาร / QR',
+        debitLak: bankApplied,
+        creditLak: 0,
+      });
+    }
+    if (creditDueLak > 0) {
+      journalLines.push({
+        accountCode: '1130',
+        accountName: 'ลูกหนี้การค้า',
+        debitLak: creditDueLak,
+        creditLak: 0,
+      });
+    }
+    if (finalCogsTotalLak > 0) {
+      journalLines.push({
+        accountCode: '5100',
+        accountName: 'ต้นทุนขาย (COGS)',
+        debitLak: finalCogsTotalLak,
+        creditLak: 0,
+      });
+    }
+    if (netRevenueLak > 0) {
+      journalLines.push({
+        accountCode: '4100',
+        accountName: 'รายได้จากการขายสินค้า',
+        debitLak: 0,
+        creditLak: netRevenueLak,
+      });
+    }
+    if (computed.taxAmountLak > 0) {
+      journalLines.push({
+        accountCode: '2120',
+        accountName: 'ภาษีขายค้างจ่าย',
+        debitLak: 0,
+        creditLak: computed.taxAmountLak,
+      });
+    }
+    if (finalCogsTotalLak > 0) {
+      journalLines.push({
+        accountCode: '1140',
+        accountName: 'สินค้าคงเหลือ',
+        debitLak: 0,
+        creditLak: finalCogsTotalLak,
+      });
+    }
+
+    const totalDr = journalLines.reduce((s, l) => s + l.debitLak, 0);
+    const totalCr = journalLines.reduce((s, l) => s + l.creditLak, 0);
+    if (journalLines.length >= 2 && totalDr > 0 && totalDr === totalCr) {
+      const journalId = generateSafeId('jnl');
+      tx.set(doc(db, 'journalEntries', journalId), {
+        journalId,
+        entryNumber: `JV-${invoiceNumber}`.slice(0, 40),
+        organizationId: user.organizationId,
+        branchId,
+        ownerUid: user.ownerUid,
+        entryDate,
+        description: `บันทึกการขายหน้าร้าน ${invoiceNumber} (${resolvedCustomerName})`.slice(0, 300),
+        sourceType: 'sale',
+        referenceNo: invoiceNumber.slice(0, 60),
+        lines: journalLines,
+        totalDebitLak: totalDr,
+        totalCreditLak: totalCr,
+        createdByUid: user.uid,
+        createdByName: user.name.slice(0, 120),
+        createdAt: serverTimestamp(),
       });
     }
 

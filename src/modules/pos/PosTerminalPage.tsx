@@ -39,13 +39,16 @@ import {
 } from './posService';
 import type {
   Category,
+  Customer,
   InventoryBalance,
+  MembershipTier,
   PaymentMethodType,
   PaymentSplit,
   PosHeldBill,
   PriceTier,
   Product,
   ProductUnit,
+  Promotion,
   SaleOrder,
 } from '../../core/firebase/types';
 
@@ -74,13 +77,18 @@ export function PosTerminalPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [balances, setBalances] = useState<InventoryBalance[]>([]);
   const [heldBills, setHeldBills] = useState<PosHeldBill[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [membershipTiers, setMembershipTiers] = useState<MembershipTier[]>([]);
+  const [promotions, setPromotions] = useState<Promotion[]>([]);
 
   const [searchText, setSearchText] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all');
   const [priceTier, setPriceTier] = useState<PriceTier>('retail');
 
   const [cartLines, setCartLines] = useState<CartLineState[]>([]);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>('');
   const [customerName, setCustomerName] = useState('ลูกค้าทั่วไป');
+  const [selectedPromotionId, setSelectedPromotionId] = useState<string>('');
   const [billDiscountLak, setBillDiscountLak] = useState<number>(0);
   const [billNotes, setBillNotes] = useState('');
   const [activeHeldBillId, setActiveHeldBillId] = useState<string | null>(null);
@@ -168,11 +176,55 @@ export function PosTerminalPage() {
       (err) => handleFirestoreError(err, OperationType.LIST, 'posHeldBills'),
     );
 
+    const unsubCustomers = onSnapshot(
+      query(
+        collection(db, 'customers'),
+        where('organizationId', '==', orgId),
+        where('branchId', '==', activeBranchId),
+      ),
+      (snap) => {
+        setCustomers(
+          snap.docs
+            .map((d) => d.data() as Customer)
+            .filter((c) => c.status === 'active')
+            .sort((a, b) => a.name.localeCompare(b.name)),
+        );
+      },
+      (err) => handleFirestoreError(err, OperationType.LIST, 'customers'),
+    );
+
+    const unsubTiers = onSnapshot(
+      query(collection(db, 'membershipTiers'), where('organizationId', '==', orgId)),
+      (snap) => {
+        setMembershipTiers(
+          snap.docs.map((d) => d.data() as MembershipTier).filter((t) => t.status === 'active'),
+        );
+      },
+      (err) => handleFirestoreError(err, OperationType.LIST, 'membershipTiers'),
+    );
+
+    const unsubPromos = onSnapshot(
+      query(
+        collection(db, 'promotions'),
+        where('organizationId', '==', orgId),
+        where('branchId', '==', activeBranchId),
+      ),
+      (snap) => {
+        setPromotions(
+          snap.docs.map((d) => d.data() as Promotion).filter((p) => p.status === 'active'),
+        );
+      },
+      (err) => handleFirestoreError(err, OperationType.LIST, 'promotions'),
+    );
+
     return () => {
       unsubProds();
       unsubCats();
       unsubInv();
       unsubHeld();
+      unsubCustomers();
+      unsubTiers();
+      unsubPromos();
     };
   }, [userProfile, activeBranchId]);
 
@@ -223,15 +275,61 @@ export function PosTerminalPage() {
     return list;
   }, [cartLines, productMap, priceTier]);
 
+  const selectedCustomer = useMemo(
+    () => customers.find((c) => c.customerId === selectedCustomerId) ?? null,
+    [customers, selectedCustomerId],
+  );
+
+  const selectedMembershipTier = useMemo(
+    () =>
+      selectedCustomer?.tierId
+        ? membershipTiers.find((t) => t.tierId === selectedCustomer.tierId) ?? null
+        : null,
+    [selectedCustomer, membershipTiers],
+  );
+
+  const eligiblePromotions = useMemo(() => {
+    const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Vientiane' }).format(
+      new Date(),
+    );
+    return promotions.filter((p) => p.startDate <= today && p.endDate >= today);
+  }, [promotions]);
+
+  const rawCartNetAfterItemDiscount = useMemo(
+    () =>
+      resolvedCartInputs.reduce((sum, entry) => {
+        const gross = Math.round(Math.max(1, Math.round(entry.qty)) * Math.max(0, Math.round(entry.unitPriceLak)));
+        const disc = Math.min(gross, Math.max(0, Math.round(entry.discountLak)));
+        return sum + Math.max(0, gross - disc);
+      }, 0),
+    [resolvedCartInputs],
+  );
+
+  const tierDiscountLak = useMemo(() => {
+    if (!selectedMembershipTier || selectedMembershipTier.discountPercent <= 0) return 0;
+    return Math.round((rawCartNetAfterItemDiscount * selectedMembershipTier.discountPercent) / 100);
+  }, [selectedMembershipTier, rawCartNetAfterItemDiscount]);
+
+  const promoDiscountLak = useMemo(() => {
+    const promo = eligiblePromotions.find((p) => p.promotionId === selectedPromotionId);
+    if (!promo || rawCartNetAfterItemDiscount < promo.minSpendLak) return 0;
+    if (promo.promoType === 'percent_bill') {
+      return Math.round((rawCartNetAfterItemDiscount * promo.discountValue) / 100);
+    }
+    return Math.round(promo.discountValue);
+  }, [eligiblePromotions, selectedPromotionId, rawCartNetAfterItemDiscount]);
+
+  const totalEffectiveBillDiscountLak = billDiscountLak + tierDiscountLak + promoDiscountLak;
+
   const billTotals = useMemo(
     () =>
       computeBillTotals({
         cartItems: resolvedCartInputs,
-        billDiscountLak,
+        billDiscountLak: totalEffectiveBillDiscountLak,
         taxSettings: settings?.taxSettings ?? null,
         roundingMode: settings?.currencySettings?.roundingMode ?? 'integer',
       }),
-    [resolvedCartInputs, billDiscountLak, settings],
+    [resolvedCartInputs, totalEffectiveBillDiscountLak, settings],
   );
 
   const getCartBaseQtyForProduct = (productId: string, overrideLines?: CartLineState[]): number => {
@@ -401,7 +499,9 @@ export function PosTerminalPage() {
 
   const clearCart = () => {
     setCartLines([]);
+    setSelectedCustomerId('');
     setCustomerName('ลูกค้าทั่วไป');
+    setSelectedPromotionId('');
     setBillDiscountLak(0);
     setBillNotes('');
     setActiveHeldBillId(null);
@@ -540,10 +640,11 @@ export function PosTerminalPage() {
         user: userProfile,
         branchId: activeBranchId,
         priceTier,
-        customerId: null,
-        customerName,
+        customerId: selectedCustomer?.customerId ?? null,
+        customerName: selectedCustomer ? selectedCustomer.name : customerName,
+        membershipTier: selectedMembershipTier,
         cartItems: resolvedCartInputs,
-        billDiscountLak,
+        billDiscountLak: totalEffectiveBillDiscountLak,
         taxSettings: settings?.taxSettings ?? null,
         roundingMode: settings?.currencySettings?.roundingMode ?? 'integer',
         invoicePrefix: settings?.receiptSettings?.prefix ?? 'INV',
@@ -791,20 +892,58 @@ export function PosTerminalPage() {
             </div>
           </div>
 
-          {/* Customer Name */}
-          <div className="px-4 py-3 border-b border-slate-100 flex items-center gap-2">
-            <User className="w-4 h-4 text-slate-400 shrink-0" />
-            <input
-              type="text"
-              maxLength={120}
-              value={customerName}
-              onChange={(e) => setCustomerName(e.target.value)}
-              placeholder="ชื่อลูกค้า (ค่าเริ่มต้น: ลูกค้าทั่วไป)"
-              className="flex-1 text-xs sm:text-sm text-slate-800 bg-transparent focus:outline-none"
-            />
-            <span className="text-[11px] font-semibold text-blue-700 shrink-0">
-              {PRICE_TIER_LABELS[priceTier]}
-            </span>
+          {/* Customer Selector & Name */}
+          <div className="px-4 py-3 border-b border-slate-100 space-y-2">
+            <div className="flex items-center gap-2">
+              <User className="w-4 h-4 text-slate-400 shrink-0" />
+              <select
+                value={selectedCustomerId}
+                onChange={(e) => {
+                  const id = e.target.value;
+                  setSelectedCustomerId(id);
+                  const found = customers.find((c) => c.customerId === id);
+                  if (found) {
+                    setCustomerName(found.name);
+                    if (found.tierId) setPriceTier('member');
+                  } else {
+                    setCustomerName('ลูกค้าทั่วไป');
+                  }
+                }}
+                className="flex-1 text-xs sm:text-sm text-slate-800 bg-slate-50 border border-slate-200 rounded-md px-2 py-1 focus:outline-none"
+              >
+                <option value="">ลูกค้าทั่วไป (Walk-in)</option>
+                {customers.map((c) => (
+                  <option key={c.customerId} value={c.customerId}>
+                    {c.name} {c.phone ? `(${c.phone})` : ''} {c.tierName ? `· ${c.tierName}` : ''}
+                  </option>
+                ))}
+              </select>
+              <span className="text-[11px] font-semibold text-blue-700 shrink-0">
+                {PRICE_TIER_LABELS[priceTier]}
+              </span>
+            </div>
+
+            {selectedCustomer ? (
+              <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500 bg-blue-50/50 border border-blue-100 rounded-md px-2.5 py-1.5 tabular-nums">
+                <span>
+                  แต้มสะสม: <strong className="text-blue-700">{selectedCustomer.pointsBalance.toLocaleString('en-US')}</strong>
+                  {selectedMembershipTier ? ` · ส่วนลดระดับ ${selectedMembershipTier.discountPercent}%` : ''}
+                </span>
+                <span>
+                  ค้างชำระ: <strong className={selectedCustomer.creditBalanceLak > 0 ? 'text-amber-700' : 'text-slate-700'}>{formatLak(selectedCustomer.creditBalanceLak)}</strong>
+                  {selectedCustomer.creditLimitLak > 0 ? ` / ${formatLak(selectedCustomer.creditLimitLak)}` : ''}
+                </span>
+              </div>
+            ) : (
+              <input
+                type="text"
+                maxLength={120}
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                placeholder="ระบุชื่อลูกค้า Walk-in (ค่าเริ่มต้น: ลูกค้าทั่วไป)"
+                className="w-full text-xs text-slate-700 bg-transparent border-b border-slate-100 pb-1 focus:outline-none focus:border-blue-400"
+              />
+            )}
           </div>
 
           {/* Cart Items */}
@@ -938,8 +1077,40 @@ export function PosTerminalPage() {
               </div>
             )}
 
+            {eligiblePromotions.length > 0 && (
+              <div className="flex items-center justify-between gap-3 text-xs text-slate-700">
+                <span className="shrink-0">โปรโมชั่น</span>
+                <select
+                  value={selectedPromotionId}
+                  onChange={(e) => setSelectedPromotionId(e.target.value)}
+                  className="flex-1 max-w-[220px] px-2 py-1 bg-white border border-slate-200 rounded-md text-xs"
+                >
+                  <option value="">ไม่ใช้โปรโมชั่น</option>
+                  {eligiblePromotions.map((p) => (
+                    <option key={p.promotionId} value={p.promotionId}>
+                      {p.code} · {p.name} (ขั้นต่ำ {formatLak(p.minSpendLak, false)})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {tierDiscountLak > 0 && (
+              <div className="flex justify-between text-xs text-blue-700 tabular-nums">
+                <span>ส่วนลดสมาชิก ({selectedMembershipTier?.name})</span>
+                <span>-{formatLak(tierDiscountLak)}</span>
+              </div>
+            )}
+
+            {promoDiscountLak > 0 && (
+              <div className="flex justify-between text-xs text-blue-700 tabular-nums">
+                <span>ส่วนลดโปรโมชั่น</span>
+                <span>-{formatLak(promoDiscountLak)}</span>
+              </div>
+            )}
+
             <div className="flex items-center justify-between gap-3 text-xs text-slate-700">
-              <span>ส่วนลดท้ายบิล (₭)</span>
+              <span>ส่วนลดเพิ่มเติมท้ายบิล (₭)</span>
               <input
                 type="number"
                 min={0}
