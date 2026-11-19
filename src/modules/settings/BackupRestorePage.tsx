@@ -27,7 +27,6 @@ import { OperationType, handleFirestoreError } from '../../core/firebase/errorHa
 import {
   DEFAULT_MAIN_BRANCH_ID,
   DEFAULT_ORG_ID,
-  DEFAULT_OWNER_UID,
   useFirebase,
 } from '../../core/firebase/FirebaseProvider';
 import { appendAuditLogToBatch, writeAuditLog } from '../../core/firebase/auditService';
@@ -776,9 +775,9 @@ export function BackupRestorePage() {
       ops.push((b) =>
         appendAuditLogToBatch(b, {
           user: {
-            uid: userProfile.uid || DEFAULT_OWNER_UID,
+            uid: userProfile.uid,
             organizationId: DEFAULT_ORG_ID,
-            ownerUid: userProfile.ownerUid || DEFAULT_OWNER_UID,
+            ownerUid: userProfile.ownerUid,
             name: userProfile.name,
             role: userProfile.role,
           },

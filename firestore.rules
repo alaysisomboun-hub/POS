@@ -13,7 +13,7 @@ service cloud.firestore {
     }
 
     // -------------------------------------------------------------------------
-    // Global Hardened Primitives (Schema & Workspace Integrity without Login Gate)
+    // Global Hardened Primitives (Firebase Auth + UID-Bound RBAC + Schema)
     // -------------------------------------------------------------------------
     function isValidId(id) {
       return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
@@ -25,6 +25,10 @@ service cloud.firestore {
 
     function existing() {
       return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
     }
 
     function isValidRole(role) {
@@ -45,6 +49,57 @@ service cloud.firestore {
 
     function isMainBranchId(branchId) {
       return branchId == 'br_hq_01';
+    }
+
+    function userDocPath(uid) {
+      return /databases/$(database)/documents/users/$(uid);
+    }
+
+    function callerHasProfile() {
+      return isSignedIn() && exists(userDocPath(request.auth.uid));
+    }
+
+    function callerProfile() {
+      return get(userDocPath(request.auth.uid)).data;
+    }
+
+    function isActiveOrgUser() {
+      return callerHasProfile() &&
+        callerProfile().status == 'active' &&
+        isMainWorkspace(callerProfile().organizationId);
+    }
+
+    function isActiveAdmin() {
+      return isActiveOrgUser() && callerProfile().role in ['super_admin', 'owner'];
+    }
+
+    function canManageStaff() {
+      return isActiveAdmin() || (
+        isActiveOrgUser() &&
+        callerProfile().role == 'branch_manager' &&
+        'staff' in callerProfile().permissions &&
+        callerProfile().permissions.staff is list &&
+        ('create' in callerProfile().permissions.staff || 'edit' in callerProfile().permissions.staff)
+      );
+    }
+
+    function hasModulePerm(mod, action) {
+      return isActiveAdmin() || (
+        isActiveOrgUser() &&
+        mod in callerProfile().permissions &&
+        callerProfile().permissions[mod] is list &&
+        action in callerProfile().permissions[mod]
+      );
+    }
+
+    function isMatchingTokenEmail(email) {
+      return isSignedIn() &&
+        request.auth.token.email_verified == true &&
+        request.auth.token.email != null &&
+        request.auth.token.email is string &&
+        request.auth.token.email != '' &&
+        email is string &&
+        email == request.auth.token.email.lower();
     }
 
     // -------------------------------------------------------------------------
@@ -99,10 +154,11 @@ service cloud.firestore {
           'role', 'branchIds', 'permissions', 'status', 'createdAt', 'lastLoginAt'
         ]) &&
         data.keys().hasOnly([
-          'uid', 'organizationId', 'ownerUid', 'name', 'email', 'phone',
+          'uid', 'employeeId', 'organizationId', 'ownerUid', 'name', 'email', 'phone',
           'role', 'branchIds', 'permissions', 'invitationId', 'status', 'createdAt', 'lastLoginAt'
         ]) &&
         isValidId(data.uid) &&
+        (!('employeeId' in data) || (data.employeeId is string && data.employeeId.size() <= 30)) &&
         isValidId(data.organizationId) && data.organizationId.size() <= 64 &&
         isValidId(data.ownerUid) &&
         data.name is string && data.name.size() >= 1 && data.name.size() <= 120 &&
@@ -766,35 +822,52 @@ service cloud.firestore {
     }
 
     // -------------------------------------------------------------------------
-    // Collection Rules (Zero-Auth Direct Workspace with Strict Schema Validation)
+    // Collection Rules (Authenticated Workspace with UID-Bound RBAC & Validation)
     // -------------------------------------------------------------------------
 
     match /organizations/{organizationId} {
-      allow get: if isValidId(organizationId) && isMainWorkspace(organizationId);
-      allow list: if isMainWorkspace(existing().organizationId);
-      allow create: if isValidId(organizationId) &&
+      allow get: if isSignedIn() && isValidId(organizationId) && isMainWorkspace(organizationId);
+      allow list: if isActiveOrgUser() && isMainWorkspace(existing().organizationId);
+      allow create: if isSignedIn() &&
+        isValidId(organizationId) &&
         isMainWorkspace(organizationId) &&
         isValidOrganization(incoming()) &&
         incoming().organizationId == organizationId &&
+        incoming().ownerUid == request.auth.uid &&
         incoming().createdAt == request.time &&
         incoming().updatedAt == request.time;
-      allow update: if isValidId(organizationId) &&
+      allow update: if isSignedIn() &&
+        isValidId(organizationId) &&
         isMainWorkspace(organizationId) &&
         isValidOrganization(incoming()) &&
         incoming().organizationId == existing().organizationId &&
-        incoming().ownerUid == existing().ownerUid &&
         incoming().createdAt == existing().createdAt &&
         incoming().updatedAt == request.time &&
-        incoming().diff(existing()).affectedKeys().hasOnly(['name', 'updatedAt']);
+        (
+          (
+            isActiveAdmin() &&
+            incoming().ownerUid == existing().ownerUid &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['name', 'updatedAt'])
+          ) ||
+          (
+            existing().ownerUid == 'usr_owner_main' &&
+            !callerHasProfile() &&
+            incoming().ownerUid == request.auth.uid &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['ownerUid', 'updatedAt']) &&
+            getAfter(userDocPath(request.auth.uid)).data.role == 'super_admin'
+          )
+        );
       allow delete: if false;
     }
 
     match /branches/{branchId} {
-      allow get: if isValidId(branchId) &&
+      allow get: if isSignedIn() &&
+        isValidId(branchId) &&
         isMainBranchId(branchId) &&
         isMainWorkspace(existing().organizationId);
       allow list: if false;
-      allow create: if isValidId(branchId) &&
+      allow create: if isSignedIn() &&
+        isValidId(branchId) &&
         isMainBranchId(branchId) &&
         isValidBranch(incoming()) &&
         isMainWorkspace(incoming().organizationId) &&
@@ -803,8 +876,11 @@ service cloud.firestore {
         incoming().status == 'active' &&
         incoming().createdAt == request.time &&
         incoming().updatedAt == request.time &&
-        existsAfter(/databases/$(database)/documents/organizations/$(incoming().organizationId));
-      allow update: if isValidId(branchId) &&
+        existsAfter(/databases/$(database)/documents/organizations/$(incoming().organizationId)) &&
+        (isActiveAdmin() || incoming().ownerUid == request.auth.uid);
+      allow update: if isActiveOrgUser() &&
+        hasModulePerm('settings', 'edit') &&
+        isValidId(branchId) &&
         isMainBranchId(branchId) &&
         isValidBranch(incoming()) &&
         isMainWorkspace(existing().organizationId) &&
@@ -822,16 +898,56 @@ service cloud.firestore {
     }
 
     match /users/{uid} {
-      allow get: if isValidId(uid) && isMainWorkspace(existing().organizationId);
-      allow list: if isMainWorkspace(existing().organizationId);
-      allow create: if isValidId(uid) &&
+      allow get: if isSignedIn() &&
+        isValidId(uid) &&
+        (request.auth.uid == uid || (isActiveOrgUser() && isMainWorkspace(existing().organizationId)));
+      allow list: if isSignedIn() &&
+        isMainWorkspace(existing().organizationId) &&
+        (isActiveOrgUser() || isMatchingTokenEmail(existing().email));
+      allow create: if isSignedIn() &&
+        isValidId(uid) &&
         isValidUserProfile(incoming()) &&
         isMainWorkspace(incoming().organizationId) &&
         incoming().uid == uid &&
         incoming().createdAt == request.time &&
         incoming().lastLoginAt == request.time &&
-        existsAfter(/databases/$(database)/documents/organizations/$(incoming().organizationId));
-      allow update: if isValidId(uid) &&
+        existsAfter(/databases/$(database)/documents/organizations/$(incoming().organizationId)) &&
+        (
+          isActiveAdmin() ||
+          (
+            canManageStaff() &&
+            !(incoming().role in ['super_admin', 'owner'])
+          ) ||
+          (
+            uid == request.auth.uid &&
+            !exists(/databases/$(database)/documents/organizations/org_main) &&
+            incoming().ownerUid == request.auth.uid &&
+            incoming().role == 'super_admin' &&
+            incoming().status == 'active'
+          ) ||
+          (
+            uid == request.auth.uid &&
+            exists(/databases/$(database)/documents/organizations/org_main) &&
+            get(/databases/$(database)/documents/organizations/org_main).data.ownerUid == 'usr_owner_main' &&
+            getAfter(/databases/$(database)/documents/organizations/org_main).data.ownerUid == request.auth.uid &&
+            incoming().ownerUid == request.auth.uid &&
+            incoming().role == 'super_admin' &&
+            incoming().status == 'active'
+          ) ||
+          (
+            uid == request.auth.uid &&
+            'invitationId' in incoming() &&
+            isValidId(incoming().invitationId) &&
+            exists(userDocPath(incoming().invitationId)) &&
+            isMatchingTokenEmail(get(userDocPath(incoming().invitationId)).data.email) &&
+            get(userDocPath(incoming().invitationId)).data.status == 'active' &&
+            incoming().role == get(userDocPath(incoming().invitationId)).data.role &&
+            incoming().permissions == get(userDocPath(incoming().invitationId)).data.permissions &&
+            incoming().status == get(userDocPath(incoming().invitationId)).data.status
+          )
+        );
+      allow update: if isSignedIn() &&
+        isValidId(uid) &&
         isValidUserProfile(incoming()) &&
         isMainWorkspace(existing().organizationId) &&
         incoming().uid == existing().uid &&
@@ -839,34 +955,74 @@ service cloud.firestore {
         incoming().ownerUid == existing().ownerUid &&
         incoming().createdAt == existing().createdAt &&
         incoming().lastLoginAt == request.time &&
-        incoming().diff(existing()).affectedKeys().hasOnly([
-          'name', 'email', 'phone', 'role', 'branchIds', 'permissions', 'status', 'lastLoginAt'
-        ]);
+        (
+          (
+            request.auth.uid == uid &&
+            isActiveOrgUser() &&
+            incoming().role == existing().role &&
+            incoming().permissions == existing().permissions &&
+            incoming().status == existing().status &&
+            incoming().branchIds == existing().branchIds &&
+            incoming().email == existing().email &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['lastLoginAt'])
+          ) ||
+          (
+            isActiveAdmin() &&
+            (uid != request.auth.uid || incoming().status == 'active') &&
+            incoming().diff(existing()).affectedKeys().hasOnly([
+              'name', 'employeeId', 'email', 'phone', 'role', 'branchIds', 'permissions', 'status', 'lastLoginAt'
+            ])
+          ) ||
+          (
+            canManageStaff() &&
+            uid != request.auth.uid &&
+            !(existing().role in ['super_admin', 'owner']) &&
+            !(incoming().role in ['super_admin', 'owner']) &&
+            incoming().diff(existing()).affectedKeys().hasOnly([
+              'name', 'employeeId', 'email', 'phone', 'role', 'branchIds', 'permissions', 'status', 'lastLoginAt'
+            ])
+          )
+        );
       allow delete: if false;
     }
 
     match /auditLogs/{auditId} {
-      allow get: if isValidId(auditId) && isMainWorkspace(existing().organizationId);
-      allow list: if isMainWorkspace(existing().organizationId);
-      allow create: if isValidId(auditId) &&
+      allow get: if isActiveOrgUser() &&
+        isValidId(auditId) &&
+        isMainWorkspace(existing().organizationId) &&
+        (hasModulePerm('staff', 'view') || hasModulePerm('dashboard', 'view') || hasModulePerm('backup', 'view') || existing().userId == request.auth.uid);
+      allow list: if isActiveOrgUser() &&
+        isMainWorkspace(existing().organizationId) &&
+        (hasModulePerm('staff', 'view') || hasModulePerm('dashboard', 'view') || hasModulePerm('backup', 'view') || existing().userId == request.auth.uid);
+      allow create: if isSignedIn() &&
+        isValidId(auditId) &&
         isValidAuditLog(incoming()) &&
         isMainWorkspace(incoming().organizationId) &&
         incoming().auditId == auditId &&
+        incoming().userId == request.auth.uid &&
         incoming().createdAt == request.time &&
-        existsAfter(/databases/$(database)/documents/organizations/$(incoming().organizationId));
+        existsAfter(/databases/$(database)/documents/organizations/$(incoming().organizationId)) &&
+        (
+          isActiveOrgUser() ||
+          existsAfter(userDocPath(request.auth.uid))
+        );
       allow update, delete: if false;
     }
 
     match /settings/{organizationId} {
-      allow get: if isValidId(organizationId) && isMainWorkspace(organizationId);
+      allow get: if isActiveOrgUser() && isValidId(organizationId) && isMainWorkspace(organizationId);
       allow list: if false;
-      allow create: if isValidId(organizationId) &&
+      allow create: if isSignedIn() &&
+        isValidId(organizationId) &&
         isMainWorkspace(organizationId) &&
         isValidSetting(incoming()) &&
         incoming().organizationId == organizationId &&
         incoming().updatedAt == request.time &&
-        existsAfter(/databases/$(database)/documents/organizations/$(organizationId));
-      allow update: if isValidId(organizationId) &&
+        existsAfter(/databases/$(database)/documents/organizations/$(organizationId)) &&
+        (isActiveAdmin() || incoming().ownerUid == request.auth.uid);
+      allow update: if isActiveOrgUser() &&
+        hasModulePerm('settings', 'edit') &&
+        isValidId(organizationId) &&
         isMainWorkspace(organizationId) &&
         isValidSetting(incoming()) &&
         incoming().organizationId == existing().organizationId &&
@@ -880,16 +1036,18 @@ service cloud.firestore {
     }
 
     match /categories/{categoryId} {
-      allow get: if isValidId(categoryId) && isMainWorkspace(existing().organizationId);
-      allow list: if isMainWorkspace(existing().organizationId);
-      allow create: if isValidId(categoryId) &&
+      allow get: if isActiveOrgUser() && isValidId(categoryId) && isMainWorkspace(existing().organizationId);
+      allow list: if isActiveOrgUser() && isMainWorkspace(existing().organizationId);
+      allow create: if isActiveOrgUser() &&
+        isValidId(categoryId) &&
         isValidCategory(incoming()) &&
         isMainWorkspace(incoming().organizationId) &&
         incoming().categoryId == categoryId &&
         incoming().createdAt == request.time &&
         incoming().updatedAt == request.time &&
         exists(/databases/$(database)/documents/organizations/$(incoming().organizationId));
-      allow update: if isValidId(categoryId) &&
+      allow update: if isActiveOrgUser() &&
+        isValidId(categoryId) &&
         isValidCategory(incoming()) &&
         isMainWorkspace(existing().organizationId) &&
         incoming().categoryId == existing().categoryId &&
@@ -904,16 +1062,18 @@ service cloud.firestore {
     }
 
     match /storageLocations/{locationId} {
-      allow get: if isValidId(locationId) && isMainWorkspace(existing().organizationId);
-      allow list: if isMainWorkspace(existing().organizationId);
-      allow create: if isValidId(locationId) &&
+      allow get: if isActiveOrgUser() && isValidId(locationId) && isMainWorkspace(existing().organizationId);
+      allow list: if isActiveOrgUser() && isMainWorkspace(existing().organizationId);
+      allow create: if isActiveOrgUser() &&
+        isValidId(locationId) &&
         isValidStorageLocation(incoming()) &&
         isMainWorkspace(incoming().organizationId) &&
         incoming().locationId == locationId &&
         incoming().createdAt == request.time &&
         incoming().updatedAt == request.time &&
         exists(/databases/$(database)/documents/organizations/$(incoming().organizationId));
-      allow update: if isValidId(locationId) &&
+      allow update: if isActiveOrgUser() &&
+        isValidId(locationId) &&
         isValidStorageLocation(incoming()) &&
         isMainWorkspace(existing().organizationId) &&
         incoming().locationId == existing().locationId &&
@@ -929,16 +1089,18 @@ service cloud.firestore {
     }
 
     match /products/{productId} {
-      allow get: if isValidId(productId) && isMainWorkspace(existing().organizationId);
-      allow list: if isMainWorkspace(existing().organizationId);
-      allow create: if isValidId(productId) &&
+      allow get: if isActiveOrgUser() && isValidId(productId) && isMainWorkspace(existing().organizationId);
+      allow list: if isActiveOrgUser() && isMainWorkspace(existing().organizationId);
+      allow create: if isActiveOrgUser() &&
+        isValidId(productId) &&
         isValidProduct(incoming()) &&
         isMainWorkspace(incoming().organizationId) &&
         incoming().productId == productId &&
         incoming().createdAt == request.time &&
         incoming().updatedAt == request.time &&
         exists(/databases/$(database)/documents/organizations/$(incoming().organizationId));
-      allow update: if isValidId(productId) &&
+      allow update: if isActiveOrgUser() &&
+        isValidId(productId) &&
         isValidProduct(incoming()) &&
         isMainWorkspace(existing().organizationId) &&
         incoming().productId == existing().productId &&
@@ -958,16 +1120,18 @@ service cloud.firestore {
     }
 
     match /inventory/{inventoryId} {
-      allow get: if isValidId(inventoryId) && isMainWorkspace(existing().organizationId);
-      allow list: if isMainWorkspace(existing().organizationId);
-      allow create: if isValidId(inventoryId) &&
+      allow get: if isActiveOrgUser() && isValidId(inventoryId) && isMainWorkspace(existing().organizationId);
+      allow list: if isActiveOrgUser() && isMainWorkspace(existing().organizationId);
+      allow create: if isActiveOrgUser() &&
+        isValidId(inventoryId) &&
         isValidInventoryBalance(incoming()) &&
         isMainWorkspace(incoming().organizationId) &&
         incoming().inventoryId == inventoryId &&
         incoming().lastMovementAt == request.time &&
         incoming().updatedAt == request.time &&
         existsAfter(/databases/$(database)/documents/products/$(incoming().productId));
-      allow update: if isValidId(inventoryId) &&
+      allow update: if isActiveOrgUser() &&
+        isValidId(inventoryId) &&
         isValidInventoryBalance(incoming()) &&
         isMainWorkspace(existing().organizationId) &&
         incoming().inventoryId == existing().inventoryId &&
@@ -985,16 +1149,18 @@ service cloud.firestore {
     }
 
     match /inventoryLots/{lotId} {
-      allow get: if isValidId(lotId) && isMainWorkspace(existing().organizationId);
-      allow list: if isMainWorkspace(existing().organizationId);
-      allow create: if isValidId(lotId) &&
+      allow get: if isActiveOrgUser() && isValidId(lotId) && isMainWorkspace(existing().organizationId);
+      allow list: if isActiveOrgUser() && isMainWorkspace(existing().organizationId);
+      allow create: if isActiveOrgUser() &&
+        isValidId(lotId) &&
         isValidInventoryLot(incoming()) &&
         isMainWorkspace(incoming().organizationId) &&
         incoming().lotId == lotId &&
         incoming().receivedAt == request.time &&
         incoming().updatedAt == request.time &&
         existsAfter(/databases/$(database)/documents/products/$(incoming().productId));
-      allow update: if isValidId(lotId) &&
+      allow update: if isActiveOrgUser() &&
+        isValidId(lotId) &&
         isValidInventoryLot(incoming()) &&
         isMainWorkspace(existing().organizationId) &&
         incoming().lotId == existing().lotId &&
@@ -1011,29 +1177,34 @@ service cloud.firestore {
     }
 
     match /stockMovements/{movementId} {
-      allow get: if isValidId(movementId) && isMainWorkspace(existing().organizationId);
-      allow list: if isMainWorkspace(existing().organizationId);
-      allow create: if isValidId(movementId) &&
+      allow get: if isActiveOrgUser() && isValidId(movementId) && isMainWorkspace(existing().organizationId);
+      allow list: if isActiveOrgUser() && isMainWorkspace(existing().organizationId);
+      allow create: if isActiveOrgUser() &&
+        isValidId(movementId) &&
         isValidStockMovement(incoming()) &&
         isMainWorkspace(incoming().organizationId) &&
         incoming().movementId == movementId &&
+        incoming().performedByUid == request.auth.uid &&
         incoming().createdAt == request.time &&
         existsAfter(/databases/$(database)/documents/products/$(incoming().productId));
       allow update, delete: if false;
     }
 
     match /sales/{saleId} {
-      allow get: if isValidId(saleId) && isMainWorkspace(existing().organizationId);
-      allow list: if isMainWorkspace(existing().organizationId);
-      allow create: if isValidId(saleId) &&
+      allow get: if isActiveOrgUser() && isValidId(saleId) && isMainWorkspace(existing().organizationId);
+      allow list: if isActiveOrgUser() && isMainWorkspace(existing().organizationId);
+      allow create: if isActiveOrgUser() &&
+        isValidId(saleId) &&
         isValidSaleOrder(incoming()) &&
         isMainWorkspace(incoming().organizationId) &&
         incoming().saleId == saleId &&
+        incoming().cashierUid == request.auth.uid &&
         incoming().status == 'completed' &&
         incoming().createdAt == request.time &&
         incoming().updatedAt == request.time &&
         exists(/databases/$(database)/documents/organizations/$(incoming().organizationId));
-      allow update: if isValidId(saleId) &&
+      allow update: if isActiveOrgUser() &&
+        isValidId(saleId) &&
         isValidSaleOrder(incoming()) &&
         isMainWorkspace(existing().organizationId) &&
         existing().status in ['completed', 'partial_return'] &&
@@ -1051,21 +1222,24 @@ service cloud.firestore {
     }
 
     match /saleReturns/{returnId} {
-      allow get: if isValidId(returnId) && isMainWorkspace(existing().organizationId);
-      allow list: if isMainWorkspace(existing().organizationId);
-      allow create: if isValidId(returnId) &&
+      allow get: if isActiveOrgUser() && isValidId(returnId) && isMainWorkspace(existing().organizationId);
+      allow list: if isActiveOrgUser() && isMainWorkspace(existing().organizationId);
+      allow create: if isActiveOrgUser() &&
+        isValidId(returnId) &&
         isValidSaleReturn(incoming()) &&
         isMainWorkspace(incoming().organizationId) &&
         incoming().returnId == returnId &&
+        incoming().performedByUid == request.auth.uid &&
         incoming().createdAt == request.time &&
         exists(/databases/$(database)/documents/sales/$(incoming().saleId));
       allow update, delete: if false;
     }
 
     match /posHeldBills/{heldId} {
-      allow get: if isValidId(heldId) && isMainWorkspace(existing().organizationId);
-      allow list: if isMainWorkspace(existing().organizationId);
-      allow create: if isValidId(heldId) &&
+      allow get: if isActiveOrgUser() && isValidId(heldId) && isMainWorkspace(existing().organizationId);
+      allow list: if isActiveOrgUser() && isMainWorkspace(existing().organizationId);
+      allow create: if isActiveOrgUser() &&
+        isValidId(heldId) &&
         isValidPosHeldBill(incoming()) &&
         isMainWorkspace(incoming().organizationId) &&
         incoming().heldId == heldId &&
@@ -1073,7 +1247,8 @@ service cloud.firestore {
         incoming().createdAt == request.time &&
         incoming().updatedAt == request.time &&
         exists(/databases/$(database)/documents/organizations/$(incoming().organizationId));
-      allow update: if isValidId(heldId) &&
+      allow update: if isActiveOrgUser() &&
+        isValidId(heldId) &&
         isValidPosHeldBill(incoming()) &&
         isMainWorkspace(existing().organizationId) &&
         existing().status == 'held' &&
@@ -1088,16 +1263,18 @@ service cloud.firestore {
     }
 
     match /membershipTiers/{tierId} {
-      allow get: if isValidId(tierId) && isMainWorkspace(existing().organizationId);
-      allow list: if isMainWorkspace(existing().organizationId);
-      allow create: if isValidId(tierId) &&
+      allow get: if isActiveOrgUser() && isValidId(tierId) && isMainWorkspace(existing().organizationId);
+      allow list: if isActiveOrgUser() && isMainWorkspace(existing().organizationId);
+      allow create: if isActiveOrgUser() &&
+        isValidId(tierId) &&
         isValidMembershipTier(incoming()) &&
         isMainWorkspace(incoming().organizationId) &&
         incoming().tierId == tierId &&
         incoming().createdAt == request.time &&
         incoming().updatedAt == request.time &&
         exists(/databases/$(database)/documents/organizations/$(incoming().organizationId));
-      allow update: if isValidId(tierId) &&
+      allow update: if isActiveOrgUser() &&
+        isValidId(tierId) &&
         isValidMembershipTier(incoming()) &&
         isMainWorkspace(existing().organizationId) &&
         incoming().tierId == existing().tierId &&
@@ -1113,16 +1290,18 @@ service cloud.firestore {
     }
 
     match /promotions/{promotionId} {
-      allow get: if isValidId(promotionId) && isMainWorkspace(existing().organizationId);
-      allow list: if isMainWorkspace(existing().organizationId);
-      allow create: if isValidId(promotionId) &&
+      allow get: if isActiveOrgUser() && isValidId(promotionId) && isMainWorkspace(existing().organizationId);
+      allow list: if isActiveOrgUser() && isMainWorkspace(existing().organizationId);
+      allow create: if isActiveOrgUser() &&
+        isValidId(promotionId) &&
         isValidPromotion(incoming()) &&
         isMainWorkspace(incoming().organizationId) &&
         incoming().promotionId == promotionId &&
         incoming().createdAt == request.time &&
         incoming().updatedAt == request.time &&
         exists(/databases/$(database)/documents/organizations/$(incoming().organizationId));
-      allow update: if isValidId(promotionId) &&
+      allow update: if isActiveOrgUser() &&
+        isValidId(promotionId) &&
         isValidPromotion(incoming()) &&
         isMainWorkspace(existing().organizationId) &&
         incoming().promotionId == existing().promotionId &&
@@ -1139,16 +1318,18 @@ service cloud.firestore {
     }
 
     match /customers/{customerId} {
-      allow get: if isValidId(customerId) && isMainWorkspace(existing().organizationId);
-      allow list: if isMainWorkspace(existing().organizationId);
-      allow create: if isValidId(customerId) &&
+      allow get: if isActiveOrgUser() && isValidId(customerId) && isMainWorkspace(existing().organizationId);
+      allow list: if isActiveOrgUser() && isMainWorkspace(existing().organizationId);
+      allow create: if isActiveOrgUser() &&
+        isValidId(customerId) &&
         isValidCustomer(incoming()) &&
         isMainWorkspace(incoming().organizationId) &&
         incoming().customerId == customerId &&
         incoming().createdAt == request.time &&
         incoming().updatedAt == request.time &&
         exists(/databases/$(database)/documents/organizations/$(incoming().organizationId));
-      allow update: if isValidId(customerId) &&
+      allow update: if isActiveOrgUser() &&
+        isValidId(customerId) &&
         isValidCustomer(incoming()) &&
         isMainWorkspace(existing().organizationId) &&
         incoming().customerId == existing().customerId &&
@@ -1166,16 +1347,18 @@ service cloud.firestore {
     }
 
     match /suppliers/{supplierId} {
-      allow get: if isValidId(supplierId) && isMainWorkspace(existing().organizationId);
-      allow list: if isMainWorkspace(existing().organizationId);
-      allow create: if isValidId(supplierId) &&
+      allow get: if isActiveOrgUser() && isValidId(supplierId) && isMainWorkspace(existing().organizationId);
+      allow list: if isActiveOrgUser() && isMainWorkspace(existing().organizationId);
+      allow create: if isActiveOrgUser() &&
+        isValidId(supplierId) &&
         isValidSupplier(incoming()) &&
         isMainWorkspace(incoming().organizationId) &&
         incoming().supplierId == supplierId &&
         incoming().createdAt == request.time &&
         incoming().updatedAt == request.time &&
         exists(/databases/$(database)/documents/organizations/$(incoming().organizationId));
-      allow update: if isValidId(supplierId) &&
+      allow update: if isActiveOrgUser() &&
+        isValidId(supplierId) &&
         isValidSupplier(incoming()) &&
         isMainWorkspace(existing().organizationId) &&
         incoming().supplierId == existing().supplierId &&
@@ -1191,17 +1374,20 @@ service cloud.firestore {
     }
 
     match /purchaseOrders/{poId} {
-      allow get: if isValidId(poId) && isMainWorkspace(existing().organizationId);
-      allow list: if isMainWorkspace(existing().organizationId);
-      allow create: if isValidId(poId) &&
+      allow get: if isActiveOrgUser() && isValidId(poId) && isMainWorkspace(existing().organizationId);
+      allow list: if isActiveOrgUser() && isMainWorkspace(existing().organizationId);
+      allow create: if isActiveOrgUser() &&
+        isValidId(poId) &&
         isValidPurchaseOrder(incoming()) &&
         isMainWorkspace(incoming().organizationId) &&
         incoming().poId == poId &&
+        incoming().createdByUid == request.auth.uid &&
         incoming().status in ['ordered', 'received'] &&
         incoming().createdAt == request.time &&
         incoming().updatedAt == request.time &&
         exists(/databases/$(database)/documents/organizations/$(incoming().organizationId));
-      allow update: if isValidId(poId) &&
+      allow update: if isActiveOrgUser() &&
+        isValidId(poId) &&
         isValidPurchaseOrder(incoming()) &&
         isMainWorkspace(existing().organizationId) &&
         existing().status != 'cancelled' &&
@@ -1219,60 +1405,80 @@ service cloud.firestore {
     }
 
     match /arPayments/{paymentId} {
-      allow get: if isValidId(paymentId) && isMainWorkspace(existing().organizationId);
-      allow list: if isMainWorkspace(existing().organizationId);
-      allow create: if isValidId(paymentId) &&
+      allow get: if isActiveOrgUser() && isValidId(paymentId) && isMainWorkspace(existing().organizationId);
+      allow list: if isActiveOrgUser() && isMainWorkspace(existing().organizationId);
+      allow create: if isActiveOrgUser() &&
+        isValidId(paymentId) &&
         isValidArPayment(incoming()) &&
         isMainWorkspace(incoming().organizationId) &&
         incoming().paymentId == paymentId &&
+        incoming().recordedByUid == request.auth.uid &&
         incoming().createdAt == request.time &&
         exists(/databases/$(database)/documents/organizations/$(incoming().organizationId));
       allow update, delete: if false;
     }
 
     match /apPayments/{paymentId} {
-      allow get: if isValidId(paymentId) && isMainWorkspace(existing().organizationId);
-      allow list: if isMainWorkspace(existing().organizationId);
-      allow create: if isValidId(paymentId) &&
+      allow get: if isActiveOrgUser() &&
+        isValidId(paymentId) &&
+        isMainWorkspace(existing().organizationId) &&
+        (hasModulePerm('accounts_payable', 'view') || hasModulePerm('accounting', 'view') || hasModulePerm('reports', 'view') || hasModulePerm('dashboard', 'view') || hasModulePerm('backup', 'view'));
+      allow list: if isActiveOrgUser() &&
+        isMainWorkspace(existing().organizationId) &&
+        (hasModulePerm('accounts_payable', 'view') || hasModulePerm('accounting', 'view') || hasModulePerm('reports', 'view') || hasModulePerm('dashboard', 'view') || hasModulePerm('backup', 'view'));
+      allow create: if isActiveOrgUser() &&
+        isValidId(paymentId) &&
         isValidApPayment(incoming()) &&
         isMainWorkspace(incoming().organizationId) &&
         incoming().paymentId == paymentId &&
+        incoming().recordedByUid == request.auth.uid &&
         incoming().createdAt == request.time &&
         exists(/databases/$(database)/documents/organizations/$(incoming().organizationId));
       allow update, delete: if false;
     }
 
     match /incomeEntries/{entryId} {
-      allow get: if isValidId(entryId) && isMainWorkspace(existing().organizationId);
-      allow list: if isMainWorkspace(existing().organizationId);
-      allow create: if isValidId(entryId) &&
+      allow get: if isActiveOrgUser() && isValidId(entryId) && isMainWorkspace(existing().organizationId);
+      allow list: if isActiveOrgUser() && isMainWorkspace(existing().organizationId);
+      allow create: if isActiveOrgUser() &&
+        isValidId(entryId) &&
         isValidIncomeEntry(incoming()) &&
         isMainWorkspace(incoming().organizationId) &&
         incoming().entryId == entryId &&
+        incoming().recordedByUid == request.auth.uid &&
         incoming().createdAt == request.time &&
         exists(/databases/$(database)/documents/organizations/$(incoming().organizationId));
       allow update, delete: if false;
     }
 
     match /expenseEntries/{entryId} {
-      allow get: if isValidId(entryId) && isMainWorkspace(existing().organizationId);
-      allow list: if isMainWorkspace(existing().organizationId);
-      allow create: if isValidId(entryId) &&
+      allow get: if isActiveOrgUser() && isValidId(entryId) && isMainWorkspace(existing().organizationId);
+      allow list: if isActiveOrgUser() && isMainWorkspace(existing().organizationId);
+      allow create: if isActiveOrgUser() &&
+        isValidId(entryId) &&
         isValidExpenseEntry(incoming()) &&
         isMainWorkspace(incoming().organizationId) &&
         incoming().entryId == entryId &&
+        incoming().recordedByUid == request.auth.uid &&
         incoming().createdAt == request.time &&
         exists(/databases/$(database)/documents/organizations/$(incoming().organizationId));
       allow update, delete: if false;
     }
 
     match /journalEntries/{journalId} {
-      allow get: if isValidId(journalId) && isMainWorkspace(existing().organizationId);
-      allow list: if isMainWorkspace(existing().organizationId);
-      allow create: if isValidId(journalId) &&
+      allow get: if isActiveOrgUser() &&
+        isValidId(journalId) &&
+        isMainWorkspace(existing().organizationId) &&
+        (hasModulePerm('accounting', 'view') || hasModulePerm('reports', 'view') || hasModulePerm('dashboard', 'view') || hasModulePerm('backup', 'view'));
+      allow list: if isActiveOrgUser() &&
+        isMainWorkspace(existing().organizationId) &&
+        (hasModulePerm('accounting', 'view') || hasModulePerm('reports', 'view') || hasModulePerm('dashboard', 'view') || hasModulePerm('backup', 'view'));
+      allow create: if isActiveOrgUser() &&
+        isValidId(journalId) &&
         isValidJournalEntry(incoming()) &&
         isMainWorkspace(incoming().organizationId) &&
         incoming().journalId == journalId &&
+        incoming().createdByUid == request.auth.uid &&
         incoming().createdAt == request.time &&
         exists(/databases/$(database)/documents/organizations/$(incoming().organizationId));
       allow update, delete: if false;

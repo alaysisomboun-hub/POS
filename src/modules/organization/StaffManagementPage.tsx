@@ -13,6 +13,8 @@ import {
 import {
   CheckCircle2,
   Edit3,
+  Eye,
+  EyeOff,
   History,
   Power,
   RotateCcw,
@@ -21,7 +23,7 @@ import {
   UserPlus,
   X,
 } from 'lucide-react';
-import { db } from '../../core/firebase/config';
+import { auth, createSecondaryStaffAuthUser, db } from '../../core/firebase/config';
 import { OperationType, handleFirestoreError } from '../../core/firebase/errorHandler';
 import { useFirebase } from '../../core/firebase/FirebaseProvider';
 import { appendAuditLogToBatch } from '../../core/firebase/auditService';
@@ -34,7 +36,6 @@ import {
   hasPermission,
 } from '../../core/rbac/permissions';
 import { formatDateTimeVientiane } from '../../core/utils/date';
-import { generateSafeId } from '../../core/utils/id';
 import type {
   AuditLog,
   ModuleKey,
@@ -67,7 +68,13 @@ export function StaffManagementPage() {
   // Modal state for Create or Edit Staff
   const [modalMode, setModalMode] = useState<'create_staff' | 'edit_staff' | null>(null);
   const [editingStaff, setEditingStaff] = useState<UserProfile | null>(null);
+  const [createAuthMode, setCreateAuthMode] = useState<'email_password' | 'google_link'>(
+    'email_password',
+  );
+  const [formEmployeeId, setFormEmployeeId] = useState('');
   const [formEmail, setFormEmail] = useState('');
+  const [formPassword, setFormPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [formName, setFormName] = useState('');
   const [formPhone, setFormPhone] = useState('');
   const [formRole, setFormRole] = useState<UserRole>('cashier');
@@ -79,8 +86,17 @@ export function StaffManagementPage() {
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  const isTopAdmin =
+    userProfile?.role === 'super_admin' || userProfile?.role === 'owner';
   const canCreate = hasPermission(userProfile, 'staff', 'create');
   const canEdit = hasPermission(userProfile, 'staff', 'edit');
+  const assignableRoles = useMemo(
+    () =>
+      (Object.keys(ROLE_LABELS) as UserRole[]).filter((role) =>
+        isTopAdmin ? true : role !== 'super_admin' && role !== 'owner',
+      ),
+    [isTopAdmin],
+  );
 
   useEffect(() => {
     if (!userProfile) return;
@@ -134,6 +150,7 @@ export function StaffManagementPage() {
       if (!q) return true;
       return (
         s.name.toLowerCase().includes(q) ||
+        (s.employeeId || '').toLowerCase().includes(q) ||
         s.email.toLowerCase().includes(q) ||
         s.phone.toLowerCase().includes(q) ||
         ROLE_LABELS[s.role].toLowerCase().includes(q)
@@ -163,7 +180,11 @@ export function StaffManagementPage() {
 
   const openCreateStaffModal = () => {
     setEditingStaff(null);
+    setCreateAuthMode('email_password');
+    setFormEmployeeId('');
     setFormEmail('');
+    setFormPassword('');
+    setShowPassword(false);
     setFormName('');
     setFormPhone('');
     setFormRole('cashier');
@@ -175,8 +196,18 @@ export function StaffManagementPage() {
   };
 
   const openEditStaffModal = (staff: UserProfile) => {
+    if (!isTopAdmin && (staff.role === 'super_admin' || staff.role === 'owner')) {
+      setFeedback({
+        type: 'err',
+        text: 'เฉพาะ Super Admin หรือเจ้าของร้านเท่านั้นที่สามารถแก้ไขบัญชีผู้ดูแลระบบสูงสุดได้',
+      });
+      return;
+    }
     setEditingStaff(staff);
+    setFormEmployeeId(staff.employeeId || '');
     setFormEmail(staff.email);
+    setFormPassword('');
+    setShowPassword(false);
     setFormName(staff.name);
     setFormPhone(staff.phone || '');
     setFormRole(staff.role);
@@ -220,10 +251,17 @@ export function StaffManagementPage() {
 
   const handleToggleStaffStatus = async (staff: UserProfile) => {
     if (!userProfile || !canEdit) return;
+    if (!isTopAdmin && (staff.role === 'super_admin' || staff.role === 'owner')) {
+      setFeedback({
+        type: 'err',
+        text: 'ไม่สามารถเปลี่ยนสถานะบัญชีผู้ดูแลระบบสูงสุดหรือเจ้าของร้านได้',
+      });
+      return;
+    }
     if (staff.uid === userProfile.uid && staff.status === 'active') {
       setFeedback({
         type: 'err',
-        text: 'ไม่สามารถระงับสิทธิ์บัญชีผู้ดูแลหลักที่กำลังใช้งานอยู่ได้',
+        text: 'ไม่สามารถระงับสิทธิ์บัญชีของท่านที่กำลังใช้งานอยู่ได้',
       });
       return;
     }
@@ -265,9 +303,37 @@ export function StaffManagementPage() {
     e.preventDefault();
     if (!userProfile) return;
 
-    if (!formName.trim()) {
+    const cleanName = formName.trim().slice(0, 120);
+    const cleanEmail = formEmail.trim().toLowerCase().slice(0, 160);
+    const cleanPhone = formPhone.trim().slice(0, 30);
+    const cleanEmployeeId = formEmployeeId.trim().slice(0, 30);
+
+    if (!cleanName) {
       setErrorMsg('กรุณากรอกชื่อพนักงาน');
       return;
+    }
+
+    if (!isTopAdmin && (formRole === 'super_admin' || formRole === 'owner')) {
+      setErrorMsg('เฉพาะผู้ดูแลระบบสูงสุดหรือเจ้าของร้านเท่านั้นที่กำหนดบทบาทระดับ Admin ได้');
+      return;
+    }
+
+    if (modalMode === 'create_staff') {
+      if (!cleanEmail || !cleanEmail.includes('@')) {
+        setErrorMsg('กรุณากรอกอีเมลที่ถูกต้องสำหรับให้พนักงานใช้เข้าสู่ระบบ');
+        return;
+      }
+      if (createAuthMode === 'email_password' && formPassword.length < 6) {
+        setErrorMsg('กรุณากำหนดรหัสผ่านเริ่มต้นอย่างน้อย 6 ตัวอักษร');
+        return;
+      }
+      const duplicateEmail = staffList.find(
+        (s) => s.email.trim().toLowerCase() === cleanEmail,
+      );
+      if (duplicateEmail) {
+        setErrorMsg(`อีเมล ${cleanEmail} ถูกใช้งานโดยพนักงาน "${duplicateEmail.name}" แล้ว`);
+        return;
+      }
     }
 
     setSaving(true);
@@ -278,14 +344,28 @@ export function StaffManagementPage() {
       const singleBranchIds = [activeBranchId];
 
       if (modalMode === 'create_staff') {
-        const uid = generateSafeId('usr');
-        batch.set(doc(db, 'users', uid), {
-          uid,
+        const expectedAdminUid = auth.currentUser?.uid;
+        if (!expectedAdminUid || expectedAdminUid !== userProfile.uid) {
+          throw new Error('เซสชันผู้ดูแลระบบไม่ตรงกับโปรไฟล์ปัจจุบัน กรุณาเข้าสู่ระบบใหม่อีกครั้ง');
+        }
+
+        const realStaffUid =
+          createAuthMode === 'email_password'
+            ? await createSecondaryStaffAuthUser(cleanEmail, formPassword)
+            : `invite_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+
+        if (auth.currentUser?.uid !== expectedAdminUid) {
+          throw new Error('ตรวจพบการเปลี่ยนแปลงเซสชันระหว่างสร้างบัญชี กรุณารีเฟรชและตรวจสอบใหม่');
+        }
+
+        batch.set(doc(db, 'users', realStaffUid), {
+          uid: realStaffUid,
+          ...(cleanEmployeeId ? { employeeId: cleanEmployeeId } : {}),
           organizationId: userProfile.organizationId,
           ownerUid: userProfile.ownerUid,
-          name: formName.trim().slice(0, 120),
-          email: formEmail.trim().toLowerCase().slice(0, 160),
-          phone: formPhone.trim().slice(0, 30),
+          name: cleanName,
+          email: cleanEmail,
+          phone: cleanPhone,
           role: formRole,
           branchIds: singleBranchIds,
           permissions: formPermissions,
@@ -299,15 +379,23 @@ export function StaffManagementPage() {
           branchId: activeBranchId,
           action: 'CREATE_STAFF',
           entityType: 'users',
-          entityId: uid,
+          entityId: realStaffUid,
           before: null,
-          after: { name: formName.trim(), role: formRole, branchIds: singleBranchIds },
+          after: {
+            uid: realStaffUid,
+            employeeId: cleanEmployeeId || null,
+            name: cleanName,
+            email: cleanEmail,
+            role: formRole,
+            branchIds: singleBranchIds,
+          },
         });
       } else if (modalMode === 'edit_staff' && editingStaff) {
         batch.update(doc(db, 'users', editingStaff.uid), {
-          name: formName.trim().slice(0, 120),
-          email: formEmail.trim().toLowerCase().slice(0, 160),
-          phone: formPhone.trim().slice(0, 30),
+          name: cleanName,
+          employeeId: cleanEmployeeId,
+          email: cleanEmail,
+          phone: cleanPhone,
           role: formRole,
           branchIds: singleBranchIds,
           permissions: formPermissions,
@@ -324,28 +412,49 @@ export function StaffManagementPage() {
           before: {
             role: editingStaff.role,
             status: editingStaff.status,
+            employeeId: editingStaff.employeeId || null,
           },
           after: {
             role: formRole,
             status: formStatus,
+            employeeId: cleanEmployeeId || null,
           },
         });
       }
 
       await batch.commit();
       setModalMode(null);
+      setFormPassword('');
       setFeedback({
         type: 'ok',
         text:
           modalMode === 'create_staff'
-            ? `เพิ่มพนักงาน "${formName.trim()}" เรียบร้อยแล้ว`
-            : `อัปเดตข้อมูลและสิทธิ์ของ "${formName.trim()}" เรียบร้อยแล้ว`,
+            ? `สร้างบัญชีพนักงาน "${cleanName}" (${cleanEmail}) พร้อมสิทธิ์เข้าสู่ระบบเรียบร้อยแล้ว`
+            : `อัปเดตข้อมูลและสิทธิ์ของ "${cleanName}" เรียบร้อยแล้ว`,
       });
     } catch (error) {
-      try {
-        handleFirestoreError(error, OperationType.WRITE, 'users');
-      } catch (err) {
-        setErrorMsg(err instanceof Error ? err.message : 'ไม่สามารถบันทึกข้อมูลพนักงานได้');
+      const code =
+        typeof error === 'object' && error !== null && 'code' in error
+          ? String((error as { code?: unknown }).code)
+          : '';
+      if (code === 'auth/operation-not-allowed') {
+        setErrorMsg(
+          'ยังไม่ได้เปิดใช้งานผู้ให้บริการ Email/Password ใน Firebase Console > Authentication > Sign-in method กรุณาเปิดใช้งาน Email/Password ก่อนสร้างบัญชีพนักงานด้วยอีเมล',
+        );
+      } else if (code === 'auth/email-already-in-use') {
+        setErrorMsg(
+          'อีเมลนี้มีบัญชีอยู่ใน Firebase Authentication แล้ว กรุณาใช้อีเมลอื่นสำหรับบัญชีพนักงานนี้',
+        );
+      } else if (code === 'auth/weak-password') {
+        setErrorMsg('รหัสผ่านสั้นเกินไป กรุณาตั้งอย่างน้อย 6 ตัวอักษร');
+      } else if (code === 'auth/invalid-email') {
+        setErrorMsg('รูปแบบอีเมลไม่ถูกต้อง');
+      } else {
+        try {
+          handleFirestoreError(error, OperationType.WRITE, 'users');
+        } catch (err) {
+          setErrorMsg(err instanceof Error ? err.message : 'ไม่สามารถบันทึกข้อมูลพนักงานได้');
+        }
       }
     } finally {
       setSaving(false);
@@ -520,10 +629,20 @@ export function StaffManagementPage() {
                   const grantedModulesCount = Object.values(staff.permissions ?? {}).filter(
                     (acts) => Array.isArray(acts) && acts.length > 0,
                   ).length;
+                  const canModifyTarget =
+                    canEdit &&
+                    (isTopAdmin || (staff.role !== 'super_admin' && staff.role !== 'owner'));
                   return (
                     <tr key={staff.uid} className="hover:bg-slate-50/70">
                       <td className="py-3 px-4">
-                        <div className="font-medium text-slate-900">{staff.name}</div>
+                        <div className="font-medium text-slate-900">
+                          {staff.name}
+                          {staff.employeeId && (
+                            <span className="ml-2 text-xs font-mono text-slate-500">
+                              [{staff.employeeId}]
+                            </span>
+                          )}
+                        </div>
                         <div className="text-xs text-slate-500">
                           {staff.phone || '-'} {staff.email ? `· ${staff.email}` : ''}
                         </div>
@@ -549,7 +668,7 @@ export function StaffManagementPage() {
                         {formatDateTimeVientiane(staff.lastLoginAt)}
                       </td>
                       <td className="py-3 px-4 text-right">
-                        {canEdit && (
+                        {canModifyTarget && (
                           <div className="inline-flex items-center gap-1">
                             <button
                               type="button"
@@ -582,47 +701,55 @@ export function StaffManagementPage() {
           </div>
 
           <div className="md:hidden space-y-3">
-            {filteredStaff.map((staff) => (
-              <div key={staff.uid} className="bg-white border border-slate-200 rounded-xl p-4 space-y-2">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <div className="font-semibold text-slate-900">{staff.name}</div>
-                    <div className="text-xs text-slate-500">
-                      {staff.phone || '-'} {staff.email ? `· ${staff.email}` : ''}
+            {filteredStaff.map((staff) => {
+              const canModifyTarget =
+                canEdit &&
+                (isTopAdmin || (staff.role !== 'super_admin' && staff.role !== 'owner'));
+              return (
+                <div key={staff.uid} className="bg-white border border-slate-200 rounded-xl p-4 space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="font-semibold text-slate-900">
+                        {staff.name}
+                        {staff.employeeId ? ` (${staff.employeeId})` : ''}
+                      </div>
+                      <div className="text-xs text-slate-500">
+                        {staff.phone || '-'} {staff.email ? `· ${staff.email}` : ''}
+                      </div>
                     </div>
+                    <span
+                      className={`text-xs font-medium ${
+                        staff.status === 'active' ? 'text-green-700' : 'text-red-600'
+                      }`}
+                    >
+                      {staff.status === 'active' ? 'ใช้งานปกติ' : 'ระงับสิทธิ์'}
+                    </span>
                   </div>
-                  <span
-                    className={`text-xs font-medium ${
-                      staff.status === 'active' ? 'text-green-700' : 'text-red-600'
-                    }`}
-                  >
-                    {staff.status === 'active' ? 'ใช้งานปกติ' : 'ระงับสิทธิ์'}
-                  </span>
+                  <div className="text-xs font-medium text-blue-700">{ROLE_LABELS[staff.role]}</div>
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs text-slate-500">
+                    <span className="tabular-nums">{formatDateTimeVientiane(staff.lastLoginAt)}</span>
+                    {canModifyTarget && (
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => openEditStaffModal(staff)}
+                          className="px-2.5 py-1 text-slate-700 border border-slate-200 rounded-md cursor-pointer"
+                        >
+                          แก้ไขสิทธิ์
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleToggleStaffStatus(staff)}
+                          className="px-2.5 py-1 text-slate-700 border border-slate-200 rounded-md cursor-pointer"
+                        >
+                          {staff.status === 'active' ? 'ระงับ' : 'เปิดใช้'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div className="text-xs font-medium text-blue-700">{ROLE_LABELS[staff.role]}</div>
-                <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs text-slate-500">
-                  <span className="tabular-nums">{formatDateTimeVientiane(staff.lastLoginAt)}</span>
-                  {canEdit && (
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        type="button"
-                        onClick={() => openEditStaffModal(staff)}
-                        className="px-2.5 py-1 text-slate-700 border border-slate-200 rounded-md cursor-pointer"
-                      >
-                        แก้ไขสิทธิ์
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleToggleStaffStatus(staff)}
-                        className="px-2.5 py-1 text-slate-700 border border-slate-200 rounded-md cursor-pointer"
-                      >
-                        {staff.status === 'active' ? 'ระงับ' : 'เปิดใช้'}
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </>
       )}
@@ -795,6 +922,19 @@ export function StaffManagementPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1">
+                    รหัสพนักงาน (Employee ID)
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={30}
+                    value={formEmployeeId}
+                    onChange={(e) => setFormEmployeeId(e.target.value)}
+                    placeholder="เช่น EMP-001"
+                    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">
                     เบอร์โทรศัพท์
                   </label>
                   <input
@@ -807,17 +947,91 @@ export function StaffManagementPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1">
-                    อีเมล (ถ้ามี)
+                    อีเมลสำหรับเข้าสู่ระบบ {modalMode === 'create_staff' ? '*' : ''}
                   </label>
                   <input
                     type="email"
+                    required={modalMode === 'create_staff'}
+                    readOnly={modalMode === 'edit_staff' && Boolean(editingStaff?.email)}
                     maxLength={160}
                     value={formEmail}
                     onChange={(e) => setFormEmail(e.target.value)}
                     placeholder="staff@store.com"
-                    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg"
+                    className={`w-full px-3 py-2 text-sm border border-slate-200 rounded-lg ${
+                      modalMode === 'edit_staff' && editingStaff?.email
+                        ? 'bg-slate-50 text-slate-500'
+                        : ''
+                    }`}
                   />
                 </div>
+                {modalMode === 'create_staff' && (
+                  <div className="sm:col-span-2 space-y-2">
+                    <label className="block text-xs font-medium text-slate-700">
+                      วิธีการเข้าสู่ระบบของพนักงาน
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setCreateAuthMode('email_password')}
+                        className={`px-3 py-2 text-xs font-medium rounded-lg border text-left cursor-pointer transition-colors ${
+                          createAuthMode === 'email_password'
+                            ? 'bg-blue-50 border-blue-600 text-blue-700'
+                            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                        }`}
+                      >
+                        อีเมลและรหัสผ่าน (สร้างบัญชีทันที)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setCreateAuthMode('google_link')}
+                        className={`px-3 py-2 text-xs font-medium rounded-lg border text-left cursor-pointer transition-colors ${
+                          createAuthMode === 'google_link'
+                            ? 'bg-blue-50 border-blue-600 text-blue-700'
+                            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                        }`}
+                      >
+                        บัญชี Google (ผูกตามอีเมลอัตโนมัติ)
+                      </button>
+                    </div>
+
+                    {createAuthMode === 'email_password' ? (
+                      <div>
+                        <label className="block text-xs font-medium text-slate-700 mb-1 mt-1">
+                          รหัสผ่านเริ่มต้นสำหรับเข้าสู่ระบบ * (อย่างน้อย 6 ตัวอักษร)
+                        </label>
+                        <div className="relative">
+                          <input
+                            type={showPassword ? 'text' : 'password'}
+                            required
+                            minLength={6}
+                            value={formPassword}
+                            onChange={(e) => setFormPassword(e.target.value)}
+                            placeholder="กำหนดรหัสผ่านให้พนักงาน"
+                            className="w-full px-3 pr-10 py-2 text-sm border border-slate-200 rounded-lg"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword((prev) => !prev)}
+                            className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 cursor-pointer"
+                          >
+                            {showPassword ? (
+                              <EyeOff className="w-4 h-4" />
+                            ) : (
+                              <Eye className="w-4 h-4" />
+                            )}
+                          </button>
+                        </div>
+                        <p className="mt-1 text-[11px] text-slate-500">
+                          ระบบจะสร้างบัญชี Firebase Authentication แยกสำหรับพนักงานโดยไม่ทำให้ผู้ดูแลระบบหลุดออกจากเซสชันปัจจุบัน และจะไม่บันทึกรหัสผ่านลงในฐานข้อมูล
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="text-[11px] text-slate-500 bg-slate-50 border border-slate-200 rounded-lg p-2.5">
+                        เมื่อพนักงานเข้าสู่ระบบด้วยบัญชี Google ที่ใช้อีเมลเดียวกัน ระบบจะผูก Firebase UID จริงเข้ากับบทบาทและสิทธิ์ที่กำหนดไว้ให้โดยอัตโนมัติ
+                      </p>
+                    )}
+                  </div>
+                )}
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1">
                     บทบาท (Role) *
@@ -827,7 +1041,7 @@ export function StaffManagementPage() {
                     onChange={(e) => handleRoleSelect(e.target.value as UserRole)}
                     className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white"
                   >
-                    {(Object.keys(ROLE_LABELS) as UserRole[]).map((role) => (
+                    {assignableRoles.map((role) => (
                       <option key={role} value={role}>
                         {ROLE_LABELS[role]}
                       </option>

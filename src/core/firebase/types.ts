@@ -73,6 +73,7 @@ export interface Branch {
 
 export interface UserProfile {
   uid: string;
+  employeeId?: string;
   organizationId: string;
   ownerUid: string;
   name: string;

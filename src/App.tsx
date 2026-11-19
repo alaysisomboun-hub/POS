@@ -1,8 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { LogOut, ShieldAlert, UserCheck } from 'lucide-react';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import { AppShell } from './components/layout/AppShell';
 import { FirebaseProvider, useFirebase } from './core/firebase/FirebaseProvider';
+import { getVisibleMenuGroups, hasPermission } from './core/rbac/permissions';
 import { RoleGuard } from './core/rbac/RoleGuard';
+import { LoginPage } from './modules/auth/LoginPage';
 import { DashboardPage } from './modules/dashboard/DashboardPage';
 import { ReportsPage } from './modules/reports/ReportsPage';
 import { AiAnalystPage } from './modules/analytics/AiAnalystPage';
@@ -29,14 +32,122 @@ import { SettingsOverviewPage } from './modules/settings/SettingsOverviewPage';
 import type { ModuleKey } from './core/firebase/types';
 
 function MainRouter() {
-  const { ready, connectionOk } = useFirebase();
+  const {
+    authReady,
+    authUser,
+    profileLoading,
+    profileError,
+    canClaimLegacyOwner,
+    connectionOk,
+    userProfile,
+    signOutUser,
+    claimLegacyOwnerProfile,
+  } = useFirebase();
   const [activeModule, setActiveModule] = useState<ModuleKey>('dashboard');
+  const [claimingOwner, setClaimingOwner] = useState(false);
 
-  if (!ready) {
+  useEffect(() => {
+    if (!userProfile) return;
+    if (!hasPermission(userProfile, activeModule, 'view')) {
+      const preferredOrder: ModuleKey[] = [
+        'dashboard',
+        'pos',
+        'inventory',
+        'purchasing',
+        'products',
+        'accounting',
+      ];
+      const preferred = preferredOrder.find((m) => hasPermission(userProfile, m, 'view'));
+      const visibleGroups = getVisibleMenuGroups(userProfile);
+      const firstPermitted = preferred || visibleGroups[0]?.items[0]?.key;
+      if (firstPermitted && firstPermitted !== activeModule) {
+        setActiveModule(firstPermitted);
+      }
+    }
+  }, [userProfile, activeModule]);
+
+  if (!authReady || (authUser && profileLoading)) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
         <div className="bg-white border border-slate-200 rounded-xl px-6 py-5 text-sm text-slate-600">
-          กำลังเตรียมข้อมูลร้านค้าและเชื่อมต่อฐานข้อมูล...
+          กำลังตรวจสอบสิทธิ์ผู้ใช้งานและโหลดโปรไฟล์จากฐานข้อมูล...
+        </div>
+      </div>
+    );
+  }
+
+  if (!authUser) {
+    return <LoginPage />;
+  }
+
+  if (profileError || !userProfile || userProfile.status !== 'active') {
+    const handleClaimOwner = async () => {
+      setClaimingOwner(true);
+      try {
+        await claimLegacyOwnerProfile();
+      } finally {
+        setClaimingOwner(false);
+      }
+    };
+
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 sm:p-6">
+        <div className="w-full max-w-lg bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 space-y-5 shadow-xs">
+          <div className="flex items-start gap-3">
+            <div className="w-11 h-11 rounded-full bg-red-50 text-red-600 flex items-center justify-center shrink-0">
+              <ShieldAlert className="w-6 h-6" />
+            </div>
+            <div className="space-y-1 min-w-0">
+              <h2 className="text-base sm:text-lg font-bold text-slate-900">
+                ไม่สามารถเข้าใช้งานระบบด้วยบัญชีนี้ได้
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-600">
+                {profileError || 'บัญชีของท่านไม่มีสิทธิ์เข้าใช้งานหรือถูกระงับสิทธิ์'}
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs space-y-1.5 text-slate-700">
+            <div>
+              <span className="text-slate-500">อีเมลที่เข้าสู่ระบบ:</span>{' '}
+              <span className="font-semibold">{authUser.email || '-'}</span>
+            </div>
+            <div className="break-all">
+              <span className="text-slate-500">Firebase UID ปัจจุบัน:</span>{' '}
+              <code className="font-mono text-slate-800">{authUser.uid}</code>
+            </div>
+          </div>
+
+          {canClaimLegacyOwner && (
+            <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 space-y-2.5 text-xs text-amber-900">
+              <div className="font-semibold">
+                ตรวจพบร้านค้าเดิมที่ยังไม่เคยผูกสิทธิ์เจ้าของร้านกับ Firebase UID
+              </div>
+              <p className="leading-relaxed text-amber-800">
+                หากท่านเป็นเจ้าของร้านค้าและกำลังเข้าสู่ระบบครั้งแรกหลังเปิดใช้งานการยืนยันตัวตน สามารถกดปุ่มด้านล่างเพื่อผูกบัญชีนี้เป็น Super Admin ได้เพียงครั้งเดียว
+              </p>
+              <button
+                type="button"
+                onClick={handleClaimOwner}
+                disabled={claimingOwner}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-amber-600 hover:bg-amber-700 disabled:opacity-60 text-white font-semibold rounded-lg transition-colors cursor-pointer"
+              >
+                <UserCheck className="w-4 h-4" />
+                {claimingOwner ? 'กำลังผูกสิทธิ์เจ้าของร้าน...' : 'ยืนยันสิทธิ์เจ้าของร้านครั้งแรก'}
+              </button>
+            </div>
+          )}
+
+          <div className="flex items-center justify-end gap-2 pt-1">
+            <button
+              type="button"
+              onClick={() => void signOutUser()}
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer"
+            >
+              <LogOut className="w-4 h-4" />
+              ออกจากระบบ / เปลี่ยนบัญชี
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -186,7 +297,7 @@ function MainRouter() {
   };
 
   return (
-    <AppShell activeModule={activeModule} onSelectModule={setActiveModule}>
+    <AppShell key={userProfile.uid} activeModule={activeModule} onSelectModule={setActiveModule}>
       {!connectionOk && (
         <div className="mb-4 p-3 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-800">
           ไม่สามารถเชื่อมต่อ Cloud Firestore ได้ในขณะนี้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต
