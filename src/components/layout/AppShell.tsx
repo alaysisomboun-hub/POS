@@ -9,7 +9,6 @@ import {
   FileSpreadsheet,
   FolderTree,
   LayoutDashboard,
-  LogOut,
   Menu,
   Package,
   PackageMinus,
@@ -64,9 +63,8 @@ interface AppShellProps {
 }
 
 export function AppShell({ activeModule, onSelectModule, children }: AppShellProps) {
-  const { userProfile, organization, signOutUser } = useFirebase();
+  const { userProfile, organization } = useFirebase();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [loggingOut, setLoggingOut] = useState(false);
 
   const menuGroups = useMemo(() => getVisibleMenuGroups(userProfile), [userProfile]);
 
@@ -75,21 +73,12 @@ export function AppShell({ activeModule, onSelectModule, children }: AppShellPro
       const found = g.items.find((i) => i.key === activeModule);
       if (found) return found.label;
     }
-    return 'POS';
+    return 'Dashboard';
   }, [menuGroups, activeModule]);
 
   const handleNavClick = (key: ModuleKey) => {
     onSelectModule(key);
     setMobileMenuOpen(false);
-  };
-
-  const handleLogout = async () => {
-    setLoggingOut(true);
-    try {
-      await signOutUser();
-    } finally {
-      setLoggingOut(false);
-    }
   };
 
   const renderSidebarContent = () => (
@@ -150,28 +139,11 @@ export function AppShell({ activeModule, onSelectModule, children }: AppShellPro
         ))}
       </nav>
 
-      <div className="p-3 border-t border-slate-200 bg-slate-50/70 shrink-0 space-y-2.5">
-        <div className="min-w-0">
-          <div className="text-xs font-semibold text-slate-900 truncate">
-            {userProfile?.name}
-            {userProfile?.employeeId ? ` (${userProfile.employeeId})` : ''}
-          </div>
-          <div className="text-[11px] font-medium text-blue-700 truncate">
-            {userProfile ? ROLE_LABELS[userProfile.role] : ''}
-          </div>
-          {userProfile?.email && (
-            <div className="text-[11px] text-slate-500 truncate">{userProfile.email}</div>
-          )}
+      <div className="p-3 border-t border-slate-200 bg-slate-50/70 shrink-0">
+        <div className="text-xs font-medium text-slate-900 truncate">{userProfile?.name}</div>
+        <div className="text-[11px] text-slate-500 truncate">
+          {userProfile ? ROLE_LABELS[userProfile.role] : ''}
         </div>
-        <button
-          type="button"
-          onClick={handleLogout}
-          disabled={loggingOut}
-          className="w-full inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:text-red-700 bg-white hover:bg-red-50 border border-slate-200 hover:border-red-200 rounded-lg transition-colors cursor-pointer"
-        >
-          <LogOut className="w-3.5 h-3.5" />
-          {loggingOut ? 'กำลังออกจากระบบ...' : 'ออกจากระบบ / สลับบัญชี'}
-        </button>
       </div>
     </div>
   );
@@ -214,23 +186,9 @@ export function AppShell({ activeModule, onSelectModule, children }: AppShellPro
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
-            <div className="hidden md:flex flex-col items-end leading-tight">
-              <span className="text-xs font-semibold text-slate-800">{userProfile?.name}</span>
-              <span className="text-[11px] text-slate-500">
-                {userProfile ? ROLE_LABELS[userProfile.role].split(' (')[0] : ''} ·{' '}
-                {organization?.name || 'ร้านค้าหลัก'}
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={handleLogout}
-              disabled={loggingOut}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:text-red-700 bg-slate-50 hover:bg-red-50 border border-slate-200 hover:border-red-200 rounded-lg transition-colors cursor-pointer"
-              title="ออกจากระบบ"
-            >
-              <LogOut className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">ออกจากระบบ</span>
-            </button>
+            <span className="hidden sm:inline text-xs font-medium text-slate-500">
+              {organization?.name || 'ร้านค้าหลัก'}
+            </span>
           </div>
         </header>
 

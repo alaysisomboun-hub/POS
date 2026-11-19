@@ -13,8 +13,6 @@ import {
 import {
   CheckCircle2,
   Edit3,
-  Eye,
-  EyeOff,
   History,
   Power,
   RotateCcw,
@@ -23,10 +21,11 @@ import {
   UserPlus,
   X,
 } from 'lucide-react';
-import { auth, createSecondaryStaffAuthUser, db } from '../../core/firebase/config';
+import { db } from '../../core/firebase/config';
 import { OperationType, handleFirestoreError } from '../../core/firebase/errorHandler';
 import { useFirebase } from '../../core/firebase/FirebaseProvider';
 import { appendAuditLogToBatch } from '../../core/firebase/auditService';
+import { generateSafeId } from '../../core/utils/id';
 import {
   ACTION_LABELS,
   ALL_ACTIONS,
@@ -68,13 +67,8 @@ export function StaffManagementPage() {
   // Modal state for Create or Edit Staff
   const [modalMode, setModalMode] = useState<'create_staff' | 'edit_staff' | null>(null);
   const [editingStaff, setEditingStaff] = useState<UserProfile | null>(null);
-  const [createAuthMode, setCreateAuthMode] = useState<'email_password' | 'google_link'>(
-    'email_password',
-  );
   const [formEmployeeId, setFormEmployeeId] = useState('');
   const [formEmail, setFormEmail] = useState('');
-  const [formPassword, setFormPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [formName, setFormName] = useState('');
   const [formPhone, setFormPhone] = useState('');
   const [formRole, setFormRole] = useState<UserRole>('cashier');
@@ -184,11 +178,8 @@ export function StaffManagementPage() {
 
   const openCreateStaffModal = () => {
     setEditingStaff(null);
-    setCreateAuthMode('google_link');
     setFormEmployeeId('');
     setFormEmail('');
-    setFormPassword('');
-    setShowPassword(false);
     setFormName('');
     setFormPhone('');
     setFormRole('cashier');
@@ -210,8 +201,6 @@ export function StaffManagementPage() {
     setEditingStaff(staff);
     setFormEmployeeId(staff.employeeId || '');
     setFormEmail(staff.email);
-    setFormPassword('');
-    setShowPassword(false);
     setFormName(staff.name);
     setFormPhone(staff.phone || '');
     setFormRole(staff.role);
@@ -322,13 +311,9 @@ export function StaffManagementPage() {
       return;
     }
 
-    if (modalMode === 'create_staff') {
-      if (!cleanEmail || !cleanEmail.includes('@')) {
-        setErrorMsg('กรุณากรอกอีเมลที่ถูกต้องสำหรับให้พนักงานใช้เข้าสู่ระบบ');
-        return;
-      }
-      if (createAuthMode === 'email_password' && formPassword.length < 6) {
-        setErrorMsg('กรุณากำหนดรหัสผ่านเริ่มต้นอย่างน้อย 6 ตัวอักษร');
+    if (modalMode === 'create_staff' && cleanEmail) {
+      if (!cleanEmail.includes('@')) {
+        setErrorMsg('รูปแบบอีเมลไม่ถูกต้อง');
         return;
       }
       const duplicateEmail = staffList.find(
@@ -348,22 +333,10 @@ export function StaffManagementPage() {
       const singleBranchIds = [activeBranchId];
 
       if (modalMode === 'create_staff') {
-        const expectedAdminUid = auth.currentUser?.uid;
-        if (!expectedAdminUid || expectedAdminUid !== userProfile.uid) {
-          throw new Error('เซสชันผู้ดูแลระบบไม่ตรงกับโปรไฟล์ปัจจุบัน กรุณาเข้าสู่ระบบใหม่อีกครั้ง');
-        }
+        const staffUid = generateSafeId('usr');
 
-        const realStaffUid =
-          createAuthMode === 'email_password'
-            ? await createSecondaryStaffAuthUser(cleanEmail, formPassword)
-            : `invite_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
-
-        if (auth.currentUser?.uid !== expectedAdminUid) {
-          throw new Error('ตรวจพบการเปลี่ยนแปลงเซสชันระหว่างสร้างบัญชี กรุณารีเฟรชและตรวจสอบใหม่');
-        }
-
-        batch.set(doc(db, 'users', realStaffUid), {
-          uid: realStaffUid,
+        batch.set(doc(db, 'users', staffUid), {
+          uid: staffUid,
           ...(cleanEmployeeId ? { employeeId: cleanEmployeeId } : {}),
           organizationId: userProfile.organizationId,
           ownerUid: userProfile.ownerUid,
@@ -383,10 +356,10 @@ export function StaffManagementPage() {
           branchId: activeBranchId,
           action: 'CREATE_STAFF',
           entityType: 'users',
-          entityId: realStaffUid,
+          entityId: staffUid,
           before: null,
           after: {
-            uid: realStaffUid,
+            uid: staffUid,
             employeeId: cleanEmployeeId || null,
             name: cleanName,
             email: cleanEmail,
@@ -428,37 +401,18 @@ export function StaffManagementPage() {
 
       await batch.commit();
       setModalMode(null);
-      setFormPassword('');
       setFeedback({
         type: 'ok',
         text:
           modalMode === 'create_staff'
-            ? `สร้างบัญชีพนักงาน "${cleanName}" (${cleanEmail}) พร้อมสิทธิ์เข้าสู่ระบบเรียบร้อยแล้ว`
+            ? `เพิ่มพนักงาน "${cleanName}" เรียบร้อยแล้ว`
             : `อัปเดตข้อมูลและสิทธิ์ของ "${cleanName}" เรียบร้อยแล้ว`,
       });
     } catch (error) {
-      const code =
-        typeof error === 'object' && error !== null && 'code' in error
-          ? String((error as { code?: unknown }).code)
-          : '';
-      if (code === 'auth/operation-not-allowed') {
-        setErrorMsg(
-          'ยังไม่ได้เปิดใช้งานผู้ให้บริการ Email/Password ใน Firebase Console > Authentication > Sign-in method กรุณาเปิดใช้งาน Email/Password ก่อนสร้างบัญชีพนักงานด้วยอีเมล',
-        );
-      } else if (code === 'auth/email-already-in-use') {
-        setErrorMsg(
-          'อีเมลนี้มีบัญชีอยู่ใน Firebase Authentication แล้ว กรุณาใช้อีเมลอื่นสำหรับบัญชีพนักงานนี้',
-        );
-      } else if (code === 'auth/weak-password') {
-        setErrorMsg('รหัสผ่านสั้นเกินไป กรุณาตั้งอย่างน้อย 6 ตัวอักษร');
-      } else if (code === 'auth/invalid-email') {
-        setErrorMsg('รูปแบบอีเมลไม่ถูกต้อง');
-      } else {
-        try {
-          handleFirestoreError(error, OperationType.WRITE, 'users');
-        } catch (err) {
-          setErrorMsg(err instanceof Error ? err.message : 'ไม่สามารถบันทึกข้อมูลพนักงานได้');
-        }
+      try {
+        handleFirestoreError(error, OperationType.WRITE, 'users');
+      } catch (err) {
+        setErrorMsg(err instanceof Error ? err.message : 'ไม่สามารถบันทึกข้อมูลพนักงานได้');
       }
     } finally {
       setSaving(false);
@@ -951,91 +905,17 @@ export function StaffManagementPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1">
-                    อีเมลสำหรับเข้าสู่ระบบ {modalMode === 'create_staff' ? '*' : ''}
+                    อีเมล (ถ้ามี)
                   </label>
                   <input
                     type="email"
-                    required={modalMode === 'create_staff'}
-                    readOnly={modalMode === 'edit_staff' && Boolean(editingStaff?.email)}
                     maxLength={160}
                     value={formEmail}
                     onChange={(e) => setFormEmail(e.target.value)}
                     placeholder="staff@store.com"
-                    className={`w-full px-3 py-2 text-sm border border-slate-200 rounded-lg ${
-                      modalMode === 'edit_staff' && editingStaff?.email
-                        ? 'bg-slate-50 text-slate-500'
-                        : ''
-                    }`}
+                    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg"
                   />
                 </div>
-                {modalMode === 'create_staff' && (
-                  <div className="sm:col-span-2 space-y-2">
-                    <label className="block text-xs font-medium text-slate-700">
-                      วิธีการเข้าสู่ระบบของพนักงาน
-                    </label>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setCreateAuthMode('google_link')}
-                        className={`px-3 py-2 text-xs font-medium rounded-lg border text-left cursor-pointer transition-colors ${
-                          createAuthMode === 'google_link'
-                            ? 'bg-blue-50 border-blue-600 text-blue-700'
-                            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                        }`}
-                      >
-                        บัญชี Google (แนะนำ — ผูกตามอีเมลอัตโนมัติ)
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setCreateAuthMode('email_password')}
-                        className={`px-3 py-2 text-xs font-medium rounded-lg border text-left cursor-pointer transition-colors ${
-                          createAuthMode === 'email_password'
-                            ? 'bg-blue-50 border-blue-600 text-blue-700'
-                            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                        }`}
-                      >
-                        อีเมลและรหัสผ่าน (ต้องเปิดใน Console)
-                      </button>
-                    </div>
-
-                    {createAuthMode === 'email_password' ? (
-                      <div>
-                        <label className="block text-xs font-medium text-slate-700 mb-1 mt-1">
-                          รหัสผ่านเริ่มต้นสำหรับเข้าสู่ระบบ * (อย่างน้อย 6 ตัวอักษร)
-                        </label>
-                        <div className="relative">
-                          <input
-                            type={showPassword ? 'text' : 'password'}
-                            required
-                            minLength={6}
-                            value={formPassword}
-                            onChange={(e) => setFormPassword(e.target.value)}
-                            placeholder="กำหนดรหัสผ่านให้พนักงาน"
-                            className="w-full px-3 pr-10 py-2 text-sm border border-slate-200 rounded-lg"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowPassword((prev) => !prev)}
-                            className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 cursor-pointer"
-                          >
-                            {showPassword ? (
-                              <EyeOff className="w-4 h-4" />
-                            ) : (
-                              <Eye className="w-4 h-4" />
-                            )}
-                          </button>
-                        </div>
-                        <p className="mt-1 text-[11px] text-slate-500">
-                          ระบบจะสร้างบัญชี Firebase Authentication แยกสำหรับพนักงานโดยไม่ทำให้ผู้ดูแลระบบหลุดออกจากเซสชันปัจจุบัน และจะไม่บันทึกรหัสผ่านลงในฐานข้อมูล
-                        </p>
-                      </div>
-                    ) : (
-                      <p className="text-[11px] text-slate-500 bg-slate-50 border border-slate-200 rounded-lg p-2.5">
-                        เมื่อพนักงานเข้าสู่ระบบด้วยบัญชี Google ที่ใช้อีเมลเดียวกัน ระบบจะผูก Firebase UID จริงเข้ากับบทบาทและสิทธิ์ที่กำหนดไว้ให้โดยอัตโนมัติ
-                      </p>
-                    )}
-                  </div>
-                )}
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1">
                     บทบาท (Role) *
