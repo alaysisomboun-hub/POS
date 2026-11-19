@@ -102,6 +102,12 @@ service cloud.firestore {
         email == request.auth.token.email.lower();
     }
 
+    function isBootstrappedAdmin() {
+      return isSignedIn() &&
+        request.auth.token.email_verified == true &&
+        request.auth.token.email == 'alaysisomboun@gmail.com';
+    }
+
     // -------------------------------------------------------------------------
     // Entity Validation Blueprints
     // -------------------------------------------------------------------------
@@ -931,6 +937,12 @@ service cloud.firestore {
             get(/databases/$(database)/documents/organizations/org_main).data.ownerUid == 'usr_owner_main' &&
             getAfter(/databases/$(database)/documents/organizations/org_main).data.ownerUid == request.auth.uid &&
             incoming().ownerUid == request.auth.uid &&
+            incoming().role == 'super_admin' &&
+            incoming().status == 'active'
+          ) ||
+          (
+            uid == request.auth.uid &&
+            isBootstrappedAdmin() &&
             incoming().role == 'super_admin' &&
             incoming().status == 'active'
           ) ||

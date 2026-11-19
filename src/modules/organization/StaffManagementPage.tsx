@@ -143,8 +143,12 @@ export function StaffManagementPage() {
   }, [staffList]);
 
   const filteredStaff = useMemo(() => {
+    const claimedInvitationIds = new Set(
+      staffList.map((s) => s.invitationId).filter((id): id is string => Boolean(id)),
+    );
     const q = search.trim().toLowerCase();
     return staffList.filter((s) => {
+      if (claimedInvitationIds.has(s.uid)) return false;
       if (roleFilter !== 'all' && s.role !== roleFilter) return false;
       if (statusFilter !== 'all' && s.status !== statusFilter) return false;
       if (!q) return true;
@@ -180,7 +184,7 @@ export function StaffManagementPage() {
 
   const openCreateStaffModal = () => {
     setEditingStaff(null);
-    setCreateAuthMode('email_password');
+    setCreateAuthMode('google_link');
     setFormEmployeeId('');
     setFormEmail('');
     setFormPassword('');
@@ -972,17 +976,6 @@ export function StaffManagementPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <button
                         type="button"
-                        onClick={() => setCreateAuthMode('email_password')}
-                        className={`px-3 py-2 text-xs font-medium rounded-lg border text-left cursor-pointer transition-colors ${
-                          createAuthMode === 'email_password'
-                            ? 'bg-blue-50 border-blue-600 text-blue-700'
-                            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                        }`}
-                      >
-                        อีเมลและรหัสผ่าน (สร้างบัญชีทันที)
-                      </button>
-                      <button
-                        type="button"
                         onClick={() => setCreateAuthMode('google_link')}
                         className={`px-3 py-2 text-xs font-medium rounded-lg border text-left cursor-pointer transition-colors ${
                           createAuthMode === 'google_link'
@@ -990,7 +983,18 @@ export function StaffManagementPage() {
                             : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                         }`}
                       >
-                        บัญชี Google (ผูกตามอีเมลอัตโนมัติ)
+                        บัญชี Google (แนะนำ — ผูกตามอีเมลอัตโนมัติ)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setCreateAuthMode('email_password')}
+                        className={`px-3 py-2 text-xs font-medium rounded-lg border text-left cursor-pointer transition-colors ${
+                          createAuthMode === 'email_password'
+                            ? 'bg-blue-50 border-blue-600 text-blue-700'
+                            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                        }`}
+                      >
+                        อีเมลและรหัสผ่าน (ต้องเปิดใน Console)
                       </button>
                     </div>
 

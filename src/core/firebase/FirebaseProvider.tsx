@@ -27,6 +27,7 @@ import type {
 export const DEFAULT_ORG_ID = 'org_main';
 export const DEFAULT_MAIN_BRANCH_ID = 'br_hq_01';
 const LEGACY_UNCLAIMED_OWNER_UID = 'usr_owner_main';
+const BOOTSTRAPPED_ADMIN_EMAIL = 'alaysisomboun@gmail.com';
 
 interface FirebaseContextValue {
   ready: boolean;
@@ -448,6 +449,59 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
             subscribeToUserAndWorkspace(currentUid, seq);
             return;
           }
+        }
+
+        if (fbUser.emailVerified && cleanEmail === BOOTSTRAPPED_ADMIN_EMAIL) {
+          const adminName = (
+            fbUser.displayName?.trim() ||
+            'ผู้ดูแลระบบหลัก (เจ้าของร้าน)'
+          ).slice(0, 120);
+          const nextOwnerUid =
+            orgData.ownerUid === LEGACY_UNCLAIMED_OWNER_UID ? currentUid : orgData.ownerUid;
+
+          const adminBatch = writeBatch(db);
+          adminBatch.set(userRef, {
+            uid: currentUid,
+            organizationId: DEFAULT_ORG_ID,
+            ownerUid: nextOwnerUid,
+            name: adminName,
+            email: cleanEmail,
+            phone: '',
+            role: 'super_admin',
+            branchIds: [DEFAULT_MAIN_BRANCH_ID],
+            permissions: DEFAULT_ROLE_PERMISSIONS.super_admin,
+            status: 'active',
+            createdAt: serverTimestamp(),
+            lastLoginAt: serverTimestamp(),
+          });
+
+          if (orgData.ownerUid === LEGACY_UNCLAIMED_OWNER_UID) {
+            adminBatch.update(orgRef, {
+              ownerUid: currentUid,
+              updatedAt: serverTimestamp(),
+            });
+          }
+
+          appendAuditLogToBatch(adminBatch, {
+            user: {
+              uid: currentUid,
+              organizationId: DEFAULT_ORG_ID,
+              ownerUid: nextOwnerUid,
+              name: adminName,
+              role: 'super_admin',
+            },
+            branchId: DEFAULT_MAIN_BRANCH_ID,
+            action: 'BOOTSTRAP_ADMIN_PROFILE',
+            entityType: 'users',
+            entityId: currentUid,
+            before: { orgOwnerUid: orgData.ownerUid },
+            after: { uid: currentUid, email: cleanEmail, role: 'super_admin' },
+          });
+
+          await adminBatch.commit();
+          if (seq !== sessionSeqRef.current) return;
+          subscribeToUserAndWorkspace(currentUid, seq);
+          return;
         }
 
         // No /users/{uid} and no legacy email match: deny access (never fall back to Super Admin!)

@@ -1,9 +1,25 @@
 import React, { useState } from 'react';
 import { signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
-import { AlertTriangle, Check, Copy, Eye, EyeOff, Lock, LogIn, Mail, Store } from 'lucide-react';
+import {
+  AlertTriangle,
+  Check,
+  ChevronDown,
+  ChevronUp,
+  Copy,
+  Eye,
+  EyeOff,
+  Lock,
+  LogIn,
+  Mail,
+  Store,
+} from 'lucide-react';
 import { auth, googleProvider } from '../../core/firebase/config';
 
-function mapAuthErrorToThai(error: unknown): { message: string; isUnauthorizedDomain: boolean } {
+function mapAuthErrorToThai(error: unknown): {
+  message: string;
+  isUnauthorizedDomain: boolean;
+  isEmailDisabled: boolean;
+} {
   const code =
     typeof error === 'object' && error !== null && 'code' in error
       ? String((error as { code?: unknown }).code)
@@ -13,14 +29,16 @@ function mapAuthErrorToThai(error: unknown): { message: string; isUnauthorizedDo
   if (code === 'auth/unauthorized-domain' || rawMessage.includes('auth/unauthorized-domain')) {
     return {
       isUnauthorizedDomain: true,
+      isEmailDisabled: false,
       message: 'โดเมนนี้ยังไม่ได้รับอนุญาตให้เข้าสู่ระบบผ่าน Google OAuth ใน Firebase Console',
     };
   }
   if (code === 'auth/operation-not-allowed') {
     return {
       isUnauthorizedDomain: false,
+      isEmailDisabled: true,
       message:
-        'ระบบยืนยันตัวตนด้วยอีเมล/รหัสผ่าน (Email/Password) ยังไม่ถูกเปิดใช้งานใน Firebase Console > Authentication > Sign-in method (โปรเจกต์ peppy-palace-rnj8s) กรุณาเปิดใช้งานหรือเข้าสู่ระบบด้วย Google',
+        'ระบบยืนยันตัวตนด้วยอีเมลและรหัสผ่าน (Email/Password) ยังไม่ถูกเปิดใช้งานใน Firebase Console (โปรเจกต์ peppy-palace-rnj8s) กรุณากดปุ่ม "เข้าสู่ระบบด้วยบัญชี Google" ด้านบนแทน',
     };
   }
   if (
@@ -31,35 +49,48 @@ function mapAuthErrorToThai(error: unknown): { message: string; isUnauthorizedDo
   ) {
     return {
       isUnauthorizedDomain: false,
+      isEmailDisabled: false,
       message: 'อีเมลหรือรหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบและลองใหม่อีกครั้ง',
     };
   }
   if (code === 'auth/user-disabled') {
     return {
       isUnauthorizedDomain: false,
+      isEmailDisabled: false,
       message: 'บัญชีผู้ใช้งานนี้ถูกปิดใช้งานในระบบยืนยันตัวตน กรุณาติดต่อผู้ดูแลระบบ',
     };
   }
   if (code === 'auth/too-many-requests') {
     return {
       isUnauthorizedDomain: false,
+      isEmailDisabled: false,
       message: 'มีการพยายามเข้าสู่ระบบผิดพลาดหลายครั้ง กรุณารอสักครู่แล้วลองใหม่',
     };
   }
   if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
     return {
       isUnauthorizedDomain: false,
+      isEmailDisabled: false,
       message: 'ยกเลิกการเข้าสู่ระบบด้วยบัญชี Google',
+    };
+  }
+  if (code === 'auth/popup-blocked') {
+    return {
+      isUnauthorizedDomain: false,
+      isEmailDisabled: false,
+      message: 'เบราว์เซอร์บล็อกหน้าต่างป๊อปอัปของ Google กรุณาอนุญาตป๊อปอัปแล้วลองใหม่อีกครั้ง',
     };
   }
   if (code === 'auth/network-request-failed') {
     return {
       isUnauthorizedDomain: false,
+      isEmailDisabled: false,
       message: 'ไม่สามารถเชื่อมต่อเครือข่ายได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต',
     };
   }
   return {
     isUnauthorizedDomain: false,
+    isEmailDisabled: false,
     message: rawMessage || 'ไม่สามารถเข้าสู่ระบบได้ กรุณาลองใหม่อีกครั้ง',
   };
 }
@@ -68,6 +99,7 @@ export function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showEmailForm, setShowEmailForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -75,6 +107,21 @@ export function LoginPage() {
   const [copiedDomain, setCopiedDomain] = useState(false);
 
   const currentHostname = typeof window !== 'undefined' ? window.location.hostname : '';
+
+  const handleGoogleLogin = async () => {
+    setGoogleLoading(true);
+    setErrorMsg(null);
+    setUnauthorizedDomain(false);
+    try {
+      await signInWithPopup(auth, googleProvider);
+    } catch (error) {
+      const mapped = mapAuthErrorToThai(error);
+      setErrorMsg(mapped.message);
+      setUnauthorizedDomain(mapped.isUnauthorizedDomain);
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,21 +145,6 @@ export function LoginPage() {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    setGoogleLoading(true);
-    setErrorMsg(null);
-    setUnauthorizedDomain(false);
-    try {
-      await signInWithPopup(auth, googleProvider);
-    } catch (error) {
-      const mapped = mapAuthErrorToThai(error);
-      setErrorMsg(mapped.message);
-      setUnauthorizedDomain(mapped.isUnauthorizedDomain);
-    } finally {
-      setGoogleLoading(false);
-    }
-  };
-
   const handleCopyHostname = async () => {
     if (!currentHostname) return;
     try {
@@ -126,7 +158,7 @@ export function LoginPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 sm:p-6">
-      <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-xs space-y-6">
+      <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-xs space-y-5">
         <div className="space-y-2">
           <div className="inline-flex items-center gap-2.5">
             <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0">
@@ -151,7 +183,7 @@ export function LoginPage() {
               </span>
             </div>
             <p className="text-red-700 leading-relaxed">
-              กรุณาเพิ่มโดเมนด้านล่างใน Firebase Console &gt; Authentication &gt; Settings &gt; Authorized domains หรือเข้าสู่ระบบด้วยอีเมลและรหัสผ่านด้านล่างแทน:
+              กรุณาเพิ่มโดเมนด้านล่างใน Firebase Console &gt; Authentication &gt; Settings &gt; Authorized domains (โปรเจกต์ peppy-palace-rnj8s):
             </p>
             <div className="flex items-center justify-between gap-2 bg-white border border-red-200 rounded-lg px-3 py-2">
               <code className="font-mono text-slate-800 truncate">{currentHostname}</code>
@@ -183,76 +215,92 @@ export function LoginPage() {
           </div>
         )}
 
-        <form onSubmit={handleEmailLogin} className="space-y-4">
-          <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1.5">
-              อีเมลพนักงาน / ผู้ดูแลระบบ
-            </label>
-            <div className="relative">
-              <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="email"
-                required
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="name@store.com"
-                className="w-full pl-9 pr-3 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-blue-600"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1.5">รหัสผ่าน</label>
-            <div className="relative">
-              <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type={showPassword ? 'text' : 'password'}
-                required
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="กรอกรหัสผ่าน"
-                className="w-full pl-9 pr-10 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-blue-600"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((prev) => !prev)}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 cursor-pointer"
-                aria-label={showPassword ? 'ซ่อนรหัสผ่าน' : 'แสดงรหัสผ่าน'}
-              >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
-            </div>
-          </div>
-
+        {/* Primary Google Sign-In CTA (configured & active out of the box) */}
+        <div className="space-y-2">
           <button
-            type="submit"
+            type="button"
+            onClick={handleGoogleLogin}
             disabled={submitting || googleLoading}
-            className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-semibold rounded-lg transition-colors cursor-pointer"
+            className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-semibold rounded-xl transition-colors cursor-pointer"
           >
-            <LogIn className="w-4 h-4" />
-            {submitting ? 'กำลังตรวจสอบบัญชี...' : 'เข้าสู่ระบบด้วยอีเมล'}
+            <span>
+              {googleLoading ? 'กำลังเปิดหน้าต่าง Google...' : 'เข้าสู่ระบบด้วยบัญชี Google →'}
+            </span>
           </button>
-        </form>
-
-        <div className="relative flex items-center py-1">
-          <div className="flex-1 border-t border-slate-200" />
-          <span className="px-3 text-xs text-slate-400">หรือ</span>
-          <div className="flex-1 border-t border-slate-200" />
+          <p className="text-[11px] text-slate-500 text-center">
+            แนะนำ: เจ้าของร้าน ผู้จัดการ และพนักงานสามารถเข้าสู่ระบบด้วยบัญชี Google ที่ได้รับสิทธิ์ได้ทันที
+          </p>
         </div>
 
-        <button
-          type="button"
-          onClick={handleGoogleLogin}
-          disabled={submitting || googleLoading}
-          className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white hover:bg-slate-50 border border-slate-300 disabled:opacity-60 text-slate-800 text-sm font-medium rounded-lg transition-colors cursor-pointer"
-        >
-          <span>{googleLoading ? 'กำลังเปิดหน้าต่าง Google...' : 'เข้าสู่ระบบด้วยบัญชี Google →'}</span>
-        </button>
+        {/* Secondary Email / Password Sign-In (for stores that enable Email/Password provider) */}
+        <div className="border-t border-slate-200 pt-4">
+          <button
+            type="button"
+            onClick={() => setShowEmailForm((prev) => !prev)}
+            className="w-full flex items-center justify-between text-xs font-medium text-slate-600 hover:text-slate-900 py-1 cursor-pointer"
+          >
+            <span>เข้าสู่ระบบด้วยอีเมลและรหัสผ่าน (สำหรับบัญชีที่เปิดใช้งานแล้ว)</span>
+            {showEmailForm ? (
+              <ChevronUp className="w-4 h-4 text-slate-400" />
+            ) : (
+              <ChevronDown className="w-4 h-4 text-slate-400" />
+            )}
+          </button>
 
-        <div className="text-[11px] text-slate-500 text-center leading-relaxed pt-1">
-          สำหรับพนักงานใหม่ กรุณาติดต่อผู้ดูแลระบบหรือผู้จัดการร้านเพื่อสร้างบัญชีพนักงานและกำหนดสิทธิ์การใช้งาน
+          {showEmailForm && (
+            <form onSubmit={handleEmailLogin} className="space-y-3.5 pt-3">
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">
+                  อีเมลพนักงาน / ผู้ดูแลระบบ
+                </label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="email"
+                    required
+                    autoComplete="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="name@store.com"
+                    className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-blue-600"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-1">รหัสผ่าน</label>
+                <div className="relative">
+                  <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="กรอกรหัสผ่าน"
+                    className="w-full pl-9 pr-10 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-blue-600"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 cursor-pointer"
+                    aria-label={showPassword ? 'ซ่อนรหัสผ่าน' : 'แสดงรหัสผ่าน'}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={submitting || googleLoading}
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-60 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer"
+              >
+                <LogIn className="w-4 h-4" />
+                {submitting ? 'กำลังตรวจสอบบัญชี...' : 'เข้าสู่ระบบด้วยอีเมล'}
+              </button>
+            </form>
+          )}
         </div>
       </div>
     </div>
