@@ -85,8 +85,12 @@ export function QuickAddProductModal({
     setName(isCode ? '' : trimmed.slice(0, 160));
     setSku(generateSkuCode('PRD'));
     setBarcode(isCode ? trimmed.slice(0, 64) : generateEan13InternalBarcode());
+    const matchedInitialCategory =
+      initialCategoryId &&
+      initialCategoryId !== 'all' &&
+      categories.some((c) => c.categoryId === initialCategoryId);
     setCategoryId(
-      initialCategoryId && initialCategoryId !== 'all'
+      matchedInitialCategory
         ? initialCategoryId
         : (categories[0]?.categoryId ?? ''),
     );

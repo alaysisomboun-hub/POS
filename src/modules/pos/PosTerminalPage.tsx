@@ -10,6 +10,8 @@ import {
   AlertCircle,
   Banknote,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
   CreditCard,
   PackagePlus,
   PauseCircle,
@@ -17,8 +19,10 @@ import {
   Plus,
   QrCode,
   ScanBarcode,
+  Search,
   ShoppingCart,
   Split,
+  Tag,
   Trash2,
   User,
   Wallet,
@@ -76,6 +80,7 @@ const QUICK_LAK_AMOUNTS = [10000, 20000, 50000, 100000, 200000, 500000];
 export function PosTerminalPage() {
   const { userProfile, organization, activeBranchId, settings } = useFirebase();
   const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const categoryScrollRef = useRef<HTMLDivElement | null>(null);
 
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -86,6 +91,7 @@ export function PosTerminalPage() {
   const [promotions, setPromotions] = useState<Promotion[]>([]);
 
   const [searchText, setSearchText] = useState('');
+  const [categorySearch, setCategorySearch] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all');
   const [priceTier, setPriceTier] = useState<PriceTier>('retail');
 
@@ -152,8 +158,8 @@ export function PosTerminalPage() {
         setCategories(
           snap.docs
             .map((d) => d.data() as Category)
-            .filter((c) => c.status === 'active' && !c.parentId)
-            .sort((a, b) => a.sortOrder - b.sortOrder),
+            .filter((c) => c.status === 'active')
+            .sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name)),
         );
       },
       (err) => handleFirestoreError(err, OperationType.LIST, 'categories'),
@@ -238,10 +244,63 @@ export function PosTerminalPage() {
     };
   }, [userProfile, activeBranchId]);
 
+  useEffect(() => {
+    if (
+      selectedCategoryId !== 'all' &&
+      !categories.some((c) => c.categoryId === selectedCategoryId)
+    ) {
+      setSelectedCategoryId('all');
+    }
+  }, [categories, selectedCategoryId]);
+
+  const mainCategories = useMemo(
+    () => categories.filter((c) => !c.parentId),
+    [categories],
+  );
+
+  const selectedMainCategoryId = useMemo(() => {
+    if (selectedCategoryId === 'all') return 'all';
+    const selected = categories.find((c) => c.categoryId === selectedCategoryId);
+    if (!selected) return 'all';
+    return selected.parentId || selected.categoryId;
+  }, [categories, selectedCategoryId]);
+
   const products = useMemo(
     () => allProducts.filter((p) => p.status === 'active'),
     [allProducts],
   );
+
+  const categoryProductCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const p of products) {
+      if (p.categoryId) {
+        counts.set(p.categoryId, (counts.get(p.categoryId) ?? 0) + 1);
+      }
+      if (p.subCategoryId && p.subCategoryId !== p.categoryId) {
+        counts.set(p.subCategoryId, (counts.get(p.subCategoryId) ?? 0) + 1);
+      }
+    }
+    return counts;
+  }, [products]);
+
+  const filteredCategories = useMemo(() => {
+    const q = categorySearch.trim().toLowerCase();
+    const list = !q
+      ? categories
+      : categories.filter(
+          (c) =>
+            c.name.toLowerCase().includes(q) ||
+            (c.description && c.description.toLowerCase().includes(q)),
+        );
+    return list;
+  }, [categories, categorySearch]);
+
+  const scrollCategories = (direction: 'left' | 'right') => {
+    const el = categoryScrollRef.current;
+    if (!el) return;
+    const offset = direction === 'left' ? -240 : 240;
+    el.scrollBy({ left: offset, behavior: 'smooth' });
+  };
 
   const productMap = useMemo(() => {
     const map = new Map<string, Product>();
@@ -258,7 +317,11 @@ export function PosTerminalPage() {
   const filteredProducts = useMemo(() => {
     const q = searchText.trim().toLowerCase();
     return products.filter((p) => {
-      if (selectedCategoryId !== 'all' && p.categoryId !== selectedCategoryId) {
+      if (
+        selectedCategoryId !== 'all' &&
+        p.categoryId !== selectedCategoryId &&
+        p.subCategoryId !== selectedCategoryId
+      ) {
         return false;
       }
       if (!q) return true;
@@ -862,33 +925,110 @@ export function PosTerminalPage() {
               </div>
             </div>
 
-            {/* Category Filter Tabs */}
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5">
-              <button
-                type="button"
-                onClick={() => setSelectedCategoryId('all')}
-                className={`px-3 py-1 text-xs font-medium rounded-md whitespace-nowrap cursor-pointer border ${
-                  selectedCategoryId === 'all'
-                    ? 'bg-blue-600 text-white border-blue-600'
-                    : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
-                }`}
+            {/* Category Filter Section (Search + Horizontal Scroll Tabs) */}
+            <div className="pt-2.5 border-t border-slate-100 space-y-2.5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
+                  <Tag className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                  <span>หมวดหมู่สินค้า</span>
+                  <span className="text-[11px] font-normal text-slate-400 tabular-nums">
+                    ({categories.length} หมวดหมู่)
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  <div className="relative flex-1 sm:w-52">
+                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      value={categorySearch}
+                      onChange={(e) => setCategorySearch(e.target.value)}
+                      placeholder="ค้นหาหมวดหมู่..."
+                      className="w-full pl-8 pr-7 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:outline-none focus:border-blue-600"
+                    />
+                    {categorySearch && (
+                      <button
+                        type="button"
+                        onClick={() => setCategorySearch('')}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                        title="ล้างคำค้นหาหมวดหมู่"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+
+                  {categories.length > 0 && (
+                    <div className="hidden sm:inline-flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => scrollCategories('left')}
+                        className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 border border-slate-200 rounded-lg cursor-pointer"
+                        title="เลื่อนดูหมวดหมู่ทางซ้าย"
+                      >
+                        <ChevronLeft className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => scrollCategories('right')}
+                        className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 border border-slate-200 rounded-lg cursor-pointer"
+                        title="เลื่อนดูหมวดหมู่ทางขวา"
+                      >
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div
+                ref={categoryScrollRef}
+                className="flex items-center gap-2 overflow-x-auto pb-1 scroll-smooth"
               >
-                ทั้งหมด ({products.length})
-              </button>
-              {categories.map((cat) => (
                 <button
-                  key={cat.categoryId}
                   type="button"
-                  onClick={() => setSelectedCategoryId(cat.categoryId)}
-                  className={`px-3 py-1 text-xs font-medium rounded-md whitespace-nowrap cursor-pointer border ${
-                    selectedCategoryId === cat.categoryId
-                      ? 'bg-blue-600 text-white border-blue-600'
-                      : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                  onClick={() => setSelectedCategoryId('all')}
+                  className={`px-3.5 py-1.5 text-xs sm:text-sm font-medium rounded-lg whitespace-nowrap shrink-0 cursor-pointer border transition-colors tabular-nums ${
+                    selectedCategoryId === 'all'
+                      ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                      : 'bg-white text-slate-700 border-slate-200 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200'
                   }`}
                 >
-                  {cat.name}
+                  ทั้งหมด ({products.length})
                 </button>
-              ))}
+
+                {filteredCategories.map((cat) => {
+                  const isSelected = selectedCategoryId === cat.categoryId;
+                  const count = categoryProductCounts.get(cat.categoryId) ?? 0;
+                  return (
+                    <button
+                      key={cat.categoryId}
+                      type="button"
+                      onClick={() => setSelectedCategoryId(cat.categoryId)}
+                      className={`px-3.5 py-1.5 text-xs sm:text-sm font-medium rounded-lg whitespace-nowrap shrink-0 cursor-pointer border transition-colors tabular-nums ${
+                        isSelected
+                          ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                          : 'bg-white text-slate-700 border-slate-200 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200'
+                      }`}
+                    >
+                      {cat.name} ({count})
+                    </button>
+                  );
+                })}
+
+                {categorySearch.trim() && filteredCategories.length === 0 && (
+                  <div className="flex items-center gap-2 px-3 py-1.5 text-xs text-slate-500 whitespace-nowrap">
+                    <span>ไม่พบหมวดหมู่ &ldquo;{categorySearch.trim()}&rdquo;</span>
+                    <button
+                      type="button"
+                      onClick={() => setCategorySearch('')}
+                      className="text-blue-600 font-medium hover:underline cursor-pointer"
+                    >
+                      แสดงทั้งหมด
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -1742,8 +1882,8 @@ export function PosTerminalPage() {
       <QuickAddProductModal
         open={quickAddOpen}
         initialQuery={quickAddInitialQuery}
-        initialCategoryId={selectedCategoryId}
-        categories={categories}
+        initialCategoryId={selectedMainCategoryId}
+        categories={mainCategories}
         existingProducts={allProducts}
         userProfile={userProfile}
         activeBranchId={activeBranchId}

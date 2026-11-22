@@ -172,13 +172,24 @@ export function CategoriesPage() {
       return;
     }
 
+    const cleanParent = parentId.trim() || null;
+    const duplicateCat = categories.find(
+      (c) =>
+        c.categoryId !== editingCat?.categoryId &&
+        c.name.trim().toLowerCase() === cleanName.toLowerCase() &&
+        (c.parentId || null) === cleanParent,
+    );
+    if (duplicateCat) {
+      setErrorMsg(`มีหมวดหมู่ "${cleanName}" อยู่ในระบบแล้ว กรุณาใช้ชื่ออื่น`);
+      return;
+    }
+
     setSaving(true);
     setErrorMsg(null);
 
     try {
       const batch = writeBatch(db);
       const parsedOrder = Math.max(0, Math.min(99999, Math.round(Number(sortOrder) || 0)));
-      const cleanParent = parentId.trim() || null;
 
       if (editingCat) {
         batch.update(doc(db, 'categories', editingCat.categoryId), {
