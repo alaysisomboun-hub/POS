@@ -163,12 +163,12 @@ export function CategoriesPage() {
 
     const cleanName = name.trim();
     if (!cleanName) {
-      setErrorMsg('กรุณากรอกชื่อหมวดหมู่สินค้า');
+      setErrorMsg('ກະລຸນາປ້ອນຊື່ໝວດໝູ່ສິນຄ້າ');
       return;
     }
 
     if (editingCat && parentId === editingCat.categoryId) {
-      setErrorMsg('ไม่สามารถกำหนดหมวดหมู่ย่อยให้อยู่ภายใต้ตัวเองได้');
+      setErrorMsg('ບໍ່ສາມາດກຳນົດໝວດໝູ່ຍ່ອຍໃຫ້ຢູ່ພາຍໃຕ້ຕົນເອງໄດ້');
       return;
     }
 
@@ -180,7 +180,7 @@ export function CategoriesPage() {
         (c.parentId || null) === cleanParent,
     );
     if (duplicateCat) {
-      setErrorMsg(`มีหมวดหมู่ "${cleanName}" อยู่ในระบบแล้ว กรุณาใช้ชื่ออื่น`);
+      setErrorMsg(`ມີໝວດໝູ່ "${cleanName}" ຢູ່ໃນລະບົບແລ້ວ ກະລຸນາໃຊ້ຊື່ອື່ນ`);
       return;
     }
 
@@ -242,7 +242,7 @@ export function CategoriesPage() {
       try {
         handleFirestoreError(err, OperationType.WRITE, 'categories');
       } catch (wrapped) {
-        setErrorMsg(wrapped instanceof Error ? wrapped.message : 'ไม่สามารถบันทึกหมวดหมู่ได้');
+        setErrorMsg(wrapped instanceof Error ? wrapped.message : 'ບໍ່ສາມາດບັນທຶກໝວດໝູ່ໄດ້');
       }
     } finally {
       setSaving(false);
@@ -260,7 +260,7 @@ export function CategoriesPage() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="ค้นหาชื่อหมวดหมู่..."
+              placeholder="ຄົ້ນຫາຊື່ໝວດໝູ່..."
               className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-blue-600"
             />
           </div>
@@ -277,7 +277,7 @@ export function CategoriesPage() {
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                {key === 'all' ? 'ทั้งหมด' : key === 'active' ? 'ใช้งาน' : 'ปิดใช้งาน'}
+                {key === 'all' ? 'ທັງໝົດ' : key === 'active' ? 'ໃຊ້ງານ' : 'ປິດໃຊ້ງານ'}
               </button>
             ))}
           </div>
@@ -290,7 +290,7 @@ export function CategoriesPage() {
             className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer"
           >
             <FolderPlus className="w-4 h-4" />
-            เพิ่มหมวดหมู่สินค้า
+            ເພີ່ມໝວດໝູ່ສິນຄ້າ
           </button>
         )}
       </div>
@@ -300,27 +300,27 @@ export function CategoriesPage() {
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-600">
-              <th className="py-3 px-4">ชื่อหมวดหมู่</th>
-              <th className="py-3 px-4">ระดับ</th>
-              <th className="py-3 px-4">รายละเอียด</th>
-              <th className="py-3 px-4 text-right">จำนวนสินค้า</th>
-              <th className="py-3 px-4 text-right">ลำดับ</th>
-              <th className="py-3 px-4">สถานะ</th>
-              <th className="py-3 px-4 text-right">จัดการ</th>
+              <th className="py-3 px-4">ຊື່ໝວດໝູ່</th>
+              <th className="py-3 px-4">ລະດັບ</th>
+              <th className="py-3 px-4">ລາຍລະອຽດ</th>
+              <th className="py-3 px-4 text-right">ຈຳນວນສິນຄ້າ</th>
+              <th className="py-3 px-4 text-right">ລຳດັບ</th>
+              <th className="py-3 px-4">ສະຖານະ</th>
+              <th className="py-3 px-4 text-right">ຈັດການ</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 text-sm">
             {loading && (
               <tr>
                 <td colSpan={7} className="py-8 text-center text-sm text-slate-500">
-                  กำลังโหลดข้อมูลหมวดหมู่...
+                  ກຳລັງໂຫຼດຂໍ້ມູນໝວດໝູ່...
                 </td>
               </tr>
             )}
             {!loading && orderedRows.length === 0 && (
               <tr>
                 <td colSpan={7} className="py-10 text-center text-sm text-slate-500">
-                  ยังไม่มีหมวดหมู่สินค้า กด &ldquo;เพิ่มหมวดหมู่สินค้า&rdquo; เพื่อเริ่มต้นจัดโครงสร้างสินค้า
+                  ຍັງບໍ່ມີໝວດໝູ່ສິນຄ້າ ກົດ &ldquo;ເພີ່ມໝວດໝູ່ສິນຄ້າ&rdquo; ເພື່ອເລີ່ມຕົ້ນຈັດໂຄງສ້າງສິນຄ້າ
                 </td>
               </tr>
             )}
@@ -342,20 +342,20 @@ export function CategoriesPage() {
                     </div>
                   </td>
                   <td className="py-3 px-4 text-xs text-slate-500">
-                    {isSub ? `หมวดหมู่ย่อย · ${categoryNameMap.get(cat.parentId || '') ?? '-'}` : 'หมวดหมู่หลัก'}
+                    {isSub ? `ໝວດໝູ່ຍ່ອຍ · ${categoryNameMap.get(cat.parentId || '') ?? '-'}` : 'ໝວດໝູ່ຫຼັກ'}
                   </td>
                   <td className="py-3 px-4 text-xs text-slate-600 max-w-xs truncate">
                     {cat.description || '-'}
                   </td>
                   <td className="py-3 px-4 text-right text-xs font-medium text-slate-800 tabular-nums">
-                    {count.toLocaleString('en-US')} รายการ
+                    {count.toLocaleString('en-US')} ລາຍການ
                   </td>
                   <td className="py-3 px-4 text-right text-xs text-slate-500 tabular-nums">
                     {cat.sortOrder}
                   </td>
                   <td className="py-3 px-4 text-xs">
                     <span className={cat.status === 'active' ? 'text-green-700 font-medium' : 'text-slate-400'}>
-                      {cat.status === 'active' ? 'ใช้งาน' : 'ปิดใช้งาน'}
+                      {cat.status === 'active' ? 'ໃຊ້ງານ' : 'ປິດໃຊ້ງານ'}
                     </span>
                   </td>
                   <td className="py-3 px-4 text-right">
@@ -365,9 +365,9 @@ export function CategoriesPage() {
                           type="button"
                           onClick={() => openCreateModal(cat.categoryId)}
                           className="px-2 py-1 text-xs text-blue-600 hover:bg-blue-50 rounded cursor-pointer"
-                          title="เพิ่มหมวดหมู่ย่อย"
+                          title="ເພີ່ມໝວດໝູ່ຍ່ອຍ"
                         >
-                          + หมวดย่อย
+                          + ໝວດຍ່ອຍ
                         </button>
                       )}
                       {canEdit && (
@@ -375,7 +375,7 @@ export function CategoriesPage() {
                           type="button"
                           onClick={() => openEditModal(cat)}
                           className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-slate-100 rounded-md cursor-pointer"
-                          title="แก้ไข"
+                          title="ແກ້ໄຂ"
                         >
                           <Edit3 className="w-4 h-4" />
                         </button>
@@ -393,7 +393,7 @@ export function CategoriesPage() {
       <div className="md:hidden space-y-3">
         {!loading && orderedRows.length === 0 && (
           <div className="bg-white border border-slate-200 rounded-xl p-6 text-center text-sm text-slate-500">
-            ยังไม่มีหมวดหมู่สินค้า
+            ຍັງບໍ່ມີໝວດໝູ່ສິນຄ້າ
           </div>
         )}
         {orderedRows.map((cat) => {
@@ -408,12 +408,12 @@ export function CategoriesPage() {
                 <div>
                   <div className="font-semibold text-slate-900 text-sm">{cat.name}</div>
                   <div className="text-xs text-slate-500">
-                    {isSub ? `ย่อยของ ${categoryNameMap.get(cat.parentId || '') ?? '-'}` : 'หมวดหมู่หลัก'} ·{' '}
-                    {count} สินค้า
+                    {isSub ? `ຍ່ອຍຂອງ ${categoryNameMap.get(cat.parentId || '') ?? '-'}` : 'ໝວດໝູ່ຫຼັກ'} ·{' '}
+                    {count} ສິນຄ້າ
                   </div>
                 </div>
                 <span className={`text-xs font-medium ${cat.status === 'active' ? 'text-green-700' : 'text-slate-400'}`}>
-                  {cat.status === 'active' ? 'ใช้งาน' : 'ปิดใช้งาน'}
+                  {cat.status === 'active' ? 'ໃຊ້ງານ' : 'ປິດໃຊ້ງານ'}
                 </span>
               </div>
               {cat.description && <p className="text-xs text-slate-600">{cat.description}</p>}
@@ -424,7 +424,7 @@ export function CategoriesPage() {
                     onClick={() => openCreateModal(cat.categoryId)}
                     className="px-2.5 py-1 text-xs font-medium text-blue-600 border border-blue-200 rounded-md"
                   >
-                    + หมวดย่อย
+                    + ໝວດຍ່ອຍ
                   </button>
                 )}
                 {canEdit && (
@@ -433,7 +433,7 @@ export function CategoriesPage() {
                     onClick={() => openEditModal(cat)}
                     className="px-2.5 py-1 text-xs font-medium text-slate-700 border border-slate-200 rounded-md"
                   >
-                    แก้ไข
+                    ແກ້ໄຂ
                   </button>
                 )}
               </div>
@@ -448,7 +448,7 @@ export function CategoriesPage() {
           <div className="w-full max-w-md bg-white border border-slate-200 rounded-xl p-6">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
               <h3 className="text-base font-semibold text-slate-900">
-                {editingCat ? 'แก้ไขหมวดหมู่สินค้า' : 'เพิ่มหมวดหมู่สินค้า'}
+                {editingCat ? 'ແກ້ໄຂໝວດໝູ່ສິນຄ້າ' : 'ເພີ່ມໝວດໝູ່ສິນຄ້າ'}
               </h3>
               <button
                 type="button"
@@ -468,7 +468,7 @@ export function CategoriesPage() {
             <form onSubmit={handleSave} className="space-y-4">
               <div>
                 <label className="block text-xs font-medium text-slate-700 mb-1">
-                  ชื่อหมวดหมู่ *
+                  ຊື່ໝວດໝູ່ *
                 </label>
                 <input
                   type="text"
@@ -476,21 +476,21 @@ export function CategoriesPage() {
                   maxLength={100}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="เช่น เครื่องดื่ม, ขนมขบเคี้ยว, ของใช้ในบ้าน"
+                  placeholder="ເຊັ່ນ ເຄື່ອງດື່ມ, ຂະໜົມ, ຂອງໃຊ້ໃນເຮືອນ"
                   className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-medium text-slate-700 mb-1">
-                  หมวดหมู่หลัก (Parent Category)
+                  ໝວດໝູ່ຫຼັກ (Parent Category)
                 </label>
                 <select
                   value={parentId}
                   onChange={(e) => setParentId(e.target.value)}
                   className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white"
                 >
-                  <option value="">— เป็นหมวดหมู่หลัก —</option>
+                  <option value="">— ເປັນໝວດໝູ່ຫຼັກ —</option>
                   {mainCategories
                     .filter((c) => !editingCat || c.categoryId !== editingCat.categoryId)
                     .map((c) => (
@@ -503,7 +503,7 @@ export function CategoriesPage() {
 
               <div>
                 <label className="block text-xs font-medium text-slate-700 mb-1">
-                  รายละเอียดเพิ่มเติม
+                  ລາຍລະອຽດເພີ່ມເຕີມ
                 </label>
                 <input
                   type="text"
@@ -516,7 +516,7 @@ export function CategoriesPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">ลำดับแสดงผล</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">ລຳດັບສະແດງຜົນ</label>
                   <input
                     type="number"
                     min={0}
@@ -527,14 +527,14 @@ export function CategoriesPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">สถานะ</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">ສະຖານະ</label>
                   <select
                     value={status}
                     onChange={(e) => setStatus(e.target.value as 'active' | 'inactive')}
                     className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white"
                   >
-                    <option value="active">ใช้งาน</option>
-                    <option value="inactive">ปิดใช้งาน</option>
+                    <option value="active">ໃຊ້ງານ</option>
+                    <option value="inactive">ປິດໃຊ້ງານ</option>
                   </select>
                 </div>
               </div>
@@ -545,14 +545,14 @@ export function CategoriesPage() {
                   onClick={() => setModalOpen(false)}
                   className="px-4 py-2 text-sm font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer"
                 >
-                  ยกเลิก
+                  ຍົກເລີກ
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
                   className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-60 rounded-lg cursor-pointer"
                 >
-                  {saving ? 'กำลังบันทึก...' : 'บันทึก'}
+                  {saving ? 'ກຳລັງບັນທຶກ...' : 'ບັນທຶກ'}
                 </button>
               </div>
             </form>

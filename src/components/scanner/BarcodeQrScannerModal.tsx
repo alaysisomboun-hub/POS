@@ -47,8 +47,8 @@ function playScanBeep() {
 }
 
 export function BarcodeQrScannerModal({
-  title = 'สแกนบาร์โค้ด / QR Code สินค้า',
-  subtitle = 'รองรับกล้องมือถือ/คอมพิวเตอร์ และเครื่องสแกนบาร์โค้ด USB หรือ Bluetooth',
+  title = 'ສະແກນບາໂຄດ / QR Code ສິນຄ້າ',
+  subtitle = 'ຮອງຮັບກ້ອງມືຖື/ຄອມພິວເຕີ ແລະ ເຄື່ອງສະແກນບາໂຄດ USB ຫຼື Bluetooth',
   onDetected,
   onClose,
 }: BarcodeQrScannerModalProps) {
@@ -126,7 +126,7 @@ export function BarcodeQrScannerModal({
         Html5Qrcode.getCameras()
           .then((list) => {
             if (list.length > 0) {
-              setCameras(list.map((c) => ({ id: c.id, label: c.label || `กล้อง ${c.id.slice(0, 6)}` })));
+              setCameras(list.map((c) => ({ id: c.id, label: c.label || `ກ້ອງ ${c.id.slice(0, 6)}` })));
               if (preferredCameraId) {
                 setSelectedCameraId(preferredCameraId);
               }
@@ -140,23 +140,23 @@ export function BarcodeQrScannerModal({
         try {
           const list = await Html5Qrcode.getCameras();
           if (list.length > 0) {
-            setCameras(list.map((c) => ({ id: c.id, label: c.label || `กล้อง ${c.id.slice(0, 6)}` })));
+            setCameras(list.map((c) => ({ id: c.id, label: c.label || `ກ້ອງ ${c.id.slice(0, 6)}` })));
             setSelectedCameraId(list[0].id);
             await inst.start(list[0].id, scanConfig, onSuccess, () => {});
             setCameraState('active');
             return;
           }
         } catch {
-          // Fall through to readable Thai error below
+          // Fall through to readable Lao error below
         }
       }
 
       const rawMsg = err instanceof Error ? err.message : String(err);
-      let friendly = 'ไม่สามารถเปิดกล้องได้ กรุณาตรวจสอบสิทธิ์การใช้กล้อง หรือใช้เครื่องสแกน USB/Bluetooth ด้านล่าง';
+      let friendly = 'ບໍ່ສາມາດເປີດກ້ອງໄດ້ ກະລຸນາກວດສອບສິດການໃຊ້ກ້ອງ ຫຼື ໃຊ້ເຄື່ອງສະແກນ USB/Bluetooth ດ້ານລຸ່ມ';
       if (rawMsg.toLowerCase().includes('notallowed') || rawMsg.toLowerCase().includes('permission')) {
-        friendly = 'เบราว์เซอร์ไม่ได้รับอนุญาตให้เข้าถึงกล้อง กรุณากดอนุญาตกล้อง หรือใช้การสแกนจากเครื่อง USB/Bluetooth หรืออัปโหลดรูปภาพ';
+        friendly = 'ບຣາວເຊີບໍ່ໄດ້ຮັບອະນຸຍາດໃຫ້ເຂົ້າເຖິງກ້ອງ ກະລຸນາກົດອະນຸຍາດກ້ອງ ຫຼື ໃຊ້ເຄື່ອງສະແກນ USB/Bluetooth ຫຼື ອັບໂຫຼດຮູບພາບ';
       } else if (rawMsg.toLowerCase().includes('notfound')) {
-        friendly = 'ไม่พบกล้องในอุปกรณ์นี้ คุณยังสามารถสแกนผ่านเครื่อง USB / Bluetooth หรืออัปโหลดรูปบาร์โค้ด/QR ได้ทันที';
+        friendly = 'ບໍ່ພົບກ້ອງໃນອຸປະກອນນີ້ ທ່ານຍັງສາມາດສະແກນຜ່ານເຄື່ອງ USB / Bluetooth ຫຼື ອັບໂຫຼດຮູບບາໂຄດ/QR ໄດ້ທັນທີ';
       }
       setCameraError(friendly);
       setCameraState('error');
@@ -207,7 +207,7 @@ export function BarcodeQrScannerModal({
       const decoded = await inst.scanFile(file, false);
       await emitCode(decoded);
     } catch {
-      setCameraError('ไม่พบบาร์โค้ดหรือ QR Code ในรูปภาพที่เลือก กรุณาลองรูปที่ชัดขึ้น');
+      setCameraError('ບໍ່ພົບບາໂຄດ ຫຼື QR Code ໃນຮູບພາບທີ່ເລືອກ ກະລຸນາລອງຮູບທີ່ຊັດເຈນຂຶ້ນ');
       setCameraState('error');
     } finally {
       setFileScanning(false);
@@ -247,7 +247,7 @@ export function BarcodeQrScannerModal({
             {cameraState === 'starting' && (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-slate-900/80 text-white text-xs">
                 <Loader2 className="w-6 h-6 animate-spin text-blue-400" />
-                <span>กำลังเปิดกล้องเพื่อสแกน Barcode / QR Code...</span>
+                <span>ກຳລັງເປີດກ້ອງເພື່ອສະແກນ Barcode / QR Code...</span>
               </div>
             )}
 
@@ -263,7 +263,7 @@ export function BarcodeQrScannerModal({
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium cursor-pointer"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
-                  ลองเปิดกล้องอีกครั้ง
+                  ລອງເປີດກ້ອງອີກຄັ້ງ
                 </button>
               </div>
             )}
@@ -279,7 +279,7 @@ export function BarcodeQrScannerModal({
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-xs font-medium text-slate-700 cursor-pointer"
                 >
                   <SwitchCamera className="w-3.5 h-3.5" />
-                  สลับกล้อง ({cameras.length})
+                  ສະຫຼັບກ້ອງ ({cameras.length})
                 </button>
               )}
 
@@ -289,7 +289,7 @@ export function BarcodeQrScannerModal({
                 ) : (
                   <ImageUp className="w-3.5 h-3.5" />
                 )}
-                สแกนจากรูปภาพ
+                ສະແກນຈາກຮູບພາບ
                 <input
                   type="file"
                   accept="image/*"
@@ -311,7 +311,7 @@ export function BarcodeQrScannerModal({
           >
             <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-800">
               <Keyboard className="w-4 h-4 text-blue-600" />
-              เครื่องสแกน USB / Bluetooth หรือพิมพ์รหัสสินค้า
+              ເຄື່ອງສະແກນ USB / Bluetooth ຫຼື ພິມລະຫັດສິນຄ້າ
             </div>
             <div className="flex gap-2">
               <input
@@ -320,7 +320,7 @@ export function BarcodeQrScannerModal({
                 maxLength={64}
                 value={manualCode}
                 onChange={(e) => setManualCode(e.target.value)}
-                placeholder="ยิงบาร์โค้ดด้วยเครื่องสแกน หรือพิมพ์รหัสแล้วกด Enter..."
+                placeholder="ຍິງບາໂຄດດ້ວຍເຄື່ອງສະແກນ ຫຼື ພິມລະຫັດແລ້ວກົດ Enter..."
                 className="flex-1 px-3 py-2 text-sm font-mono bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <button
@@ -328,7 +328,7 @@ export function BarcodeQrScannerModal({
                 disabled={!manualCode.trim()}
                 className="px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white text-xs font-semibold cursor-pointer"
               >
-                ตกลง
+                ຕົກລົງ
               </button>
             </div>
           </form>

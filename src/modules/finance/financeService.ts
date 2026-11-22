@@ -27,42 +27,42 @@ export const CHART_OF_ACCOUNTS: {
   name: string;
   type: 'asset' | 'liability' | 'equity' | 'revenue' | 'expense';
 }[] = [
-  { code: '1110', name: 'เงินสดในมือ', type: 'asset' },
-  { code: '1120', name: 'เงินฝากธนาคาร / QR', type: 'asset' },
-  { code: '1130', name: 'ลูกหนี้การค้า', type: 'asset' },
-  { code: '1140', name: 'สินค้าคงเหลือ', type: 'asset' },
-  { code: '1210', name: 'อุปกรณ์และทรัพย์สินร้าน', type: 'asset' },
-  { code: '2110', name: 'เจ้าหนี้การค้า', type: 'liability' },
-  { code: '2120', name: 'ภาษีขายค้างจ่าย', type: 'liability' },
-  { code: '3100', name: 'ทุนของเจ้าของกิจการ', type: 'equity' },
-  { code: '4100', name: 'รายได้จากการขายสินค้า', type: 'revenue' },
-  { code: '4200', name: 'รายได้อื่น ๆ', type: 'revenue' },
-  { code: '5100', name: 'ต้นทุนขาย (COGS)', type: 'expense' },
-  { code: '5210', name: 'ค่าเช่าสถานที่', type: 'expense' },
-  { code: '5220', name: 'ค่าน้ำ-ค่าไฟ-สาธารณูปโภค', type: 'expense' },
-  { code: '5230', name: 'เงินเดือนและค่าแรงพนักงาน', type: 'expense' },
-  { code: '5240', name: 'ค่าขนส่งสินค้า', type: 'expense' },
-  { code: '5250', name: 'ค่าการตลาดและส่งเสริมการขาย', type: 'expense' },
-  { code: '5260', name: 'ค่าซ่อมบำรุงและค่าใช้จ่ายอื่น', type: 'expense' },
+  { code: '1110', name: 'ເງິນສົດໃນມື', type: 'asset' },
+  { code: '1120', name: 'ເງິນຝາກທະນາຄານ / QR', type: 'asset' },
+  { code: '1130', name: 'ລູກໜີ້ການຄ້າ', type: 'asset' },
+  { code: '1140', name: 'ສິນຄ້າຄົງເຫຼືອ', type: 'asset' },
+  { code: '1210', name: 'ອຸປະກອນ ແລະ ຊັບສິນຮ້ານ', type: 'asset' },
+  { code: '2110', name: 'ເຈົ້າໜີ້ການຄ້າ', type: 'liability' },
+  { code: '2120', name: 'ພາສີຂາຍຄ້າງຈ່າຍ', type: 'liability' },
+  { code: '3100', name: 'ທຶນຂອງເຈົ້າຂອງກິດຈະການ', type: 'equity' },
+  { code: '4100', name: 'ລາຍໄດ້ຈາກການຂາຍສິນຄ້າ', type: 'revenue' },
+  { code: '4200', name: 'ລາຍໄດ້ອື່ນໆ', type: 'revenue' },
+  { code: '5100', name: 'ຕົ້ນທຶນຂາຍ (COGS)', type: 'expense' },
+  { code: '5210', name: 'ຄ່າເຊົ່າສະຖານທີ່', type: 'expense' },
+  { code: '5220', name: 'ຄ່ານ້ຳ-ຄ່າໄຟ-ສາທາລະນູປະໂພກ', type: 'expense' },
+  { code: '5230', name: 'ເງິນເດືອນ ແລະ ຄ່າແຮງພະນັກງານ', type: 'expense' },
+  { code: '5240', name: 'ຄ່າຂົນສົ່ງສິນຄ້າ', type: 'expense' },
+  { code: '5250', name: 'ຄ່າການຕະຫຼາດ ແລະ ສົ່ງເສີມການຂາຍ', type: 'expense' },
+  { code: '5260', name: 'ຄ່າສ້ອມແປງ ແລະ ຄ່າໃຊ້ຈ່າຍອື່ນ', type: 'expense' },
 ];
 
 export const EXPENSE_CATEGORY_META: Record<
   ExpenseCategory,
   { label: string; accountCode: string; accountName: string }
 > = {
-  inventory_purchase: { label: 'ซื้อสินค้าเข้าคลัง', accountCode: '1140', accountName: 'สินค้าคงเหลือ' },
-  rent: { label: 'ค่าเช่าสถานที่', accountCode: '5210', accountName: 'ค่าเช่าสถานที่' },
-  utilities: { label: 'ค่าน้ำ-ค่าไฟ-สาธารณูปโภค', accountCode: '5220', accountName: 'ค่าน้ำ-ค่าไฟ-สาธารณูปโภค' },
-  salary: { label: 'เงินเดือนและค่าแรง', accountCode: '5230', accountName: 'เงินเดือนและค่าแรงพนักงาน' },
-  transport: { label: 'ค่าขนส่งและเดินทาง', accountCode: '5240', accountName: 'ค่าขนส่งสินค้า' },
-  marketing: { label: 'ค่าการตลาดและโปรโมท', accountCode: '5250', accountName: 'ค่าการตลาดและส่งเสริมการขาย' },
-  maintenance_other: { label: 'ซ่อมบำรุงและค่าใช้จ่ายอื่น ๆ', accountCode: '5260', accountName: 'ค่าซ่อมบำรุงและค่าใช้จ่ายอื่น' },
+  inventory_purchase: { label: 'ຊື້ສິນຄ້າເຂົ້າສາງ', accountCode: '1140', accountName: 'ສິນຄ້າຄົງເຫຼືອ' },
+  rent: { label: 'ຄ່າເຊົ່າສະຖານທີ່', accountCode: '5210', accountName: 'ຄ່າເຊົ່າສະຖານທີ່' },
+  utilities: { label: 'ຄ່ານ້ຳ-ຄ່າໄຟ-ສາທາລະນູປະໂພກ', accountCode: '5220', accountName: 'ຄ່ານ້ຳ-ຄ່າໄຟ-ສາທາລະນູປະໂພກ' },
+  salary: { label: 'ເງິນເດືອນ ແລະ ຄ່າແຮງ', accountCode: '5230', accountName: 'ເງິນເດືອນ ແລະ ຄ່າແຮງພະນັກງານ' },
+  transport: { label: 'ຄ່າຂົນສົ່ງ ແລະ ເດີນທາງ', accountCode: '5240', accountName: 'ຄ່າຂົນສົ່ງສິນຄ້າ' },
+  marketing: { label: 'ຄ່າການຕະຫຼາດ ແລະ ໂປຣໂມດ', accountCode: '5250', accountName: 'ຄ່າການຕະຫຼາດ ແລະ ສົ່ງເສີມການຂາຍ' },
+  maintenance_other: { label: 'ສ້ອມແປງ ແລະ ຄ່າໃຊ້ຈ່າຍອື່ນໆ', accountCode: '5260', accountName: 'ຄ່າສ້ອມແປງ ແລະ ຄ່າໃຊ້ຈ່າຍອື່ນ' },
 };
 
 export const INCOME_CATEGORY_LABELS: Record<IncomeCategory, string> = {
-  sales: 'รายได้จากการขายสินค้า',
-  ar_collection: 'รับชำระหนี้ลูกหนี้การค้า',
-  other_income: 'รายรับอื่น ๆ',
+  sales: 'ລາຍໄດ້ຈາກການຂາຍສິນຄ້າ',
+  ar_collection: 'ຮັບຊຳລະໜີ້ລູກໜີ້ການຄ້າ',
+  other_income: 'ລາຍຮັບອື່ນໆ',
 };
 
 export async function recordArPayment(params: {
@@ -77,7 +77,7 @@ export async function recordArPayment(params: {
 }): Promise<void> {
   const { db, user, branchId, customer, sale = null, amountLak, paymentMethod, notes } = params;
   const safeAmount = Math.round(amountLak);
-  if (safeAmount <= 0) throw new Error('จำนวนเงินรับชำระต้องมากกว่า 0');
+  if (safeAmount <= 0) throw new Error('ຈຳນວນເງິນຮັບຊຳລະຕ້ອງຫຼາຍກວ່າ 0');
 
   const paymentId = generateSafeId('arp');
   const entryDate = todayYmd();
@@ -85,7 +85,7 @@ export async function recordArPayment(params: {
   await runTransaction(db, async (tx) => {
     const custRef = doc(db, 'customers', customer.customerId);
     const custSnap = await tx.get(custRef);
-    if (!custSnap.exists()) throw new Error('ไม่พบข้อมูลลูกค้า');
+    if (!custSnap.exists()) throw new Error('ບໍ່ພົບຂໍ້ມູນລູກຄ້າ');
     const latestCust = custSnap.data() as Customer;
 
     let saleRef: ReturnType<typeof doc> | null = null;
@@ -136,7 +136,7 @@ export async function recordArPayment(params: {
       branchId,
       ownerUid: user.ownerUid,
       category: 'ar_collection',
-      title: `รับชำระหนี้ลูกหนี้ ${latestCust.name} (${invoiceNumber})`.slice(0, 160),
+      title: `ຮັບຊຳລະໜີ້ລູກໜີ້ ${latestCust.name} (${invoiceNumber})`.slice(0, 160),
       amountLak: safeAmount,
       paymentMethod,
       referenceNo: invoiceNumber.slice(0, 60),
@@ -149,8 +149,8 @@ export async function recordArPayment(params: {
 
     const debitAcc =
       paymentMethod === 'cash'
-        ? { code: '1110', name: 'เงินสดในมือ' }
-        : { code: '1120', name: 'เงินฝากธนาคาร / QR' };
+        ? { code: '1110', name: 'ເງິນສົດໃນມື' }
+        : { code: '1120', name: 'ເງິນຝາກທະນາຄານ / QR' };
     const jnlId = generateSafeId('jnl');
     tx.set(doc(db, 'journalEntries', jnlId), {
       journalId: jnlId,
@@ -159,12 +159,12 @@ export async function recordArPayment(params: {
       branchId,
       ownerUid: user.ownerUid,
       entryDate,
-      description: `รับชำระหนี้ลูกหนี้ ${latestCust.name} (${invoiceNumber})`.slice(0, 300),
+      description: `ຮັບຊຳລະໜີ້ລູກໜີ້ ${latestCust.name} (${invoiceNumber})`.slice(0, 300),
       sourceType: 'ar_payment',
       referenceNo: invoiceNumber.slice(0, 60),
       lines: [
         { accountCode: debitAcc.code, accountName: debitAcc.name, debitLak: safeAmount, creditLak: 0 },
-        { accountCode: '1130', accountName: 'ลูกหนี้การค้า', debitLak: 0, creditLak: safeAmount },
+        { accountCode: '1130', accountName: 'ລູກໜີ້ການຄ້າ', debitLak: 0, creditLak: safeAmount },
       ],
       totalDebitLak: safeAmount,
       totalCreditLak: safeAmount,
@@ -198,7 +198,7 @@ export async function recordApPayment(params: {
 }): Promise<void> {
   const { db, user, branchId, supplier, po = null, amountLak, paymentMethod, notes } = params;
   const safeAmount = Math.round(amountLak);
-  if (safeAmount <= 0) throw new Error('จำนวนเงินจ่ายชำระต้องมากกว่า 0');
+  if (safeAmount <= 0) throw new Error('ຈຳນວນເງິນຈ່າຍຊຳລະຕ້ອງຫຼາຍກວ່າ 0');
 
   const paymentId = generateSafeId('app');
   const entryDate = todayYmd();
@@ -206,7 +206,7 @@ export async function recordApPayment(params: {
   await runTransaction(db, async (tx) => {
     const supRef = doc(db, 'suppliers', supplier.supplierId);
     const supSnap = await tx.get(supRef);
-    if (!supSnap.exists()) throw new Error('ไม่พบข้อมูลซัพพลายเออร์');
+    if (!supSnap.exists()) throw new Error('ບໍ່ພົບຂໍ້ມູນຜູ້ສະໜອງ');
     const latestSup = supSnap.data() as Supplier;
 
     let poRef: ReturnType<typeof doc> | null = null;
@@ -257,7 +257,7 @@ export async function recordApPayment(params: {
       branchId,
       ownerUid: user.ownerUid,
       category: 'inventory_purchase',
-      title: `จ่ายชำระหนี้ซัพพลายเออร์ ${latestSup.name} (${poNumber})`.slice(0, 160),
+      title: `ຈ່າຍຊຳລະໜີ້ຜູ້ສະໜອງ ${latestSup.name} (${poNumber})`.slice(0, 160),
       amountLak: safeAmount,
       paymentMethod,
       referenceNo: poNumber.slice(0, 60),
@@ -270,8 +270,8 @@ export async function recordApPayment(params: {
 
     const creditAcc =
       paymentMethod === 'cash'
-        ? { code: '1110', name: 'เงินสดในมือ' }
-        : { code: '1120', name: 'เงินฝากธนาคาร / QR' };
+        ? { code: '1110', name: 'ເງິນສົດໃນມື' }
+        : { code: '1120', name: 'ເງິນຝາກທະນາຄານ / QR' };
     const jnlId = generateSafeId('jnl');
     tx.set(doc(db, 'journalEntries', jnlId), {
       journalId: jnlId,
@@ -280,11 +280,11 @@ export async function recordApPayment(params: {
       branchId,
       ownerUid: user.ownerUid,
       entryDate,
-      description: `จ่ายชำระหนี้ซัพพลายเออร์ ${latestSup.name} (${poNumber})`.slice(0, 300),
+      description: `ຈ່າຍຊຳລະໜີ້ຜູ້ສະໜອງ ${latestSup.name} (${poNumber})`.slice(0, 300),
       sourceType: 'ap_payment',
       referenceNo: poNumber.slice(0, 60),
       lines: [
-        { accountCode: '2110', accountName: 'เจ้าหนี้การค้า', debitLak: safeAmount, creditLak: 0 },
+        { accountCode: '2110', accountName: 'ເຈົ້າໜີ້ການຄ້າ', debitLak: safeAmount, creditLak: 0 },
         { accountCode: creditAcc.code, accountName: creditAcc.name, debitLak: 0, creditLak: safeAmount },
       ],
       totalDebitLak: safeAmount,
@@ -322,8 +322,8 @@ export async function recordIncomeEntry(params: {
   const { db, user, branchId, category, title, amountLak, paymentMethod, referenceNo, notes, entryDate } =
     params;
   const safeAmount = Math.round(amountLak);
-  if (safeAmount <= 0) throw new Error('จำนวนเงินต้องมากกว่า 0');
-  if (!title.trim()) throw new Error('กรุณาระบุชื่อรายการรายรับ');
+  if (safeAmount <= 0) throw new Error('ຈຳນວນເງິນຕ້ອງຫຼາຍກວ່າ 0');
+  if (!title.trim()) throw new Error('ກະລຸນາລະບຸຊື່ລາຍການລາຍຮັບ');
 
   const entryId = generateSafeId('inc');
   const cleanTitle = title.trim().slice(0, 160);
@@ -349,8 +349,8 @@ export async function recordIncomeEntry(params: {
 
     const debitAcc =
       paymentMethod === 'cash'
-        ? { code: '1110', name: 'เงินสดในมือ' }
-        : { code: '1120', name: 'เงินฝากธนาคาร / QR' };
+        ? { code: '1110', name: 'ເງິນສົດໃນມື' }
+        : { code: '1120', name: 'ເງິນຝາກທະນາຄານ / QR' };
     const jnlId = generateSafeId('jnl');
     tx.set(doc(db, 'journalEntries', jnlId), {
       journalId: jnlId,
@@ -364,7 +364,7 @@ export async function recordIncomeEntry(params: {
       referenceNo: referenceNo.trim().slice(0, 60),
       lines: [
         { accountCode: debitAcc.code, accountName: debitAcc.name, debitLak: safeAmount, creditLak: 0 },
-        { accountCode: '4200', accountName: 'รายได้อื่น ๆ', debitLak: 0, creditLak: safeAmount },
+        { accountCode: '4200', accountName: 'ລາຍໄດ້ອື່ນໆ', debitLak: 0, creditLak: safeAmount },
       ],
       totalDebitLak: safeAmount,
       totalCreditLak: safeAmount,
@@ -401,8 +401,8 @@ export async function recordExpenseEntry(params: {
   const { db, user, branchId, category, title, amountLak, paymentMethod, referenceNo, notes, entryDate } =
     params;
   const safeAmount = Math.round(amountLak);
-  if (safeAmount <= 0) throw new Error('จำนวนเงินรายจ่ายต้องมากกว่า 0');
-  if (!title.trim()) throw new Error('กรุณาระบุชื่อรายการรายจ่าย');
+  if (safeAmount <= 0) throw new Error('ຈຳນວນເງິນລາຍຈ່າຍຕ້ອງຫຼາຍກວ່າ 0');
+  if (!title.trim()) throw new Error('ກະລຸນາລະບຸຊື່ລາຍການລາຍຈ່າຍ');
 
   const entryId = generateSafeId('exp');
   const cleanTitle = title.trim().slice(0, 160);
@@ -429,8 +429,8 @@ export async function recordExpenseEntry(params: {
 
     const creditAcc =
       paymentMethod === 'cash'
-        ? { code: '1110', name: 'เงินสดในมือ' }
-        : { code: '1120', name: 'เงินฝากธนาคาร / QR' };
+        ? { code: '1110', name: 'ເງິນສົດໃນມື' }
+        : { code: '1120', name: 'ເງິນຝາກທະນາຄານ / QR' };
     const jnlId = generateSafeId('jnl');
     tx.set(doc(db, 'journalEntries', jnlId), {
       journalId: jnlId,
@@ -491,15 +491,15 @@ export async function createManualJournalEntry(params: {
     .filter((l) => l.debitLak > 0 || l.creditLak > 0);
 
   if (cleanLines.length < 2) {
-    throw new Error('รายการบัญชีต้องมีอย่างน้อย 2 บรรทัด (เดบิตและเครดิต)');
+    throw new Error('ລາຍການບັນຊີຕ້ອງມີຢ່າງໜ້ອຍ 2 ແຖວ (ເດບິດ ແລະ ເຄຣດິດ)');
   }
   const totalDebitLak = cleanLines.reduce((s, l) => s + l.debitLak, 0);
   const totalCreditLak = cleanLines.reduce((s, l) => s + l.creditLak, 0);
   if (totalDebitLak <= 0 || totalDebitLak !== totalCreditLak) {
-    throw new Error('ยอดรวมเดบิตและเครดิตต้องเท่ากันและมากกว่า 0');
+    throw new Error('ຍອດລວມເດບິດ ແລະ ເຄຣດິດຕ້ອງເທົ່າກັນ ແລະ ຫຼາຍກວ່າ 0');
   }
   if (!description.trim()) {
-    throw new Error('กรุณาระบุคำอธิบายรายการบัญชี');
+    throw new Error('ກະລຸນາລະບຸຄຳອະທິບາຍລາຍການບັນຊີ');
   }
 
   const journalId = generateSafeId('jnl');

@@ -4,20 +4,20 @@ export async function compressProductImageFile(
   maxChars = 42000,
 ): Promise<string> {
   if (!file.type.startsWith('image/')) {
-    throw new Error('กรุณาเลือกไฟล์รูปภาพเท่านั้น (JPG, PNG, WebP)');
+    throw new Error('ກະລຸນາເລືອກໄຟລ໌ຮູບພາບເທົ່ານັ້ນ (JPG, PNG, WebP)');
   }
 
   const dataUrl = await new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result || ''));
-    reader.onerror = () => reject(new Error('ไม่สามารถอ่านไฟล์รูปภาพได้'));
+    reader.onerror = () => reject(new Error('ບໍ່ສາມາດອ່ານໄຟລ໌ຮູບພາບໄດ້'));
     reader.readAsDataURL(file);
   });
 
   const img = await new Promise<HTMLImageElement>((resolve, reject) => {
     const image = new Image();
     image.onload = () => resolve(image);
-    image.onerror = () => reject(new Error('ไม่สามารถถอดรหัสรูปภาพได้'));
+    image.onerror = () => reject(new Error('ບໍ່ສາມາດຖອດລະຫັດຮູບພາບໄດ້'));
     image.src = dataUrl;
   });
 
@@ -31,7 +31,7 @@ export async function compressProductImageFile(
 
   const ctx = canvas.getContext('2d');
   if (!ctx) {
-    throw new Error('เบราว์เซอร์ไม่รองรับการย่อขนาดรูปภาพ');
+    throw new Error('ບຣາວເຊີບໍ່ຮອງຮັບການຫຍໍ້ຂະໜາດຮູບພາບ');
   }
 
   ctx.fillStyle = '#ffffff';
@@ -46,7 +46,7 @@ export async function compressProductImageFile(
   }
 
   if (output.length > maxChars) {
-    throw new Error('รูปภาพมีขนาดใหญ่เกินไป กรุณาเลือกรูปที่เล็กลงหรือใส่ลิงก์ URL แทน');
+    throw new Error('ຮູບພາບມີຂະໜາດໃຫຍ່ເກີນໄປ ກະລຸນາເລືອກຮູບທີ່ນ້ອຍລົງ ຫຼື ໃສ່ລິ້ງ URL ແທນ');
   }
 
   return output;

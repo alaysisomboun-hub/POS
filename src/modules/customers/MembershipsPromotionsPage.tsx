@@ -158,7 +158,7 @@ export function MembershipsPromotionsPage() {
           before: { name: editingTier.name, discountPercent: editingTier.discountPercent },
           after: { name: cleanName, discountPercent, status: tierStatus },
         });
-        setFeedback({ type: 'ok', text: `อัปเดตระดับสมาชิก "${cleanName}" เรียบร้อยแล้ว` });
+        setFeedback({ type: 'ok', text: `ອັບເດດລະດັບສະມາຊິກ "${cleanName}" ຮຽບຮ້ອຍແລ້ວ` });
       } else {
         const tierId = generateSafeId('tier');
         await setDoc(doc(db, 'membershipTiers', tierId), {
@@ -183,13 +183,13 @@ export function MembershipsPromotionsPage() {
           before: null,
           after: { name: cleanName, discountPercent, pointsPer1000Lak },
         });
-        setFeedback({ type: 'ok', text: `เพิ่มระดับสมาชิก "${cleanName}" เรียบร้อยแล้ว` });
+        setFeedback({ type: 'ok', text: `ເພີ່ມລະດັບສະມາຊິກ "${cleanName}" ຮຽບຮ້ອຍແລ້ວ` });
       }
       setTierModalOpen(false);
     } catch (err) {
       setFeedback({
         type: 'err',
-        text: err instanceof Error ? err.message : 'ไม่สามารถบันทึกระดับสมาชิกได้',
+        text: err instanceof Error ? err.message : 'ບໍ່ສາມາດບັນທຶກລະດັບສະມາຊິກໄດ້',
       });
     } finally {
       setTierSaving(false);
@@ -257,7 +257,7 @@ export function MembershipsPromotionsPage() {
           before: { code: editingPromo.code, status: editingPromo.status },
           after: { code: cleanCode, name: cleanName, status: promoStatus },
         });
-        setFeedback({ type: 'ok', text: `อัปเดตโปรโมชั่น "${cleanName}" เรียบร้อยแล้ว` });
+        setFeedback({ type: 'ok', text: `ອັບເດດໂປຣໂມຊັນ "${cleanName}" ຮຽບຮ້ອຍແລ້ວ` });
       } else {
         const promotionId = generateSafeId('promo');
         await setDoc(doc(db, 'promotions', promotionId), {
@@ -285,13 +285,13 @@ export function MembershipsPromotionsPage() {
           before: null,
           after: { code: cleanCode, name: cleanName, promoType, discountValue },
         });
-        setFeedback({ type: 'ok', text: `สร้างโปรโมชั่น "${cleanName}" เรียบร้อยแล้ว` });
+        setFeedback({ type: 'ok', text: `ສ້າງໂປຣໂມຊັນ "${cleanName}" ຮຽບຮ້ອຍແລ້ວ` });
       }
       setPromoModalOpen(false);
     } catch (err) {
       setFeedback({
         type: 'err',
-        text: err instanceof Error ? err.message : 'ไม่สามารถบันทึกโปรโมชั่นได้',
+        text: err instanceof Error ? err.message : 'ບໍ່ສາມາດບັນທຶກໂປຣໂມຊັນໄດ້',
       });
     } finally {
       setPromoSaving(false);
@@ -322,28 +322,28 @@ export function MembershipsPromotionsPage() {
       {/* KPI Row */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white border border-slate-200 rounded-xl p-4">
-          <div className="text-xs text-slate-500">ระดับสมาชิกทั้งหมด</div>
+          <div className="text-xs text-slate-500">ລະດັບສະມາຊິກທັງໝົດ</div>
           <div className="text-2xl font-bold text-slate-900 tabular-nums mt-1">
-            {tiers.filter((t) => t.status === 'active').length} ระดับ
+            {tiers.filter((t) => t.status === 'active').length} ລະດັບ
           </div>
           <div className="text-[11px] text-slate-400 mt-0.5">
-            เชื่อมต่อกับระบบคำนวณส่วนลดและแต้มบนหน้าจอ POS
+            ເຊື່ອມຕໍ່ກັບລະບົບຄຳນວນສ່ວນຫຼຸດ ແລະ ແຕ້ມໃນໜ້າຈໍ POS
           </div>
         </div>
         <div className="bg-white border border-slate-200 rounded-xl p-4">
-          <div className="text-xs text-slate-500">โปรโมชั่นที่ใช้งานได้วันนี้</div>
+          <div className="text-xs text-slate-500">ໂປຣໂມຊັນທີ່ໃຊ້ງານໄດ້ມື້ນີ້</div>
           <div className="text-2xl font-bold text-blue-700 tabular-nums mt-1">
-            {activePromoCount} รายการ
+            {activePromoCount} ລາຍການ
           </div>
           <div className="text-[11px] text-slate-400 mt-0.5">
-            จากโปรโมชั่นทั้งหมด {promotions.length} รายการ
+            ຈາກໂປຣໂມຊັນທັງໝົດ {promotions.length} ລາຍການ
           </div>
         </div>
         <div className="bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between">
           <div>
-            <div className="text-xs text-slate-500">การสะสมแต้ม</div>
+            <div className="text-xs text-slate-500">ການສະສົມແຕ້ມ</div>
             <div className="text-sm font-semibold text-slate-900 mt-1">
-              คำนวณอัตโนมัติทุกบิลขายสมาชิก
+              ຄຳນວນອັດຕະໂນມັດທຸກບິນຂາຍສະມາຊິກ
             </div>
           </div>
           <Award className="w-7 h-7 text-blue-600 shrink-0" />
@@ -363,7 +363,7 @@ export function MembershipsPromotionsPage() {
             }`}
           >
             <Award className="w-3.5 h-3.5" />
-            ระดับสมาชิก ({tiers.length})
+            ລະດັບສະມາຊິກ ({tiers.length})
           </button>
           <button
             type="button"
@@ -375,7 +375,7 @@ export function MembershipsPromotionsPage() {
             }`}
           >
             <Tag className="w-3.5 h-3.5" />
-            โปรโมชั่น ({promotions.length})
+            ໂປຣໂມຊັນ ({promotions.length})
           </button>
         </div>
 
@@ -386,7 +386,7 @@ export function MembershipsPromotionsPage() {
             className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold rounded-lg cursor-pointer self-start sm:self-auto"
           >
             <Plus className="w-4 h-4" />
-            เพิ่มระดับสมาชิก
+            ເພີ່ມລະດັບສະມາຊິກ
           </button>
         )}
 
@@ -397,7 +397,7 @@ export function MembershipsPromotionsPage() {
             className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold rounded-lg cursor-pointer self-start sm:self-auto"
           >
             <Plus className="w-4 h-4" />
-            สร้างโปรโมชั่นใหม่
+            ສ້າງໂປຣໂມຊັນໃໝ່
           </button>
         )}
       </div>
@@ -409,12 +409,12 @@ export function MembershipsPromotionsPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-600">
-                  <th className="py-3 px-4">ชื่อระดับสมาชิก</th>
-                  <th className="py-3 px-4 text-right">ส่วนลดสมาชิก (%)</th>
-                  <th className="py-3 px-4 text-right">แต้ม / 1,000 ₭</th>
-                  <th className="py-3 px-4 text-right">ยอดสะสมขั้นต่ำ</th>
-                  <th className="py-3 px-4">สถานะ</th>
-                  <th className="py-3 px-4 text-right">จัดการ</th>
+                  <th className="py-3 px-4">ຊື່ລະດັບສະມາຊິກ</th>
+                  <th className="py-3 px-4 text-right">ສ່ວນຫຼຸດສະມາຊິກ (%)</th>
+                  <th className="py-3 px-4 text-right">ແຕ້ມ / 1,000 ₭</th>
+                  <th className="py-3 px-4 text-right">ຍອດສະສົມຂັ້ນຕ່ຳ</th>
+                  <th className="py-3 px-4">ສະຖານະ</th>
+                  <th className="py-3 px-4 text-right">ຈັດການ</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-sm">
@@ -430,7 +430,7 @@ export function MembershipsPromotionsPage() {
                       {tier.discountPercent}%
                     </td>
                     <td className="py-3 px-4 text-right tabular-nums text-slate-700">
-                      {tier.pointsPer1000Lak} แต้ม
+                      {tier.pointsPer1000Lak} ແຕ້ມ
                     </td>
                     <td className="py-3 px-4 text-right tabular-nums text-slate-700">
                       {formatLak(tier.minSpendLak)}
@@ -441,7 +441,7 @@ export function MembershipsPromotionsPage() {
                           tier.status === 'active' ? 'text-green-700' : 'text-slate-400'
                         }`}
                       >
-                        {tier.status === 'active' ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}
+                        {tier.status === 'active' ? 'ເປີດໃຊ້ງານ' : 'ປິດໃຊ້ງານ'}
                       </span>
                     </td>
                     <td className="py-3 px-4 text-right">
@@ -452,7 +452,7 @@ export function MembershipsPromotionsPage() {
                           className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded-md cursor-pointer"
                         >
                           <Edit2 className="w-3.5 h-3.5" />
-                          แก้ไข
+                          ແກ້ໄຂ
                         </button>
                       )}
                     </td>
@@ -461,7 +461,7 @@ export function MembershipsPromotionsPage() {
                 {tiers.length === 0 && (
                   <tr>
                     <td colSpan={6} className="py-10 text-center text-xs text-slate-500">
-                      ยังไม่มีระดับสมาชิก กดปุ่ม "เพิ่มระดับสมาชิก" เพื่อกำหนดส่วนลดและอัตราการให้คะแนน
+                      ຍັງບໍ່ມີລະດັບສະມາຊິກ ກົດປຸ່ມ "ເພີ່ມລະດັບສະມາຊິກ" ເພື່ອກຳນົດສ່ວນຫຼຸດ ແລະ ອັດຕາການໃຫ້ຄະແນນ
                     </td>
                   </tr>
                 )}
@@ -478,13 +478,13 @@ export function MembershipsPromotionsPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-600">
-                  <th className="py-3 px-4">โค้ด</th>
-                  <th className="py-3 px-4">ชื่อโปรโมชั่น</th>
-                  <th className="py-3 px-4 text-right">ส่วนลด</th>
-                  <th className="py-3 px-4 text-right">ซื้อขั้นต่ำ</th>
-                  <th className="py-3 px-4">ระยะเวลา</th>
-                  <th className="py-3 px-4">สถานะ</th>
-                  <th className="py-3 px-4 text-right">จัดการ</th>
+                  <th className="py-3 px-4">ໂຄ້ດ</th>
+                  <th className="py-3 px-4">ຊື່ໂປຣໂມຊັນ</th>
+                  <th className="py-3 px-4 text-right">ສ່ວນຫຼຸດ</th>
+                  <th className="py-3 px-4 text-right">ຊື້ຂັ້ນຕ່ຳ</th>
+                  <th className="py-3 px-4">ໄລຍະເວລາ</th>
+                  <th className="py-3 px-4">ສະຖານະ</th>
+                  <th className="py-3 px-4 text-right">ຈັດການ</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-sm">
@@ -506,7 +506,7 @@ export function MembershipsPromotionsPage() {
                         {formatLak(promo.minSpendLak)}
                       </td>
                       <td className="py-3 px-4 text-xs tabular-nums text-slate-600">
-                        {promo.startDate} ถึง {promo.endDate}
+                        {promo.startDate} ເຖິງ {promo.endDate}
                       </td>
                       <td className="py-3 px-4 text-xs">
                         {promo.status === 'active' ? (
@@ -515,10 +515,10 @@ export function MembershipsPromotionsPage() {
                               inDateRange ? 'text-green-700' : 'text-amber-600'
                             }`}
                           >
-                            {inDateRange ? 'กำลังใช้งาน' : 'นอกช่วงเวลา'}
+                            {inDateRange ? 'ກຳລັງໃຊ້ງານ' : 'ນອກຊ່ວງເວລາ'}
                           </span>
                         ) : (
-                          <span className="text-slate-400 font-semibold">ปิดใช้งาน</span>
+                          <span className="text-slate-400 font-semibold">ປິດໃຊ້ງານ</span>
                         )}
                       </td>
                       <td className="py-3 px-4 text-right">
@@ -529,7 +529,7 @@ export function MembershipsPromotionsPage() {
                             className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded-md cursor-pointer"
                           >
                             <Edit2 className="w-3.5 h-3.5" />
-                            แก้ไข
+                            ແກ້ໄຂ
                           </button>
                         )}
                       </td>
@@ -539,7 +539,7 @@ export function MembershipsPromotionsPage() {
                 {promotions.length === 0 && (
                   <tr>
                     <td colSpan={7} className="py-10 text-center text-xs text-slate-500">
-                      ยังไม่มีโปรโมชั่นหน้าร้าน กดปุ่ม "สร้างโปรโมชั่นใหม่" เพื่อเริ่มสร้างแคมเปญส่วนลด
+                      ຍັງບໍ່ມີໂປຣໂມຊັນໜ້າຮ້ານ ກົດປຸ່ມ "ສ້າງໂປຣໂມຊັນໃໝ່" ເພື່ອເລີ່ມສ້າງແຄມເປນສ່ວນຫຼຸດ
                     </td>
                   </tr>
                 )}
@@ -555,7 +555,7 @@ export function MembershipsPromotionsPage() {
           <div className="w-full max-w-md bg-white border border-slate-200 rounded-xl p-6">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
               <h3 className="text-base font-semibold text-slate-900">
-                {editingTier ? 'แก้ไขระดับสมาชิก' : 'เพิ่มระดับสมาชิกใหม่'}
+                {editingTier ? 'ແກ້ໄຂລະດັບສະມາຊິກ' : 'ເພີ່ມລະດັບສະມາຊິກໃໝ່'}
               </h3>
               <button
                 type="button"
@@ -568,7 +568,7 @@ export function MembershipsPromotionsPage() {
             <form onSubmit={handleSaveTier} className="space-y-4">
               <div>
                 <label className="block text-xs font-medium text-slate-700 mb-1">
-                  ชื่อระดับสมาชิก *
+                  ຊື່ລະດັບສະມາຊິກ *
                 </label>
                 <input
                   type="text"
@@ -576,14 +576,14 @@ export function MembershipsPromotionsPage() {
                   maxLength={80}
                   value={tierName}
                   onChange={(e) => setTierName(e.target.value)}
-                  placeholder="เช่น Silver / Gold / VIP"
+                  placeholder="ເຊັ່ນ Silver / Gold / VIP"
                   className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1">
-                    ส่วนลดสมาชิก (%)
+                    ສ່ວນຫຼຸດສະມາຊິກ (%)
                   </label>
                   <input
                     type="number"
@@ -597,7 +597,7 @@ export function MembershipsPromotionsPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1">
-                    แต้มต่อทุก 1,000 ₭
+                    ແຕ້ມຕໍ່ທຸກ 1,000 ₭
                   </label>
                   <input
                     type="number"
@@ -612,7 +612,7 @@ export function MembershipsPromotionsPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1">
-                    ยอดซื้อสะสมขั้นต่ำ (₭)
+                    ຍອດຊື້ສະສົມຂັ້ນຕ່ຳ (₭)
                   </label>
                   <input
                     type="number"
@@ -623,27 +623,27 @@ export function MembershipsPromotionsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">สถานะ</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">ສະຖານະ</label>
                   <select
                     value={tierStatus}
                     onChange={(e) => setTierStatus(e.target.value as 'active' | 'inactive')}
                     className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white"
                   >
-                    <option value="active">เปิดใช้งาน</option>
-                    <option value="inactive">ปิดใช้งาน</option>
+                    <option value="active">ເປີດໃຊ້ງານ</option>
+                    <option value="inactive">ປິດໃຊ້ງານ</option>
                   </select>
                 </div>
               </div>
               <div>
                 <label className="block text-xs font-medium text-slate-700 mb-1">
-                  รายละเอียดสิทธิประโยชน์
+                  ລາຍລະອຽດສິດທິປະໂຫຍດ
                 </label>
                 <input
                   type="text"
                   maxLength={300}
                   value={tierDescription}
                   onChange={(e) => setTierDescription(e.target.value)}
-                  placeholder="คำอธิบายเพิ่มเติม (ถ้ามี)"
+                  placeholder="ຄຳອະທິບາຍເພີ່ມເຕີມ (ຖ້າມີ)"
                   className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg"
                 />
               </div>
@@ -653,14 +653,14 @@ export function MembershipsPromotionsPage() {
                   onClick={() => setTierModalOpen(false)}
                   className="px-4 py-2 text-sm font-medium text-slate-600 border border-slate-200 rounded-lg cursor-pointer"
                 >
-                  ยกเลิก
+                  ຍົກເລີກ
                 </button>
                 <button
                   type="submit"
                   disabled={tierSaving}
                   className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg cursor-pointer"
                 >
-                  {tierSaving ? 'กำลังบันทึก...' : 'บันทึกระดับสมาชิก'}
+                  {tierSaving ? 'ກຳລັງບັນທຶກ...' : 'ບັນທຶກລະດັບສະມາຊິກ'}
                 </button>
               </div>
             </form>
@@ -674,7 +674,7 @@ export function MembershipsPromotionsPage() {
           <div className="w-full max-w-md bg-white border border-slate-200 rounded-xl p-6">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
               <h3 className="text-base font-semibold text-slate-900">
-                {editingPromo ? 'แก้ไขโปรโมชั่น' : 'สร้างโปรโมชั่นใหม่'}
+                {editingPromo ? 'ແກ້ໄຂໂປຣໂມຊັນ' : 'ສ້າງໂປຣໂມຊັນໃໝ່'}
               </h3>
               <button
                 type="button"
@@ -687,7 +687,7 @@ export function MembershipsPromotionsPage() {
             <form onSubmit={handleSavePromo} className="space-y-4">
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">รหัสโค้ด *</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">ລະຫັດໂຄ້ດ *</label>
                   <input
                     type="text"
                     required
@@ -699,7 +699,7 @@ export function MembershipsPromotionsPage() {
                 </div>
                 <div className="col-span-2">
                   <label className="block text-xs font-medium text-slate-700 mb-1">
-                    ชื่อโปรโมชั่น *
+                    ຊື່ໂປຣໂມຊັນ *
                   </label>
                   <input
                     type="text"
@@ -707,7 +707,7 @@ export function MembershipsPromotionsPage() {
                     maxLength={120}
                     value={promoName}
                     onChange={(e) => setPromoName(e.target.value)}
-                    placeholder="เช่น ลด 5% เมื่อซื้อครบ 200,000 ₭"
+                    placeholder="ເຊັ່ນ ຫຼຸດ 5% ເມື່ອຊື້ຄົບ 200,000 ₭"
                     className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg"
                   />
                 </div>
@@ -715,7 +715,7 @@ export function MembershipsPromotionsPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1">
-                    รูปแบบส่วนลด
+                    ຮູບແບບສ່ວນຫຼຸດ
                   </label>
                   <select
                     value={promoType}
@@ -724,13 +724,13 @@ export function MembershipsPromotionsPage() {
                     }
                     className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white"
                   >
-                    <option value="percent_bill">เปอร์เซ็นต์ท้ายบิล (%)</option>
-                    <option value="fixed_bill">จำนวนเงินคงที่ (₭)</option>
+                    <option value="percent_bill">ເປີເຊັນທ້າຍບິນ (%)</option>
+                    <option value="fixed_bill">ຈຳນວນເງິນຄົງທີ່ (₭)</option>
                   </select>
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1">
-                    มูลค่าส่วนลด {promoType === 'percent_bill' ? '(%)' : '(₭)'}
+                    ມູນຄ່າສ່ວນຫຼຸດ {promoType === 'percent_bill' ? '(%)' : '(₭)'}
                   </label>
                   <input
                     type="number"
@@ -745,7 +745,7 @@ export function MembershipsPromotionsPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1">
-                    ยอดซื้อขั้นต่ำ (₭)
+                    ຍອດຊື້ຂັ້ນຕ່ຳ (₭)
                   </label>
                   <input
                     type="number"
@@ -756,20 +756,20 @@ export function MembershipsPromotionsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">สถานะ</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">ສະຖານະ</label>
                   <select
                     value={promoStatus}
                     onChange={(e) => setPromoStatus(e.target.value as 'active' | 'inactive')}
                     className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white"
                   >
-                    <option value="active">เปิดใช้งาน</option>
-                    <option value="inactive">ปิดใช้งาน</option>
+                    <option value="active">ເປີດໃຊ້ງານ</option>
+                    <option value="inactive">ປິດໃຊ້ງານ</option>
                   </select>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">วันเริ่มต้น</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">ວັນເລີ່ມຕົ້ນ</label>
                   <input
                     type="date"
                     required
@@ -779,7 +779,7 @@ export function MembershipsPromotionsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">วันสิ้นสุด</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">ວັນສິ້ນສຸດ</label>
                   <input
                     type="date"
                     required
@@ -795,14 +795,14 @@ export function MembershipsPromotionsPage() {
                   onClick={() => setPromoModalOpen(false)}
                   className="px-4 py-2 text-sm font-medium text-slate-600 border border-slate-200 rounded-lg cursor-pointer"
                 >
-                  ยกเลิก
+                  ຍົກເລີກ
                 </button>
                 <button
                   type="submit"
                   disabled={promoSaving}
                   className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg cursor-pointer"
                 >
-                  {promoSaving ? 'กำลังบันทึก...' : 'บันทึกโปรโมชั่น'}
+                  {promoSaving ? 'ກຳລັງບັນທຶກ...' : 'ບັນທຶກໂປຣໂມຊັນ'}
                 </button>
               </div>
             </form>

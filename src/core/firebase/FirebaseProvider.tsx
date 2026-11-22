@@ -76,7 +76,7 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
           if (!orgSnap.exists()) {
             batch.set(orgRef, {
               organizationId: DEFAULT_ORG_ID,
-              name: 'ร้านค้าหลัก (Grocery POS)',
+              name: 'ຮ້ານຄ້າຫຼັກ (Grocery POS)',
               ownerUid: resolvedOwnerUid,
               currency: 'LAK',
               timezone: 'Asia/Vientiane',
@@ -88,7 +88,7 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
               uid: resolvedOwnerUid,
               organizationId: DEFAULT_ORG_ID,
               ownerUid: resolvedOwnerUid,
-              name: 'ผู้ดูแลระบบหลัก (เจ้าของร้าน)',
+              name: 'ຜູ້ດູແລລະບົບຫຼັກ (ເຈົ້າຂອງຮ້ານ)',
               email: '',
               phone: '',
               role: 'super_admin',
@@ -103,7 +103,7 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
               organizationId: DEFAULT_ORG_ID,
               ownerUid: resolvedOwnerUid,
               storeProfile: {
-                name: 'ร้านค้าหลัก (Grocery POS)',
+                name: 'ຮ້ານຄ້າຫຼັກ (Grocery POS)',
                 logoUrl: '',
                 address: '',
                 phone: '',
@@ -111,8 +111,8 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
               receiptSettings: {
                 prefix: 'INV',
                 paperSize: '80mm',
-                headerText: 'ร้านค้าหลัก (Grocery POS)',
-                footerText: 'ขอบคุณที่ใช้บริการ',
+                headerText: 'ຮ້ານຄ້າຫຼັກ (Grocery POS)',
+                footerText: 'ຂອບໃຈທີ່ໃຊ້ບໍລິການ',
                 showQr: true,
                 showTaxId: false,
               },
@@ -143,7 +143,7 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
                 uid: resolvedOwnerUid,
                 organizationId: DEFAULT_ORG_ID,
                 ownerUid: resolvedOwnerUid,
-                name: 'ผู้ดูแลระบบหลัก (เจ้าของร้าน)',
+                name: 'ຜູ້ດູແລລະບົບຫຼັກ (ເຈົ້າຂອງຮ້ານ)',
                 role: 'super_admin',
               },
               branchId: DEFAULT_MAIN_BRANCH_ID,
@@ -163,7 +163,7 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
               uid: resolvedOwnerUid,
               organizationId: DEFAULT_ORG_ID,
               ownerUid: resolvedOwnerUid,
-              name: 'ผู้ดูแลระบบหลัก (เจ้าของร้าน)',
+              name: 'ຜູ້ດູແລລະບົບຫຼັກ (ເຈົ້າຂອງຮ້ານ)',
               email: '',
               phone: '',
               role: 'super_admin',
@@ -178,7 +178,7 @@ export function FirebaseProvider({ children }: { children: React.ReactNode }) {
           if (!branchSnap.exists()) {
             const storeName = orgSnap.exists()
               ? (orgSnap.data() as Organization).name
-              : 'ร้านค้าหลัก (Grocery POS)';
+              : 'ຮ້ານຄ້າຫຼັກ (Grocery POS)';
 
             batch.set(branchRef, {
               branchId: DEFAULT_MAIN_BRANCH_ID,

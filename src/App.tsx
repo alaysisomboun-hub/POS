@@ -36,7 +36,7 @@ function MainRouter() {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
         <div className="bg-white border border-slate-200 rounded-xl px-6 py-5 text-sm text-slate-600">
-          กำลังเตรียมข้อมูลร้านค้าและเชื่อมต่อฐานข้อมูล...
+          ກຳລັງກຽມຂໍ້ມູນຮ້ານຄ້າ ແລະ ເຊື່ອມຕໍ່ຖານຂໍ້ມູນ...
         </div>
       </div>
     );
@@ -189,7 +189,7 @@ function MainRouter() {
     <AppShell activeModule={activeModule} onSelectModule={setActiveModule}>
       {!connectionOk && (
         <div className="mb-4 p-3 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-800">
-          ไม่สามารถเชื่อมต่อ Cloud Firestore ได้ในขณะนี้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต
+          ບໍ່ສາມາດເຊື່ອມຕໍ່ Cloud Firestore ໄດ້ໃນຂະນະນີ້ ກະລຸນາກວດສອບການເຊື່ອມຕໍ່ອິນເຕີເນັດ
         </div>
       )}
       {renderModuleContent()}

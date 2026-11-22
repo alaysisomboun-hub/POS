@@ -87,11 +87,11 @@ export function IncomePage() {
       setAmountLak('0');
       setReferenceNo('');
       setNotes('');
-      setFeedback({ type: 'ok', text: 'บันทึกรายรับอื่น ๆ และลงบัญชีอัตโนมัติเรียบร้อยแล้ว' });
+      setFeedback({ type: 'ok', text: 'ບັນທຶກລາຍຮັບອື່ນໆ ແລະ ລົງບັນຊີອັດຕະໂນມັດຮຽບຮ້ອຍແລ້ວ' });
     } catch (err) {
       setFeedback({
         type: 'err',
-        text: err instanceof Error ? err.message : 'ไม่สามารถบันทึกรายรับได้',
+        text: err instanceof Error ? err.message : 'ບໍ່ສາມາດບັນທຶກລາຍຮັບໄດ້',
       });
     } finally {
       setSaving(false);
@@ -125,25 +125,25 @@ export function IncomePage() {
       {/* KPI Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white border border-slate-200 rounded-xl p-4">
-          <div className="text-xs text-slate-500">รายรับรวมทั้งหมด</div>
+          <div className="text-xs text-slate-500">ລາຍຮັບລວມທັງໝົດ</div>
           <div className="text-2xl font-bold text-green-700 tabular-nums mt-1">
             {formatLak(totals.total)}
           </div>
         </div>
         <div className="bg-white border border-slate-200 rounded-xl p-4">
-          <div className="text-xs text-slate-500">รายรับจากการขาย POS</div>
+          <div className="text-xs text-slate-500">ລາຍຮັບຈາກການຂາຍ POS</div>
           <div className="text-xl font-bold text-blue-700 tabular-nums mt-1">
             {formatLak(totals.sales)}
           </div>
         </div>
         <div className="bg-white border border-slate-200 rounded-xl p-4">
-          <div className="text-xs text-slate-500">รับชำระหนี้ลูกหนี้ (AR)</div>
+          <div className="text-xs text-slate-500">ຮັບຊຳລະໜີ້ລູກໜີ້ (AR)</div>
           <div className="text-xl font-bold text-slate-900 tabular-nums mt-1">
             {formatLak(totals.ar)}
           </div>
         </div>
         <div className="bg-white border border-slate-200 rounded-xl p-4">
-          <div className="text-xs text-slate-500">รายรับอื่น ๆ</div>
+          <div className="text-xs text-slate-500">ລາຍຮັບອື່ນໆ</div>
           <div className="text-xl font-bold text-slate-900 tabular-nums mt-1">
             {formatLak(totals.other)}
           </div>
@@ -162,7 +162,7 @@ export function IncomePage() {
                 categoryFilter === cat ? 'bg-white text-blue-700 shadow-xs' : 'text-slate-600'
               }`}
             >
-              {cat === 'all' ? 'ทั้งหมด' : INCOME_CATEGORY_LABELS[cat]}
+              {cat === 'all' ? 'ທັງໝົດ' : INCOME_CATEGORY_LABELS[cat]}
             </button>
           ))}
         </div>
@@ -173,7 +173,7 @@ export function IncomePage() {
             className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold rounded-lg cursor-pointer self-start sm:self-auto"
           >
             <Plus className="w-4 h-4" />
-            บันทึกรายรับอื่น ๆ
+            ບັນທຶກລາຍຮັບອື່ນໆ
           </button>
         )}
       </div>
@@ -184,13 +184,13 @@ export function IncomePage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-600">
-                <th className="py-3 px-4">วันที่</th>
-                <th className="py-3 px-4">ประเภท</th>
-                <th className="py-3 px-4">รายการรายรับ</th>
-                <th className="py-3 px-4">อ้างอิง</th>
-                <th className="py-3 px-4">ช่องทาง</th>
-                <th className="py-3 px-4 text-right">จำนวนเงิน</th>
-                <th className="py-3 px-4">ผู้บันทึก</th>
+                <th className="py-3 px-4">ວັນທີ</th>
+                <th className="py-3 px-4">ປະເພດ</th>
+                <th className="py-3 px-4">ລາຍການລາຍຮັບ</th>
+                <th className="py-3 px-4">ອ້າງອີງ</th>
+                <th className="py-3 px-4">ຊ່ອງທາງ</th>
+                <th className="py-3 px-4 text-right">ຈຳນວນເງິນ</th>
+                <th className="py-3 px-4">ຜູ້ບັນທຶກ</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-sm">
@@ -209,9 +209,9 @@ export function IncomePage() {
                   </td>
                   <td className="py-3 px-4 text-xs text-slate-600">
                     {item.paymentMethod === 'cash'
-                      ? 'เงินสด'
+                      ? 'ເງິນສົດ'
                       : item.paymentMethod === 'transfer'
-                        ? 'โอนเงิน'
+                        ? 'ໂອນເງິນ'
                         : 'QR Payment'}
                   </td>
                   <td className="py-3 px-4 text-right font-bold text-green-700 tabular-nums">
@@ -226,7 +226,7 @@ export function IncomePage() {
               {filtered.length === 0 && (
                 <tr>
                   <td colSpan={7} className="py-10 text-center text-xs text-slate-500">
-                    ยังไม่มีรายการรายรับในช่วงที่เลือก
+                    ຍັງບໍ່ມີລາຍການລາຍຮັບໃນຊ່ວງທີ່ເລືອກ
                   </td>
                 </tr>
               )}
@@ -240,7 +240,7 @@ export function IncomePage() {
         <div className="fixed inset-0 z-50 bg-slate-900/45 flex items-center justify-center p-4">
           <div className="w-full max-w-md bg-white border border-slate-200 rounded-xl p-6">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
-              <h3 className="text-base font-semibold text-slate-900">บันทึกรายรับอื่น ๆ</h3>
+              <h3 className="text-base font-semibold text-slate-900">ບັນທຶກລາຍຮັບອື່ນໆ</h3>
               <button
                 type="button"
                 onClick={() => setModalOpen(false)}
@@ -252,7 +252,7 @@ export function IncomePage() {
             <form onSubmit={handleSave} className="space-y-4">
               <div>
                 <label className="block text-xs font-medium text-slate-700 mb-1">
-                  ชื่อรายการรายรับ *
+                  ຊື່ລາຍການລາຍຮັບ *
                 </label>
                 <input
                   type="text"
@@ -260,14 +260,14 @@ export function IncomePage() {
                   maxLength={160}
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="เช่น ขายกล่องลังเก่า / ค่าเช่าตู้แช่ / ดอกเบี้ยรับ"
+                  placeholder="ເຊັ່ນ ຂາຍແກັດເຈ້ຍເກົ່າ / ຄ່າເຊົ່າຕູ້ແຊ່ / ດອກເບ້ຍຮັບ"
                   className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1">
-                    จำนวนเงิน (₭) *
+                    ຈຳນວນເງິນ (₭) *
                   </label>
                   <input
                     type="number"
@@ -279,7 +279,7 @@ export function IncomePage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">วันที่รับเงิน</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">ວັນທີຮັບເງິນ</label>
                   <input
                     type="date"
                     required
@@ -291,19 +291,19 @@ export function IncomePage() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">ช่องทางรับ</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">ຊ່ອງທາງຮັບ</label>
                   <select
                     value={paymentMethod}
                     onChange={(e) => setPaymentMethod(e.target.value as 'cash' | 'transfer' | 'qr')}
                     className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white"
                   >
-                    <option value="cash">เงินสด</option>
-                    <option value="transfer">โอนเงินธนาคาร</option>
+                    <option value="cash">ເງິນສົດ</option>
+                    <option value="transfer">ໂອນເງິນທະນາຄານ</option>
                     <option value="qr">QR Payment</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">เลขที่อ้างอิง</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">ເລກທີອ້າງອີງ</label>
                   <input
                     type="text"
                     maxLength={60}
@@ -314,7 +314,7 @@ export function IncomePage() {
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">หมายเหตุ</label>
+                <label className="block text-xs font-medium text-slate-700 mb-1">ໝາຍເຫດ</label>
                 <input
                   type="text"
                   maxLength={300}
@@ -329,14 +329,14 @@ export function IncomePage() {
                   onClick={() => setModalOpen(false)}
                   className="px-4 py-2 text-sm font-medium text-slate-600 border border-slate-200 rounded-lg cursor-pointer"
                 >
-                  ยกเลิก
+                  ຍົກເລີກ
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
                   className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg cursor-pointer"
                 >
-                  {saving ? 'กำลังบันทึก...' : 'บันทึกรายรับ'}
+                  {saving ? 'ກຳລັງບັນທຶກ...' : 'ບັນທຶກລາຍຮັບ'}
                 </button>
               </div>
             </form>

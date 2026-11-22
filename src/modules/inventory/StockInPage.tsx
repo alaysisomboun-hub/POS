@@ -160,7 +160,7 @@ export function StockInPage() {
     if (selectedProduct.trackExpiry && !expiryDate.trim()) {
       setNotice({
         type: 'err',
-        text: 'สินค้านี้ตั้งค่าติดตามวันหมดอายุ กรุณาระบุวันหมดอายุของล็อต',
+        text: 'ສິນຄ້ານີ້ຕັ້ງຄ່າຕິດຕາມວັນໝົດອາຍຸ ກະລຸນາລະບຸວັນໝົດອາຍຸຂອງລ໋ອດ',
       });
       return;
     }
@@ -181,13 +181,13 @@ export function StockInPage() {
         lotNumber,
         expiryDate: expiryDate || null,
         storageLocationName,
-        reason: reason || 'รับสินค้าเข้าคลัง',
+        reason: reason || 'ຮັບສິນຄ້າເຂົ້າສາງ',
         referenceNo,
       });
 
       setNotice({
         type: 'ok',
-        text: `รับสินค้า "${selectedProduct.name}" เข้าคลังจำนวน +${addedBaseQty.toLocaleString('en-US')} ${selectedProduct.baseUnitName} เรียบร้อยแล้ว`,
+        text: `ຮັບສິນຄ້າ "${selectedProduct.name}" ເຂົ້າສາງຈຳນວນ +${addedBaseQty.toLocaleString('en-US')} ${selectedProduct.baseUnitName} ສຳເລັດແລ້ວ`,
       });
       setInputQty('1');
       setLotNumber('');
@@ -197,7 +197,7 @@ export function StockInPage() {
     } catch (err) {
       setNotice({
         type: 'err',
-        text: err instanceof Error ? err.message : 'ไม่สามารถรับสินค้าเข้าคลังได้',
+        text: err instanceof Error ? err.message : 'ບໍ່ສາມາດຮັບສິນຄ້າເຂົ້າສາງໄດ້',
       });
     } finally {
       setSaving(false);
@@ -208,9 +208,9 @@ export function StockInPage() {
     <div className="space-y-6">
       <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-5">
         <div>
-          <h2 className="text-base font-semibold text-slate-900">รับสินค้าเข้าคลังและบันทึกล็อต</h2>
+          <h2 className="text-base font-semibold text-slate-900">ຮັບສິນຄ້າເຂົ້າສາງ ແລະ ບັນທຶກລ໋ອດ</h2>
           <p className="text-xs text-slate-500">
-            รองรับการรับเข้าตามหน่วยใหญ่ (แพ็ค/ลัง) แปลงเป็นหน่วยฐาน คำนวณต้นทุน WAC และบันทึกวันหมดอายุอัตโนมัติ
+            ຮອງຮັບການຮັບເຂົ້າຕາມໜ່ວຍໃຫຍ່ (ແພັກ/ລັງ) ແປງເປັນໜ່ວຍພື້ນຖານ ຄິດໄລ່ຕົ້ນທຶນ WAC ແລະ ບັນທຶກວັນໝົດອາຍຸອັດຕະໂນມັດ
           </p>
         </div>
 
@@ -231,7 +231,7 @@ export function StockInPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-medium text-slate-700 mb-1">
-                ค้นหาสินค้า (ชื่อ / SKU / บาร์โค้ด)
+                ຄົ້ນຫາສິນຄ້າ (ຊື່ / SKU / ບາໂຄ້ດ)
               </label>
               <div className="relative">
                 <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -248,21 +248,21 @@ export function StockInPage() {
                     );
                     if (exact) handleSelectProduct(exact.productId);
                   }}
-                  placeholder="พิมพ์ชื่อสินค้า หรือยิงสแกนบาร์โค้ด..."
+                  placeholder="ພິມຊື່ສິນຄ້າ ຫຼື ສະແກນບາໂຄ້ດ..."
                   className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">เลือกสินค้า *</label>
+              <label className="block text-xs font-medium text-slate-700 mb-1">ເລືອກສິນຄ້າ *</label>
               <select
                 required
                 value={selectedProductId}
                 onChange={(e) => handleSelectProduct(e.target.value)}
                 className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white"
               >
-                <option value="">— เลือกสินค้า —</option>
+                <option value="">— ເລືອກສິນຄ້າ —</option>
                 {filteredProducts.map((p) => (
                   <option key={p.productId} value={p.productId}>
                     {p.sku} · {p.name}
@@ -276,14 +276,14 @@ export function StockInPage() {
             <>
               <div className="p-3.5 rounded-lg bg-slate-50 border border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs">
                 <div>
-                  คงเหลือปัจจุบัน:{' '}
+                  ຄົງເຫຼືອປັດຈຸບັນ:{' '}
                   <strong className="text-slate-900 tabular-nums">
                     {(balances.get(selectedProduct.productId)?.qtyOnHandBase ?? 0).toLocaleString('en-US')}{' '}
                     {selectedProduct.baseUnitName}
                   </strong>
                 </div>
                 <div>
-                  จะรับเข้าเพิ่ม:{' '}
+                  ຈະຮັບເຂົ້າເພີ່ມ:{' '}
                   <strong className="text-blue-700 tabular-nums">
                     +{addedBaseQty.toLocaleString('en-US')} {selectedProduct.baseUnitName}
                   </strong>
@@ -292,7 +292,7 @@ export function StockInPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">หน่วยที่รับเข้า *</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">ໜ່ວຍທີ່ຮັບເຂົ້າ *</label>
                   <select
                     value={selectedUnit?.unitId ?? ''}
                     onChange={(e) => handleUnitChange(e.target.value)}
@@ -307,7 +307,7 @@ export function StockInPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">จำนวนรับเข้า *</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">ຈຳນວນຮັບເຂົ້າ *</label>
                   <input
                     type="number"
                     min={1}
@@ -320,7 +320,7 @@ export function StockInPage() {
 
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1">
-                    ต้นทุนต่อ {selectedUnit?.unitName || 'หน่วย'} (LAK) *
+                    ລາຄາທຶນຕໍ່ {selectedUnit?.unitName || 'ໜ່ວຍ'} (LAK) *
                   </label>
                   <input
                     type="number"
@@ -333,20 +333,20 @@ export function StockInPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">เลขล็อต (Lot No.)</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">ເລກລ໋ອດ (Lot No.)</label>
                   <input
                     type="text"
                     maxLength={60}
                     value={lotNumber}
                     onChange={(e) => setLotNumber(e.target.value)}
-                    placeholder="สร้างอัตโนมัติหากเว้นว่าง"
+                    placeholder="ສ້າງອັດຕະໂນມັດຫາກປ່ອຍວ່າງ"
                     className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg"
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1">
-                    วันหมดอายุ {selectedProduct.trackExpiry ? '*' : '(ถ้ามี)'}
+                    ວັນໝົດອາຍຸ {selectedProduct.trackExpiry ? '*' : '(ຖ້າມີ)'}
                   </label>
                   <input
                     type="date"
@@ -358,7 +358,7 @@ export function StockInPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">ตำแหน่งจัดเก็บ</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">ຕຳແໜ່ງຈັດເກັບ</label>
                   <input
                     type="text"
                     maxLength={100}
@@ -372,25 +372,25 @@ export function StockInPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1">
-                    เลขที่เอกสารอ้างอิง (ถ้ามี)
+                    ເລກທີເອກະສານອ້າງອີງ (ຖ້າມີ)
                   </label>
                   <input
                     type="text"
                     maxLength={60}
                     value={referenceNo}
                     onChange={(e) => setReferenceNo(e.target.value)}
-                    placeholder="เช่น เลขบิลซัพพลายเออร์"
+                    placeholder="ເຊັ່ນ ເລກບິນຜູ້ສະໜອງ"
                     className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">หมายเหตุ</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">ໝາຍເຫດ</label>
                   <input
                     type="text"
                     maxLength={300}
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
-                    placeholder="เช่น รับของเข้ารอบเช้า"
+                    placeholder="ເຊັ່ນ ຮັບສິນຄ້າເຂົ້າຮອບເຊົ້າ"
                     className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg"
                   />
                 </div>
@@ -404,7 +404,7 @@ export function StockInPage() {
                     className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-semibold rounded-lg cursor-pointer"
                   >
                     <PackagePlus className="w-4 h-4" />
-                    {saving ? 'กำลังบันทึก...' : 'บันทึกรับสินค้าเข้าคลัง'}
+                    {saving ? 'ກຳລັງບັນທຶກ...' : 'ບັນທຶກຮັບສິນຄ້າເຂົ້າສາງ'}
                   </button>
                 </div>
               )}
@@ -416,25 +416,25 @@ export function StockInPage() {
       {/* Recent Stock In History */}
       <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
         <div className="px-5 py-3.5 border-b border-slate-200 text-sm font-semibold text-slate-900">
-          ประวัติรับสินค้าเข้าล่าสุด
+          ປະຫວັດຮັບສິນຄ້າເຂົ້າຫຼ້າສຸດ
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-600">
-                <th className="py-2.5 px-4">วันเวลา</th>
-                <th className="py-2.5 px-4">สินค้า / ล็อต</th>
-                <th className="py-2.5 px-4 text-right">จำนวนรับเข้า</th>
-                <th className="py-2.5 px-4 text-right">รวมหน่วยฐาน</th>
-                <th className="py-2.5 px-4 text-right">มูลค่ารวม</th>
-                <th className="py-2.5 px-4">ผู้บันทึก</th>
+                <th className="py-2.5 px-4">ວັນເວລາ</th>
+                <th className="py-2.5 px-4">ສິນຄ້າ / ລ໋ອດ</th>
+                <th className="py-2.5 px-4 text-right">ຈຳນວນຮັບເຂົ້າ</th>
+                <th className="py-2.5 px-4 text-right">ລວມໜ່ວຍພື້ນຖານ</th>
+                <th className="py-2.5 px-4 text-right">ມູນຄ່າລວມ</th>
+                <th className="py-2.5 px-4">ຜູ້ບັນທຶກ</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-xs">
               {recentMoves.length === 0 && (
                 <tr>
                   <td colSpan={6} className="py-8 text-center text-slate-500">
-                    ยังไม่มีรายการรับสินค้าเข้า
+                    ຍັງບໍ່ມີລາຍການຮັບສິນຄ້າເຂົ້າ
                   </td>
                 </tr>
               )}

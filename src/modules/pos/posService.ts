@@ -222,10 +222,10 @@ export async function executePosCheckout(
   } = params;
 
   if (cartItems.length === 0) {
-    throw new Error('กรุณาเพิ่มสินค้าลงในตะกร้าก่อนชำระเงิน');
+    throw new Error('ກະລຸນາເພີ່ມສິນຄ້າລົງໃນກະຕ່າກ່ອນຊຳລະເງິນ');
   }
   if (cartItems.length > 100) {
-    throw new Error('รายการสินค้าต่อ 1 บิลต้องไม่เกิน 100 รายการ');
+    throw new Error('ລາຍການສິນຄ້າຕໍ່ 1 ບິນຕ້ອງບໍ່ເກີນ 100 ລາຍການ');
   }
 
   const computed = computeBillTotals({
@@ -244,7 +244,7 @@ export async function executePosCheckout(
     .slice(0, 5);
 
   if (cleanPayments.length === 0) {
-    throw new Error('กรุณาระบุยอดชำระเงินให้ถูกต้อง');
+    throw new Error('ກະລຸນາລະບຸຍອດຊຳລະເງິນໃຫ້ຖືກຕ້ອງ');
   }
 
   const creditDueLak = cleanPayments
@@ -257,7 +257,7 @@ export async function executePosCheckout(
   const totalCoveredLak = nonCreditTenderedLak + creditDueLak;
   if (totalCoveredLak < computed.grandTotalLak) {
     throw new Error(
-      `ยอดชำระยังไม่ครบ (ขาดอีก ${(computed.grandTotalLak - totalCoveredLak).toLocaleString('en-US')} ₭)`,
+      `ຍອດຊຳລະຍັງບໍ່ຄົບ (ຂາດອີກ ${(computed.grandTotalLak - totalCoveredLak).toLocaleString('en-US')} ₭)`,
     );
   }
 
@@ -312,7 +312,7 @@ export async function executePosCheckout(
 
   const saleId = generateSafeId('sale');
   const invoiceNumber = generateInvoiceNumber(invoicePrefix);
-  const resolvedCustomerName = customerName.trim().slice(0, 120) || 'ลูกค้าทั่วไป';
+  const resolvedCustomerName = customerName.trim().slice(0, 120) || 'ລູກຄ້າທົ່ວໄປ';
   const resolvedNotes = notes.trim().slice(0, 300);
 
   let finalCogsTotalLak = 0;
@@ -374,7 +374,7 @@ export async function executePosCheckout(
       loadedCustomer.creditBalanceLak + creditDueLak > loadedCustomer.creditLimitLak
     ) {
       throw new Error(
-        `ลูกค้า "${loadedCustomer.name}" มียอดหนี้เกินวงเงินเครดิตที่กำหนด (คงเหลือได้อีก ${Math.max(0, loadedCustomer.creditLimitLak - loadedCustomer.creditBalanceLak).toLocaleString('en-US')} ₭)`,
+        `ລູກຄ້າ "${loadedCustomer.name}" ມີຍອດໜີ້ເກີນວົງເງິນເຄຣດິດທີ່ກຳນົດ (ຄົງເຫຼືອໄດ້ອີກ ${Math.max(0, loadedCustomer.creditLimitLak - loadedCustomer.creditBalanceLak).toLocaleString('en-US')} ₭)`,
       );
     }
 
@@ -389,7 +389,7 @@ export async function executePosCheckout(
 
       if (!allowNegativeStock && currentQty < requiredQty) {
         throw new Error(
-          `สินค้า "${prod.name}" คงเหลือไม่พอ (คงเหลือ ${currentQty.toLocaleString('en-US')} ${prod.baseUnitName} ต้องการตัด ${requiredQty.toLocaleString('en-US')} ${prod.baseUnitName})`,
+          `ສິນຄ້າ "${prod.name}" ຄົງເຫຼືອບໍ່ພໍ (ຄົງເຫຼືອ ${currentQty.toLocaleString('en-US')} ${prod.baseUnitName} ຕ້ອງການຕັດ ${requiredQty.toLocaleString('en-US')} ${prod.baseUnitName})`,
         );
       }
 
@@ -504,7 +504,7 @@ export async function executePosCheckout(
         balanceAfterBase: afterQty,
         unitCostBaseLak: item.unitCostBaseLak,
         totalCostLak: item.cogsTotalLak,
-        reason: `ขายหน้าร้าน POS (${invoiceNumber})`,
+        reason: `ຂາຍໜ້າຮ້ານ POS (${invoiceNumber})`,
         referenceNo: invoiceNumber,
         performedByUid: user.uid,
         performedByName: user.name.slice(0, 120),
@@ -588,11 +588,11 @@ export async function executePosCheckout(
         branchId,
         ownerUid: user.ownerUid,
         category: 'sales',
-        title: `รายได้ขายหน้าร้าน ${invoiceNumber}`.slice(0, 160),
+        title: `ລາຍຮັບຂາຍໜ້າຮ້ານ ${invoiceNumber}`.slice(0, 160),
         amountLak: paidAmountLak,
         paymentMethod: incomeMethod,
         referenceNo: invoiceNumber.slice(0, 60),
-        notes: `ลูกค้า: ${resolvedCustomerName}`.slice(0, 300),
+        notes: `ລູກຄ້າ: ${resolvedCustomerName}`.slice(0, 300),
         entryDate,
         recordedByUid: user.uid,
         recordedByName: user.name.slice(0, 120),
@@ -612,7 +612,7 @@ export async function executePosCheckout(
     if (cashApplied > 0) {
       journalLines.push({
         accountCode: '1110',
-        accountName: 'เงินสดในมือ',
+        accountName: 'ເງິນສົດໃນມື',
         debitLak: cashApplied,
         creditLak: 0,
       });
@@ -620,7 +620,7 @@ export async function executePosCheckout(
     if (bankApplied > 0) {
       journalLines.push({
         accountCode: '1120',
-        accountName: 'เงินฝากธนาคาร / QR',
+        accountName: 'ເງິນຝາກທະນາຄານ / QR',
         debitLak: bankApplied,
         creditLak: 0,
       });
@@ -628,7 +628,7 @@ export async function executePosCheckout(
     if (creditDueLak > 0) {
       journalLines.push({
         accountCode: '1130',
-        accountName: 'ลูกหนี้การค้า',
+        accountName: 'ລູກໜີ້ການຄ້າ',
         debitLak: creditDueLak,
         creditLak: 0,
       });
@@ -636,7 +636,7 @@ export async function executePosCheckout(
     if (finalCogsTotalLak > 0) {
       journalLines.push({
         accountCode: '5100',
-        accountName: 'ต้นทุนขาย (COGS)',
+        accountName: 'ຕົ້ນທຶນຂາຍ (COGS)',
         debitLak: finalCogsTotalLak,
         creditLak: 0,
       });
@@ -644,7 +644,7 @@ export async function executePosCheckout(
     if (netRevenueLak > 0) {
       journalLines.push({
         accountCode: '4100',
-        accountName: 'รายได้จากการขายสินค้า',
+        accountName: 'ລາຍຮັບຈາກການຂາຍສິນຄ້າ',
         debitLak: 0,
         creditLak: netRevenueLak,
       });
@@ -652,7 +652,7 @@ export async function executePosCheckout(
     if (computed.taxAmountLak > 0) {
       journalLines.push({
         accountCode: '2120',
-        accountName: 'ภาษีขายค้างจ่าย',
+        accountName: 'ອາກອນຂາຍຄ້າງຈ່າຍ',
         debitLak: 0,
         creditLak: computed.taxAmountLak,
       });
@@ -660,7 +660,7 @@ export async function executePosCheckout(
     if (finalCogsTotalLak > 0) {
       journalLines.push({
         accountCode: '1140',
-        accountName: 'สินค้าคงเหลือ',
+        accountName: 'ສິນຄ້າຄົງເຫຼືອ',
         debitLak: 0,
         creditLak: finalCogsTotalLak,
       });
@@ -677,7 +677,7 @@ export async function executePosCheckout(
         branchId,
         ownerUid: user.ownerUid,
         entryDate,
-        description: `บันทึกการขายหน้าร้าน ${invoiceNumber} (${resolvedCustomerName})`.slice(0, 300),
+        description: `ບັນທຶກການຂາຍໜ້າຮ້ານ ${invoiceNumber} (${resolvedCustomerName})`.slice(0, 300),
         sourceType: 'sale',
         referenceNo: invoiceNumber.slice(0, 60),
         lines: journalLines,
@@ -757,13 +757,13 @@ export async function executeVoidSale(params: {
   const { db, user, branchId, sale, reason, productsMap } = params;
   const cleanReason = reason.trim().slice(0, 300);
   if (!cleanReason) {
-    throw new Error('กรุณาระบุเหตุผลการยกเลิกบิลขาย');
+    throw new Error('ກະລຸນາລະບຸເຫດຜົນການຍົກເລີກບິນຂາຍ');
   }
   if (sale.status === 'voided') {
-    throw new Error('บิลขายนี้ถูกยกเลิกไปแล้ว');
+    throw new Error('ບິນຂາຍນີ້ຖືກຍົກເລີກໄປແລ້ວ');
   }
   if (sale.status !== 'completed') {
-    throw new Error('บิลที่มีการรับคืนสินค้าแล้ว ไม่สามารถยกเลิกทั้งบิลได้');
+    throw new Error('ບິນທີ່ມີການຮັບຄືນສິນຄ້າແລ້ວ ບໍ່ສາມາດຍົກເລີກທັງບິນໄດ້');
   }
 
   const restockByProduct = new Map<string, number>();
@@ -779,11 +779,11 @@ export async function executeVoidSale(params: {
     const saleRef = doc(db, 'sales', sale.saleId);
     const saleSnap = await tx.get(saleRef);
     if (!saleSnap.exists()) {
-      throw new Error('ไม่พบข้อมูลบิลขายในระบบ');
+      throw new Error('ບໍ່ພົບຂໍ້ມູນບິນຂາຍໃນລະບົບ');
     }
     const latestSale = saleSnap.data() as SaleOrder;
     if (latestSale.status !== 'completed') {
-      throw new Error('สถานะบิลเปลี่ยนแปลงแล้ว ไม่สามารถยกเลิกซ้ำได้');
+      throw new Error('ສະຖານະບິນປ່ຽນແປງແລ້ວ ບໍ່ສາມາດຍົກເລີກຊ້ຳໄດ້');
     }
 
     const invSnaps = new Map<string, { exists: boolean; data: InventoryBalance | null }>();
@@ -881,7 +881,7 @@ export async function executeVoidSale(params: {
         balanceAfterBase: afterQty,
         unitCostBaseLak: item.unitCostBaseLak,
         totalCostLak: item.cogsTotalLak,
-        reason: `ยกเลิกบิล ${latestSale.invoiceNumber}: ${cleanReason}`.slice(0, 300),
+        reason: `ຍົກເລີກບິນ ${latestSale.invoiceNumber}: ${cleanReason}`.slice(0, 300),
         referenceNo: latestSale.invoiceNumber,
         performedByUid: user.uid,
         performedByName: user.name.slice(0, 120),
@@ -940,10 +940,10 @@ export async function executeSaleReturn(params: {
 
   const cleanReason = reason.trim().slice(0, 300);
   if (!cleanReason) {
-    throw new Error('กรุณาระบุสาเหตุการรับคืนสินค้า');
+    throw new Error('ກະລຸນາລະບຸສາເຫດການຮັບຄືນສິນຄ້າ');
   }
   if (sale.status === 'voided' || sale.status === 'returned') {
-    throw new Error('บิลนี้ไม่สามารถรับคืนสินค้าเพิ่มเติมได้');
+    throw new Error('ບິນນີ້ບໍ່ສາມາດຮັບຄືນສິນຄ້າເພີ່ມເຕີມໄດ້');
   }
 
   // Sum already returned base qty per product + unitName
@@ -958,7 +958,7 @@ export async function executeSaleReturn(params: {
 
   const activeLines = returnLines.filter((l) => l.qty > 0);
   if (activeLines.length === 0) {
-    throw new Error('กรุณาระบุจำนวนสินค้าที่ต้องการคืนอย่างน้อย 1 รายการ');
+    throw new Error('ກະລຸນາລະບຸຈຳນວນສິນຄ້າທີ່ຕ້ອງການຄືນຢ່າງໜ້ອຍ 1 ລາຍການ');
   }
 
   const returnItems: SaleReturnItem[] = [];
@@ -982,7 +982,7 @@ export async function executeSaleReturn(params: {
     const reqQty = Math.round(line.qty);
     if (reqQty > remainingQty) {
       throw new Error(
-        `สินค้า "${saleItem.name}" คืนได้สูงสุด ${remainingQty} ${saleItem.unitName}`,
+        `ສິນຄ້າ "${saleItem.name}" ຄືນໄດ້ສູງສຸດ ${remainingQty} ${saleItem.unitName}`,
       );
     }
 
@@ -1037,11 +1037,11 @@ export async function executeSaleReturn(params: {
     const saleRef = doc(db, 'sales', sale.saleId);
     const saleSnap = await tx.get(saleRef);
     if (!saleSnap.exists()) {
-      throw new Error('ไม่พบข้อมูลบิลขายในระบบ');
+      throw new Error('ບໍ່ພົບຂໍ້ມູນບິນຂາຍໃນລະບົບ');
     }
     const latestSale = saleSnap.data() as SaleOrder;
     if (latestSale.status !== 'completed' && latestSale.status !== 'partial_return') {
-      throw new Error('บิลขายนี้ไม่อยู่ในสถานะที่รับคืนสินค้าได้');
+      throw new Error('ບິນຂາຍນີ້ບໍ່ຢູ່ໃນສະຖານະທີ່ຮັບຄືນສິນຄ້າໄດ້');
     }
 
     const invSnaps = new Map<string, { exists: boolean; data: InventoryBalance | null }>();
@@ -1152,7 +1152,7 @@ export async function executeSaleReturn(params: {
         balanceAfterBase: afterQty,
         unitCostBaseLak: unitCost,
         totalCostLak: Math.round(ri.baseQty * unitCost),
-        reason: `รับคืนสินค้า (${returnNumber}): ${cleanReason}`.slice(0, 300),
+        reason: `ຮັບຄືນສິນຄ້າ (${returnNumber}): ${cleanReason}`.slice(0, 300),
         referenceNo: returnNumber,
         performedByUid: user.uid,
         performedByName: user.name.slice(0, 120),
@@ -1232,7 +1232,7 @@ export async function createPosHeldBill(params: {
     params;
 
   if (items.length === 0) {
-    throw new Error('ไม่มีสินค้าในตะกร้าสำหรับพักบิล');
+    throw new Error('ບໍ່ມີສິນຄ້າໃນກະຕ່າສຳລັບພັກບິນ');
   }
 
   const heldId = generateSafeId('hold');
@@ -1241,9 +1241,9 @@ export async function createPosHeldBill(params: {
     organizationId: user.organizationId,
     branchId,
     ownerUid: user.ownerUid,
-    label: label.trim().slice(0, 100) || `บิลพัก ${new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`,
+    label: label.trim().slice(0, 100) || `ບິນພັກ ${new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`,
     priceTier,
-    customerName: customerName.trim().slice(0, 120) || 'ลูกค้าทั่วไป',
+    customerName: customerName.trim().slice(0, 120) || 'ລູກຄ້າທົ່ວໄປ',
     billDiscountLak: Math.max(0, Math.round(billDiscountLak)),
     items: items.slice(0, 100).map((it) => ({
       productId: it.productId,

@@ -13,11 +13,11 @@ export class ErrorBoundary extends React.Component<{ children: React.ReactNode }
   };
 
   static getDerivedStateFromError(error: Error): State {
-    let parsedMessage = error.message || 'เกิดข้อผิดพลาดที่ไม่คาดคิด';
+    let parsedMessage = error.message || 'ເກີດຂໍ້ຜິດພາດທີ່ບໍ່ຄາດຄິດ';
     try {
       const obj = JSON.parse(error.message) as { error?: string; operationType?: string; path?: string };
       if (obj && obj.error) {
-        parsedMessage = `ข้อผิดพลาดสิทธิ์ฐานข้อมูล (${obj.operationType ?? 'operation'} · ${obj.path ?? '-'}): ${obj.error}`;
+        parsedMessage = `ຂໍ້ຜິດພາດສິດຖານຂໍ້ມູນ (${obj.operationType ?? 'operation'} · ${obj.path ?? '-'}): ${obj.error}`;
       }
     } catch {
       // plain error message
@@ -32,7 +32,7 @@ export class ErrorBoundary extends React.Component<{ children: React.ReactNode }
           <div className="max-w-lg w-full bg-white border border-slate-200 rounded-xl p-6">
             <div className="flex items-center gap-3 text-red-600 mb-3">
               <AlertTriangle className="w-6 h-6 shrink-0" />
-              <h1 className="text-lg font-semibold text-slate-900">เกิดข้อผิดพลาดในการทำงานของระบบ</h1>
+              <h1 className="text-lg font-semibold text-slate-900">ເກີດຂໍ້ຜິດພາດໃນການເຮັດວຽກຂອງລະບົບ</h1>
             </div>
             <p className="text-sm text-slate-600 leading-relaxed mb-5 break-words">{this.state.message}</p>
             <button
@@ -41,7 +41,7 @@ export class ErrorBoundary extends React.Component<{ children: React.ReactNode }
               className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
             >
               <RotateCcw className="w-4 h-4" />
-              โหลดหน้าใหม่
+              ໂຫຼດໜ້າໃໝ່
             </button>
           </div>
         </div>

@@ -38,7 +38,7 @@ interface QuickAddProductModalProps {
   onClose: () => void;
 }
 
-const QUICK_UNIT_PRESETS = ['ชิ้น', 'ขวด', 'ซอง', 'กล่อง', 'แพ็ค', 'ถุง', 'กก.'];
+const QUICK_UNIT_PRESETS = ['ອັນ', 'ຕຸກ', 'ຊອງ', 'ກ່ອງ', 'ແພັກ', 'ຖົງ', 'ກິໂລ'];
 
 function looksLikeBarcode(raw: string): boolean {
   const trimmed = raw.trim();
@@ -68,7 +68,7 @@ export function QuickAddProductModal({
   const [wholesalePriceLak, setWholesalePriceLak] = useState('0');
   const [retailPriceLak, setRetailPriceLak] = useState('');
   const [openingStockQty, setOpeningStockQty] = useState('1');
-  const [baseUnitName, setBaseUnitName] = useState('ชิ้น');
+  const [baseUnitName, setBaseUnitName] = useState('ອັນ');
   const [imageUrl, setImageUrl] = useState('');
   const [notes, setNotes] = useState('');
 
@@ -98,7 +98,7 @@ export function QuickAddProductModal({
     setWholesalePriceLak('0');
     setRetailPriceLak('');
     setOpeningStockQty('1');
-    setBaseUnitName('ชิ้น');
+    setBaseUnitName('ອັນ');
     setImageUrl('');
     setNotes('');
     setScannerOpen(false);
@@ -118,7 +118,7 @@ export function QuickAddProductModal({
 
     if (!canCreateProduct) {
       setErrorMsg(
-        'บัญชีของคุณไม่มีสิทธิ์เพิ่มสินค้าใหม่ กรุณาติดต่อเจ้าของร้านหรือผู้จัดการร้าน',
+        'ບັນຊີຂອງທ່ານບໍ່ມີສິດເພີ່ມສິນຄ້າໃໝ່ ກະລຸນາຕິດຕໍ່ເຈົ້າຂອງຮ້ານ ຫຼື ຜູ້ຈັດການຮ້ານ',
       );
       return;
     }
@@ -131,27 +131,27 @@ export function QuickAddProductModal({
     const cleanNotes = notes.trim().slice(0, 500);
 
     if (!cleanName) {
-      setErrorMsg('กรุณากรอกชื่อสินค้า');
+      setErrorMsg('ກະລຸນາປ້ອນຊື່ສິນຄ້າ');
       return;
     }
     if (!cleanSku) {
-      setErrorMsg('กรุณากรอกรหัสสินค้า (SKU)');
+      setErrorMsg('ກະລຸນາປ້ອນລະຫັດສິນຄ້າ (SKU)');
       return;
     }
     if (!cleanUnitName) {
-      setErrorMsg('กรุณากรอกหน่วยนับสินค้า');
+      setErrorMsg('ກະລຸນາປ້ອນໜ່ວຍນັບສິນຄ້າ');
       return;
     }
     if (retailPriceLak.trim() === '' || Number(retailPriceLak) < 0 || Number.isNaN(Number(retailPriceLak))) {
-      setErrorMsg('กรุณากรอกราคาขายปลีกให้ถูกต้อง');
+      setErrorMsg('ກະລຸນາປ້ອນລາຄາຂາຍຍ່ອຍໃຫ້ຖືກຕ້ອງ');
       return;
     }
     if (openingStockQty.trim() === '' || Number(openingStockQty) < 0 || Number.isNaN(Number(openingStockQty))) {
-      setErrorMsg('กรุณากรอกจำนวนสินค้าเริ่มต้นให้ถูกต้อง');
+      setErrorMsg('ກະລຸນາປ້ອນຈຳນວນສິນຄ້າເລີ່ມຕົ້ນໃຫ້ຖືກຕ້ອງ');
       return;
     }
     if (cleanImageUrl.length > 45000) {
-      setErrorMsg('รูปภาพสินค้ามีขนาดใหญ่เกินกำหนด กรุณาอัปโหลดใหม่หรือใช้ลิงก์ URL รูปภาพ');
+      setErrorMsg('ຮູບພາບສິນຄ້າມີຂະໜາດໃຫຍ່ເກີນກຳນົດ ກະລຸນາອັບໂຫຼດໃໝ່ ຫຼື ໃຊ້ລິ້ງ URL ຮູບພາບ');
       return;
     }
 
@@ -159,7 +159,7 @@ export function QuickAddProductModal({
       (p) => p.sku.trim().toLowerCase() === cleanSku.toLowerCase(),
     );
     if (duplicateSku) {
-      setErrorMsg(`รหัสสินค้า SKU "${cleanSku}" ซ้ำกับสินค้า "${duplicateSku.name}" ในระบบ`);
+      setErrorMsg(`ລະຫັດສິນຄ້າ SKU "${cleanSku}" ຊ້ຳກັບສິນຄ້າ "${duplicateSku.name}" ໃນລະບົບ`);
       return;
     }
 
@@ -174,7 +174,7 @@ export function QuickAddProductModal({
       );
       if (duplicateBarcode) {
         setErrorMsg(
-          `บาร์โค้ด "${cleanBarcode}" ซ้ำกับสินค้า "${duplicateBarcode.name}" ในระบบ`,
+          `ບາໂຄດ "${cleanBarcode}" ຊ້ຳກັບສິນຄ້າ "${duplicateBarcode.name}" ໃນລະບົບ`,
         );
         return;
       }
@@ -303,7 +303,7 @@ export function QuickAddProductModal({
           balanceAfterBase: parsedOpening,
           unitCostBaseLak: parsedCost,
           totalCostLak: Math.round(parsedOpening * parsedCost),
-          reason: 'เพิ่มสินค้าใหม่จากหน้าขาย (POS)',
+          reason: 'ເພີ່ມສິນຄ້າໃໝ່ຈາກໜ້າຂາຍ (POS)',
           referenceNo: 'POS-QUICK-ADD',
           performedByUid: userProfile.uid,
           performedByName: userProfile.name.slice(0, 120),
@@ -347,7 +347,7 @@ export function QuickAddProductModal({
         handleFirestoreError(err, OperationType.WRITE, 'products');
       } catch (wrapped) {
         setErrorMsg(
-          wrapped instanceof Error ? wrapped.message : 'ไม่สามารถบันทึกสินค้าใหม่ได้ กรุณาลองอีกครั้ง',
+          wrapped instanceof Error ? wrapped.message : 'ບໍ່ສາມາດບັນທຶກສິນຄ້າໃໝ່ໄດ້ ກະລຸນາລອງອີກຄັ້ງ',
         );
       }
     } finally {
@@ -365,10 +365,10 @@ export function QuickAddProductModal({
             </div>
             <div>
               <h3 className="text-base font-semibold text-slate-900">
-                เพิ่มสินค้าใหม่จากหน้าขาย (POS)
+                ເພີ່ມສິນຄ້າໃໝ່ຈາກໜ້າຂາຍ (POS)
               </h3>
               <p className="text-xs text-slate-500">
-                บันทึกแล้วระบบจะเพิ่มสินค้าลงตะกร้าขายและซิงค์เข้าคลังสินค้าทันที
+                ບັນທຶກແລ້ວລະບົບຈະເພີ່ມສິນຄ້າໃສ່ກະຕ່າຂາຍ ແລະ ຊິ້ງເຂົ້າສາງສິນຄ້າທັນທີ
               </p>
             </div>
           </div>
@@ -385,7 +385,7 @@ export function QuickAddProductModal({
           <div className="mb-4 p-3 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-800 flex items-start gap-2">
             <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5 text-amber-600" />
             <span>
-              บัญชีของคุณไม่มีสิทธิ์เพิ่มสินค้าใหม่ กรุณาติดต่อเจ้าของร้านหรือผู้จัดการร้านเพื่อดำเนินการ
+              ບັນຊີຂອງທ່ານບໍ່ມີສິດເພີ່ມສິນຄ້າໃໝ່ ກະລຸນາຕິດຕໍ່ເຈົ້າຂອງຮ້ານ ຫຼື ຜູ້ຈັດການຮ້ານເພື່ອດຳເນີນການ
             </span>
           </div>
         )}
@@ -401,7 +401,7 @@ export function QuickAddProductModal({
             {/* Product Name */}
             <div className="sm:col-span-2">
               <label className="block text-xs font-medium text-slate-700 mb-1">
-                ชื่อสินค้า *
+                ຊື່ສິນຄ້າ *
               </label>
               <input
                 ref={nameInputRef}
@@ -410,7 +410,7 @@ export function QuickAddProductModal({
                 maxLength={160}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="เช่น น้ำดื่มบริสุทธิ์ 600 มล."
+                placeholder="ເຊັ່ນ ນ້ຳດື່ມບໍລິສຸດ 600 ມລ."
                 className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-blue-600"
               />
             </div>
@@ -418,7 +418,7 @@ export function QuickAddProductModal({
             {/* Barcode */}
             <div>
               <label className="block text-xs font-medium text-slate-700 mb-1">
-                บาร์โค้ด
+                ບາໂຄດ
               </label>
               <div className="flex gap-1.5">
                 <input
@@ -426,14 +426,14 @@ export function QuickAddProductModal({
                   maxLength={64}
                   value={barcode}
                   onChange={(e) => setBarcode(e.target.value)}
-                  placeholder="สแกนหรือกรอกบาร์โค้ด"
+                  placeholder="ສະແກນ ຫຼື ປ້ອນບາໂຄດ"
                   className="flex-1 px-3 py-2 text-sm font-mono border border-slate-200 rounded-lg focus:outline-none focus:border-blue-600"
                 />
                 <button
                   type="button"
                   onClick={() => setScannerOpen(true)}
                   className="px-2.5 py-2 text-slate-700 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer"
-                  title="สแกนบาร์โค้ด / QR ด้วยกล้อง"
+                  title="ສະແກນບາໂຄດ / QR ດ້ວຍກ້ອງ"
                 >
                   <QrCode className="w-4 h-4" />
                 </button>
@@ -441,7 +441,7 @@ export function QuickAddProductModal({
                   type="button"
                   onClick={() => setBarcode(generateEan13InternalBarcode())}
                   className="px-2.5 py-2 text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer"
-                  title="สร้างบาร์โค้ด EAN-13 อัตโนมัติ"
+                  title="ສ້າງບາໂຄດ EAN-13 ອັດຕະໂນມັດ"
                 >
                   <Wand2 className="w-4 h-4" />
                 </button>
@@ -451,7 +451,7 @@ export function QuickAddProductModal({
             {/* SKU */}
             <div>
               <label className="block text-xs font-medium text-slate-700 mb-1">
-                รหัสสินค้า (SKU) *
+                ລະຫັດສິນຄ້າ (SKU) *
               </label>
               <div className="flex gap-1.5">
                 <input
@@ -460,14 +460,14 @@ export function QuickAddProductModal({
                   maxLength={50}
                   value={sku}
                   onChange={(e) => setSku(e.target.value.toUpperCase())}
-                  placeholder="เช่น PRD-123456"
+                  placeholder="ເຊັ່ນ PRD-123456"
                   className="flex-1 px-3 py-2 text-sm font-mono border border-slate-200 rounded-lg focus:outline-none focus:border-blue-600"
                 />
                 <button
                   type="button"
                   onClick={() => setSku(generateSkuCode('PRD'))}
                   className="px-2.5 py-2 text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer"
-                  title="สร้างรหัส SKU อัตโนมัติ"
+                  title="ສ້າງລະຫັດ SKU ອັດຕະໂນມັດ"
                 >
                   <Wand2 className="w-4 h-4" />
                 </button>
@@ -477,14 +477,14 @@ export function QuickAddProductModal({
             {/* Category */}
             <div>
               <label className="block text-xs font-medium text-slate-700 mb-1">
-                หมวดหมู่สินค้า
+                ໝວດໝູ່ສິນຄ້າ
               </label>
               <select
                 value={categoryId}
                 onChange={(e) => setCategoryId(e.target.value)}
                 className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:border-blue-600"
               >
-                <option value="">— ไม่ระบุหมวดหมู่ —</option>
+                <option value="">— ບໍ່ລະບຸໝວດໝູ່ —</option>
                 {categories.map((c) => (
                   <option key={c.categoryId} value={c.categoryId}>
                     {c.name}
@@ -496,7 +496,7 @@ export function QuickAddProductModal({
             {/* Unit */}
             <div>
               <label className="block text-xs font-medium text-slate-700 mb-1">
-                หน่วยนับ *
+                ໜ່ວຍນັບ *
               </label>
               <input
                 type="text"
@@ -504,7 +504,7 @@ export function QuickAddProductModal({
                 maxLength={40}
                 value={baseUnitName}
                 onChange={(e) => setBaseUnitName(e.target.value)}
-                placeholder="เช่น ชิ้น / ขวด / กล่อง"
+                placeholder="ເຊັ່ນ ອັນ / ຕຸກ / ກ່ອງ"
                 className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-blue-600"
               />
               <div className="flex flex-wrap gap-1 mt-1.5">
@@ -530,7 +530,7 @@ export function QuickAddProductModal({
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
             <div>
               <label className="block text-xs font-medium text-slate-700 mb-1">
-                ราคาทุน (₭)
+                ລາຄາທຶນ (₭)
               </label>
               <input
                 type="number"
@@ -543,7 +543,7 @@ export function QuickAddProductModal({
 
             <div>
               <label className="block text-xs font-medium text-slate-700 mb-1">
-                ราคาขายปลีก (₭) *
+                ລາຄາຂາຍຍ່ອຍ (₭) *
               </label>
               <input
                 type="number"
@@ -558,7 +558,7 @@ export function QuickAddProductModal({
 
             <div>
               <label className="block text-xs font-medium text-slate-700 mb-1">
-                ราคาขายส่ง (₭)
+                ລາຄາຂາຍສົ່ງ (₭)
               </label>
               <input
                 type="number"
@@ -571,7 +571,7 @@ export function QuickAddProductModal({
 
             <div>
               <label className="block text-xs font-medium text-slate-700 mb-1">
-                จำนวนเริ่มต้น *
+                ຈຳນວນເລີ່ມຕົ້ນ *
               </label>
               <input
                 type="number"
@@ -586,26 +586,26 @@ export function QuickAddProductModal({
 
           {!allowNegativeStock && Number(openingStockQty) <= 0 && (
             <div className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-              หมายเหตุ: ร้านตั้งค่าไม่อนุญาตขายติดลบ หากระบุจำนวนเริ่มต้นเป็น 0 ระบบจะบันทึกสินค้าเข้าคลังแต่จะยังไม่สามารถเพิ่มลงตะกร้าขายได้ทันที (แนะนำใส่จำนวนเริ่มต้นอย่างน้อย 1)
+              ໝາຍເຫດ: ຮ້ານຕັ້ງຄ່າບໍ່ອະນຸຍາດຂາຍຕິດລົບ ຫາກລະບຸຈຳນວນເລີ່ມຕົ້ນເປັນ 0 ລະບົບຈະບັນທຶກສິນຄ້າເຂົ້າສາງ ແຕ່ຈະຍັງບໍ່ສາມາດເພີ່ມໃສ່ກະຕ່າຂາຍໄດ້ທັນທີ (ແນະນຳໃສ່ຈຳນວນເລີ່ມຕົ້ນຢ່າງໜ້ອຍ 1)
             </div>
           )}
 
           {/* Optional Image */}
           <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 space-y-2.5">
             <label className="block text-xs font-medium text-slate-700">
-              รูปภาพสินค้า (ไม่บังคับ)
+              ຮູບພາບສິນຄ້າ (ບໍ່ບັງຄັບ)
             </label>
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
               {imageUrl ? (
                 <img
                   src={imageUrl}
-                  alt={name || 'รูปสินค้า'}
+                  alt={name || 'ຮູບສິນຄ້າ'}
                   className="w-16 h-16 rounded-lg object-cover border border-slate-200 bg-white shrink-0"
                 />
               ) : (
                 <div className="w-16 h-16 rounded-lg border border-dashed border-slate-300 bg-white flex flex-col items-center justify-center text-slate-400 shrink-0 text-[10px]">
                   <Package className="w-4 h-4 mb-0.5" />
-                  ไม่มีรูป
+                  ບໍ່ມີຮູບ
                 </div>
               )}
 
@@ -613,7 +613,7 @@ export function QuickAddProductModal({
                 <div className="flex flex-wrap gap-2">
                   <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-xs font-medium text-slate-700 cursor-pointer">
                     <ImagePlus className="w-3.5 h-3.5 text-blue-600" />
-                    {imageUploading ? 'กำลังย่อรูปภาพ...' : 'เลือกรูป / ถ่ายภาพ'}
+                    {imageUploading ? 'ກຳລັງຫຍໍ້ຮູບພາບ...' : 'ເລືອກຮູບ / ຖ່າຍຮູບ'}
                     <input
                       type="file"
                       accept="image/*"
@@ -630,7 +630,7 @@ export function QuickAddProductModal({
                           setImageUrl(compressed);
                         } catch (err) {
                           setErrorMsg(
-                            err instanceof Error ? err.message : 'ไม่สามารถอัปโหลดรูปภาพได้',
+                            err instanceof Error ? err.message : 'ບໍ່ສາມາດອັບໂຫຼດຮູບພາບໄດ້',
                           );
                         } finally {
                           setImageUploading(false);
@@ -645,7 +645,7 @@ export function QuickAddProductModal({
                       onClick={() => setImageUrl('')}
                       className="px-2.5 py-1.5 rounded-lg border border-rose-200 bg-white text-xs font-medium text-rose-700 hover:bg-rose-50 cursor-pointer"
                     >
-                      ลบรูป
+                      ລຶບຮູບ
                     </button>
                   )}
                 </div>
@@ -655,8 +655,8 @@ export function QuickAddProductModal({
                   onChange={(e) => setImageUrl(e.target.value.slice(0, 500))}
                   placeholder={
                     imageUrl.startsWith('data:image/')
-                      ? 'อัปโหลดรูปภาพเรียบร้อยแล้ว (หรือวางลิงก์ URL ทับได้)'
-                      : 'หรือวางลิงก์รูปภาพสินค้า https://...'
+                      ? 'ອັບໂຫຼດຮູບພາບສຳເລັດແລ້ວ (ຫຼື ວາງລິ້ງ URL ທັບໄດ້)'
+                      : 'ຫຼື ວາງລິ້ງຮູບພາບສິນຄ້າ https://...'
                   }
                   className="w-full px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-lg"
                 />
@@ -667,14 +667,14 @@ export function QuickAddProductModal({
           {/* Optional Description */}
           <div>
             <label className="block text-xs font-medium text-slate-700 mb-1">
-              รายละเอียดสินค้า (ไม่บังคับ)
+              ລາຍລະອຽດສິນຄ້າ (ບໍ່ບັງຄັບ)
             </label>
             <textarea
               rows={2}
               maxLength={500}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="รายละเอียดเพิ่มเติม เช่น รสชาติ ขนาด ปริมาณ..."
+              placeholder="ລາຍລະອຽດເພີ່ມເຕີມ ເຊັ່ນ ລົດຊາດ ຂະໜາດ ປະລິມານ..."
               className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg resize-none focus:outline-none focus:border-blue-600"
             />
           </div>
@@ -685,14 +685,14 @@ export function QuickAddProductModal({
               onClick={onClose}
               className="px-4 py-2 text-sm font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer"
             >
-              ยกเลิก
+              ຍົກເລີກ
             </button>
             <button
               type="submit"
               disabled={saving || imageUploading || !canCreateProduct}
               className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg cursor-pointer"
             >
-              {saving ? 'กำลังบันทึกสินค้า...' : 'บันทึกและเพิ่มลงรายการขาย'}
+              {saving ? 'ກຳລັງບັນທຶກສິນຄ້າ...' : 'ບັນທຶກ ແລະ ເພີ່ມໃສ່ກະຕ່າ'}
             </button>
           </div>
         </form>
@@ -700,8 +700,8 @@ export function QuickAddProductModal({
 
       {scannerOpen && (
         <BarcodeQrScannerModal
-          title="สแกนบาร์โค้ด / QR Code สินค้าใหม่"
-          subtitle="สแกนเพื่อกรอกรหัสบาร์โค้ดลงในฟอร์มสินค้าทันที"
+          title="ສະແກນບາໂຄດ / QR Code ສິນຄ້າໃໝ່"
+          subtitle="ສະແກນເພື່ອປ້ອນລະຫັດບາໂຄດລົງໃນຟອມສິນຄ້າທັນທີ"
           onDetected={(code) => {
             setBarcode(code.trim().slice(0, 64));
             setScannerOpen(false);

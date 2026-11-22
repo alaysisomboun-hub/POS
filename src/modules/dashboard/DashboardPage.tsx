@@ -341,10 +341,10 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
       <div className="bg-white border border-slate-200 rounded-xl p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
           <h2 className="text-lg font-semibold text-slate-900">
-            {organization?.name ?? 'Grocery POS Management System'}
+            {organization?.name ?? 'ລະບົບຈັດການຮ້ານຄ້າ Grocery POS'}
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            ระบบร้านค้าเดี่ยว (1 สาขา) · สกุลเงินหลัก: LAK · เขตเวลา: Asia/Vientiane
+            ລະບົບຮ້ານຄ້າດ່ຽວ (1 ສາຂາ) · ສະກຸນເງິນຫຼັກ: LAK · ເຂດເວລາ: Asia/Vientiane
           </p>
         </div>
 
@@ -352,11 +352,11 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
           <div className="inline-flex bg-slate-100 p-1 rounded-lg">
             {(
               [
-                { key: 'today', label: 'วันนี้' },
-                { key: '7d', label: '7 วัน' },
-                { key: 'month', label: 'เดือนนี้' },
-                { key: 'year', label: 'ปีนี้' },
-                { key: 'custom', label: 'กำหนดเอง' },
+                { key: 'today', label: 'ມື້ນີ້' },
+                { key: '7d', label: '7 ວັນ' },
+                { key: 'month', label: 'ເດືອນນີ້' },
+                { key: 'year', label: 'ປີນີ້' },
+                { key: 'custom', label: 'ກຳນົດເອງ' },
               ] as const
             ).map((p) => (
               <button
@@ -380,7 +380,7 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
                 onChange={(e) => setCustomStart(e.target.value)}
                 className="px-2 py-1 border border-slate-200 rounded-md"
               />
-              <span>ถึง</span>
+              <span>ເຖິງ</span>
               <input
                 type="date"
                 value={customEnd}
@@ -395,7 +395,7 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
             onClick={() => onNavigate('pos')}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs sm:text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg cursor-pointer"
           >
-            เปิด POS ขายสินค้า
+            ເປີດ POS ຂາຍສິນຄ້າ
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>
@@ -405,20 +405,20 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white border border-slate-200 rounded-xl p-5">
           <div className="flex items-center justify-between text-xs font-medium text-slate-500 mb-2">
-            <span>ยอดขายสุทธิ (ช่วงที่เลือก)</span>
+            <span>ຍອດຂາຍສຸດທິ (ຊ່ວງທີ່ເລືອກ)</span>
             <TrendingUp className="w-4 h-4 text-blue-600" />
           </div>
           <div className="text-2xl font-bold text-blue-700 tabular-nums">
             {formatLak(analytics.periodNetSales)}
           </div>
           <div className="text-xs text-slate-500 mt-1 tabular-nums">
-            {analytics.periodBills} บิล · วันนี้ {formatLak(analytics.todaySales)}
+            {analytics.periodBills} ບິນ · ມື້ນີ້ {formatLak(analytics.todaySales)}
           </div>
         </div>
 
         <div className="bg-white border border-slate-200 rounded-xl p-5">
           <div className="flex items-center justify-between text-xs font-medium text-slate-500 mb-2">
-            <span>กำไรขั้นต้น / กำไรสุทธิ</span>
+            <span>ກຳໄລຂັ້ນຕົ້ນ / ກຳໄລສຸດທິ</span>
             <Wallet className="w-4 h-4 text-green-600" />
           </div>
           <div
@@ -429,29 +429,29 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
             {formatLak(analytics.periodNetProfit)}
           </div>
           <div className="text-xs text-slate-500 mt-1 tabular-nums">
-            ขั้นต้น {formatLak(analytics.periodGrossProfit)} · ค่าใช้จ่าย {formatLak(analytics.periodOpExpense)}
+            ຂັ້ນຕົ້ນ {formatLak(analytics.periodGrossProfit)} · ຄ່າໃຊ້ຈ່າຍ {formatLak(analytics.periodOpExpense)}
           </div>
         </div>
 
         <div className="bg-white border border-slate-200 rounded-xl p-5">
           <div className="flex items-center justify-between text-xs font-medium text-slate-500 mb-2">
-            <span>มูลค่าสต็อกคงเหลือ (WAC)</span>
+            <span>ມູນຄ່າສະຕ໋ອກຄົງເຫຼືອ (WAC)</span>
             <Boxes className="w-4 h-4 text-blue-600" />
           </div>
           <div className="text-2xl font-bold text-slate-900 tabular-nums">
             {formatLak(analytics.invValue)}
           </div>
           <div className="text-xs text-slate-500 mt-1 tabular-nums">
-            {products.length} สินค้า ·{' '}
+            {products.length} ສິນຄ້າ ·{' '}
             <span className={analytics.lowStock + analytics.outStock > 0 ? 'text-amber-600 font-medium' : ''}>
-              ต่ำ {analytics.lowStock} / หมด {analytics.outStock}
+              ຕ່ຳ {analytics.lowStock} / ໝົດ {analytics.outStock}
             </span>
           </div>
         </div>
 
         <div className="bg-white border border-slate-200 rounded-xl p-5">
           <div className="flex items-center justify-between text-xs font-medium text-slate-500 mb-2">
-            <span>ลูกหนี้ (AR) / เจ้าหนี้ (AP)</span>
+            <span>ລູກໜີ້ (AR) / ເຈົ້າໜີ້ (AP)</span>
             <Users className="w-4 h-4 text-blue-600" />
           </div>
           <div className="text-base font-bold text-amber-700 tabular-nums">
@@ -461,7 +461,7 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
             AP: {formatLak(analytics.totalAp)}
           </div>
           <div className="text-[11px] text-slate-500 mt-1 tabular-nums">
-            ลูกค้า {customers.length} ราย · พนักงาน {staffCount} คน
+            ລູກຄ້າ {customers.length} ລາຍ · ພະນັກງານ {staffCount} ຄົນ
           </div>
         </div>
       </div>
@@ -469,15 +469,15 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
       {/* Period Benchmarks Row */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white border border-slate-200 rounded-xl p-4 flex justify-between items-center tabular-nums">
-          <span className="text-xs text-slate-500">ยอดขายเดือนนี้</span>
+          <span className="text-xs text-slate-500">ຍອດຂາຍເດືອນນີ້</span>
           <span className="text-base font-bold text-slate-900">{formatLak(analytics.monthSales)}</span>
         </div>
         <div className="bg-white border border-slate-200 rounded-xl p-4 flex justify-between items-center tabular-nums">
-          <span className="text-xs text-slate-500">ยอดขายปีนี้</span>
+          <span className="text-xs text-slate-500">ຍອດຂາຍປີນີ້</span>
           <span className="text-base font-bold text-slate-900">{formatLak(analytics.yearSales)}</span>
         </div>
         <div className="bg-white border border-slate-200 rounded-xl p-4 flex justify-between items-center tabular-nums">
-          <span className="text-xs text-slate-500">รายรับ / รายจ่ายรวม (ช่วงที่เลือก)</span>
+          <span className="text-xs text-slate-500">ລາຍຮັບ / ລາຍຈ່າຍລວມ (ຊ່ວງທີ່ເລືອກ)</span>
           <span className="text-sm font-bold text-slate-900">
             <span className="text-green-700">+{formatLak(analytics.periodIncomeTotal, false)}</span> /{' '}
             <span className="text-red-700">-{formatLak(analytics.periodAllExpense, false)}</span> ₭
@@ -493,22 +493,22 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
             <div className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4 text-blue-600" />
               <h3 className="text-sm font-semibold text-slate-900">
-                กราฟยอดขายและกำไรขั้นต้นรายวัน (สูงสุด 14 วันล่าสุดในช่วง)
+                ກຣາຟຍອດຂາຍ ແລະ ກຳໄລຂັ້ນຕົ້ນລາຍວັນ (ສູງສຸດ 14 ວັນຫຼ້າສຸດໃນຊ່ວງ)
               </h3>
             </div>
             <div className="flex items-center gap-3 text-[11px] text-slate-500">
               <span className="inline-flex items-center gap-1">
-                <span className="w-2.5 h-2.5 bg-blue-600 rounded-xs inline-block" /> ยอดขาย
+                <span className="w-2.5 h-2.5 bg-blue-600 rounded-xs inline-block" /> ຍອດຂາຍ
               </span>
               <span className="inline-flex items-center gap-1">
-                <span className="w-2.5 h-2.5 bg-emerald-500 rounded-xs inline-block" /> กำไรขั้นต้น
+                <span className="w-2.5 h-2.5 bg-emerald-500 rounded-xs inline-block" /> ກຳໄລຂັ້ນຕົ້ນ
               </span>
             </div>
           </div>
 
           {analytics.chartPoints.length === 0 ? (
             <div className="py-16 text-center text-xs text-slate-400">
-              ยังไม่มีข้อมูลยอดขายในช่วงเวลาที่เลือก
+              ຍັງບໍ່ມີຂໍ້ມູນຍອດຂາຍໃນຊ່ວງເວລາທີ່ເລືອກ
             </div>
           ) : (
             <div className="flex items-end gap-2 h-52 pt-4 pb-2 overflow-x-auto">
@@ -526,12 +526,12 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
                     <div className="w-full flex items-end justify-center gap-1 h-[155px]">
                       <div
                         style={{ height: `${salesH}px` }}
-                        title={`ยอดขาย ${pt.date}: ${formatLak(pt.sales)}`}
+                        title={`ຍອດຂາຍ ${pt.date}: ${formatLak(pt.sales)}`}
                         className="w-3 sm:w-4 bg-blue-600 rounded-t transition-all"
                       />
                       <div
                         style={{ height: `${profitH}px` }}
-                        title={`กำไรขั้นต้น ${pt.date}: ${formatLak(pt.profit)}`}
+                        title={`ກຳໄລຂັ້ນຕົ້ນ ${pt.date}: ${formatLak(pt.profit)}`}
                         className="w-2.5 sm:w-3 bg-emerald-500 rounded-t transition-all"
                       />
                     </div>
@@ -548,13 +548,13 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
         {/* Top 10 Best-Selling Products */}
         <div className="lg:col-span-5 bg-white border border-slate-200 rounded-xl p-5">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-slate-900">10 อันดับสินค้าขายดี</h3>
+            <h3 className="text-sm font-semibold text-slate-900">10 ອັນດັບສິນຄ້າຂາຍດີ</h3>
             <button
               type="button"
               onClick={() => onNavigate('reports')}
               className="text-xs font-medium text-blue-600 hover:underline cursor-pointer"
             >
-              รายงานทั้งหมด
+              ລາຍງານທັງໝົດ
             </button>
           </div>
           <div className="divide-y divide-slate-100 max-h-60 overflow-y-auto text-xs">
@@ -565,7 +565,7 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
                     {idx + 1}. {tp.name}
                   </div>
                   <div className="text-[11px] text-slate-400 tabular-nums">
-                    ขายออก {tp.baseQty.toLocaleString('en-US')} หน่วยฐาน · กำไร {formatLak(tp.profitLak)}
+                    ຂາຍອອກ {tp.baseQty.toLocaleString('en-US')} ໜ່ວຍພື້ນຖານ · ກຳໄລ {formatLak(tp.profitLak)}
                   </div>
                 </div>
                 <div className="font-bold text-blue-700 tabular-nums shrink-0">
@@ -575,7 +575,7 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
             ))}
             {analytics.topProducts.length === 0 && (
               <div className="py-10 text-center text-slate-400">
-                ยังไม่มีรายการสินค้าขายในช่วงนี้
+                ຍັງບໍ່ມີລາຍການສິນຄ້າຂາຍໃນຊ່ວງນີ້
               </div>
             )}
           </div>
@@ -585,16 +585,16 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
       {/* Quick Actions + Live Audit Feed */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-2.5">
-          <h3 className="text-sm font-semibold text-slate-900">ทางลัดโมดูลหลัก</h3>
+          <h3 className="text-sm font-semibold text-slate-900">ທາງລັດໂມດູນຫຼັກ</h3>
           <div className="grid grid-cols-1 gap-2">
             {[
-              { key: 'pos' as ModuleKey, icon: ShoppingCart, title: 'POS ขายสินค้าหน้าร้าน' },
-              { key: 'sales_history' as ModuleKey, icon: ReceiptText, title: 'ประวัติการขาย & รับคืน' },
-              { key: 'purchasing' as ModuleKey, icon: PackagePlus, title: 'จัดซื้อสินค้า (PO)' },
-              { key: 'products' as ModuleKey, icon: Package, title: 'สินค้าทั้งหมดและราคา' },
-              { key: 'inventory' as ModuleKey, icon: Boxes, title: 'คลังสินค้าและตรวจนับ' },
-              { key: 'accounting' as ModuleKey, icon: UserCog, title: 'บัญชีและการเงิน' },
-              { key: 'settings' as ModuleKey, icon: Settings, title: 'ตั้งค่าระบบและภาษี' },
+              { key: 'pos' as ModuleKey, icon: ShoppingCart, title: 'POS ຂາຍສິນຄ້າໜ້າຮ້ານ' },
+              { key: 'sales_history' as ModuleKey, icon: ReceiptText, title: 'ປະຫວັດການຂາຍ & ຮັບຄືນ' },
+              { key: 'purchasing' as ModuleKey, icon: PackagePlus, title: 'ຈັດຊື້ສິນຄ້າ (PO)' },
+              { key: 'products' as ModuleKey, icon: Package, title: 'ສິນຄ້າທັງໝົດ ແລະ ລາຄາ' },
+              { key: 'inventory' as ModuleKey, icon: Boxes, title: 'ສາງສິນຄ້າ ແລະ ກວດນັບ' },
+              { key: 'accounting' as ModuleKey, icon: UserCog, title: 'ບັນຊີ ແລະ ການເງິນ' },
+              { key: 'settings' as ModuleKey, icon: Settings, title: 'ຕັ້ງຄ່າລະບົບ ແລະ ພາສີ' },
             ].map((item) => {
               const Icon = item.icon;
               return (
@@ -620,11 +620,11 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
             <div className="flex items-center gap-2">
               <History className="w-4 h-4 text-blue-600" />
               <h3 className="text-sm font-semibold text-slate-900">
-                กิจกรรมล่าสุดในฐานข้อมูล (Audit Log)
+                ກິດຈະກຳຫຼ້າສຸດໃນຖານຂໍ້ມູນ (Audit Log)
               </h3>
             </div>
             <span className="text-xs text-slate-400 tabular-nums">
-              ภาษีปัจจุบัน: {settings?.taxSettings?.taxEnabled ? `${settings.taxSettings.taxRate}%` : '0% (ปิด)'}
+              ພາສີປັດຈຸບັນ: {settings?.taxSettings?.taxEnabled ? `${settings.taxSettings.taxRate}%` : '0% (ປິດ)'}
             </span>
           </div>
 
@@ -636,7 +636,7 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
                     {log.action} · <span className="text-blue-700">{log.entityType}</span>
                   </div>
                   <div className="text-slate-500 truncate">
-                    โดย {log.userNameSnapshot} · {log.deviceInfo}
+                    ໂດຍ {log.userNameSnapshot} · {log.deviceInfo}
                   </div>
                 </div>
                 <div className="text-slate-500 tabular-nums shrink-0">
@@ -646,7 +646,7 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
             ))}
             {recentLogs.length === 0 && (
               <div className="py-8 text-center text-xs text-slate-500">
-                ยังไม่มีประวัติการทำรายการในระบบ
+                ຍັງບໍ່ມີປະຫວັດການເຮັດລາຍການໃນລະບົບ
               </div>
             )}
           </div>

@@ -48,25 +48,25 @@ import type {
 type InventoryTab = 'balances' | 'lots' | 'count' | 'ledger' | 'locations';
 
 const MOVEMENT_LABELS: Record<StockMovementType, string> = {
-  initial: 'ยอดยกมา',
-  stock_in: 'รับสินค้าเข้า',
-  stock_out: 'เบิกออก',
-  damaged: 'เสียหาย',
-  expired: 'หมดอายุ',
-  lost: 'สูญหาย',
-  adjustment_in: 'ปรับเพิ่ม (ตรวจนับ)',
-  adjustment_out: 'ปรับลด (ตรวจนับ)',
-  sale: 'ขายหน้าร้าน POS',
-  sale_return: 'รับคืนสินค้า (POS)',
-  sale_void: 'ยกเลิกบิลขาย (POS)',
+  initial: 'ຍອດຍົກມາ',
+  stock_in: 'ຮັບສິນຄ້າເຂົ້າ',
+  stock_out: 'ເບີກອອກ',
+  damaged: 'ເສຍຫາຍ',
+  expired: 'ໝົດອາຍຸ',
+  lost: 'ສູນຫາຍ',
+  adjustment_in: 'ປັບເພີ່ມ (ກວດນັບ)',
+  adjustment_out: 'ປັບຫຼຸດ (ກວດນັບ)',
+  sale: 'ຂາຍໜ້າຮ້ານ POS',
+  sale_return: 'ຮັບຄືນສິນຄ້າ (POS)',
+  sale_void: 'ຍົກເລີກບິນຂາຍ (POS)',
 };
 
 const ZONE_LABELS: Record<StorageZoneType, string> = {
-  shelf: 'ชั้นวางหน้าร้าน',
-  warehouse: 'คลังสินค้าหลังร้าน',
-  cooler: 'ตู้แช่เย็น',
-  freezer: 'ตู้แช่แข็ง',
-  counter: 'เคาน์เตอร์ขาย',
+  shelf: 'ຊັ້ນວາງໜ້າຮ້ານ',
+  warehouse: 'ສາງສິນຄ້າຫຼັງຮ້ານ',
+  cooler: 'ຕູ້ແຊ່ເຢັນ',
+  freezer: 'ຕູ້ແຊ່ແຂງ',
+  counter: 'ເຄົາເຕີຂາຍ',
 };
 
 export function InventoryPage() {
@@ -320,17 +320,17 @@ export function InventoryPage() {
         branchId: activeBranchId,
         product: selectedCountProduct,
         countedBaseQty: countedBase,
-        reason: countReason || 'ปรับยอดจากการตรวจนับสต็อกจริง',
+        reason: countReason || 'ປັບຍອດຈາກການກວດນັບສະຕ໋ອກຈິງ',
       });
       setCountMessage({
         type: 'ok',
-        text: `ปรับปรุงยอดคงเหลือ "${selectedCountProduct.name}" เป็น ${countedBase.toLocaleString('en-US')} ${selectedCountProduct.baseUnitName} เรียบร้อยแล้ว`,
+        text: `ປັບປຸງຍອດຄົງເຫຼືອ "${selectedCountProduct.name}" ເປັນ ${countedBase.toLocaleString('en-US')} ${selectedCountProduct.baseUnitName} ສຳເລັດແລ້ວ`,
       });
       setCountReason('');
     } catch (err) {
       setCountMessage({
         type: 'err',
-        text: err instanceof Error ? err.message : 'ไม่สามารถปรับปรุงยอดตรวจนับได้',
+        text: err instanceof Error ? err.message : 'ບໍ່ສາມາດປັບປຸງຍອດກວດນັບໄດ້',
       });
     } finally {
       setCountSaving(false);
@@ -366,7 +366,7 @@ export function InventoryPage() {
     const cleanCode = locCode.trim().toUpperCase().slice(0, 30);
     const cleanName = locName.trim().slice(0, 100);
     if (!cleanCode || !cleanName) {
-      setLocError('กรุณากรอกรหัสตำแหน่งและชื่อตำแหน่งจัดเก็บ');
+      setLocError('ກະລຸນາປ້ອນລະຫັດຕຳແໜ່ງ ແລະ ຊື່ຕຳແໜ່ງຈັດເກັບ');
       return;
     }
 
@@ -426,7 +426,7 @@ export function InventoryPage() {
       try {
         handleFirestoreError(err, OperationType.WRITE, 'storageLocations');
       } catch (wrapped) {
-        setLocError(wrapped instanceof Error ? wrapped.message : 'ไม่สามารถบันทึกตำแหน่งจัดเก็บได้');
+        setLocError(wrapped instanceof Error ? wrapped.message : 'ບໍ່ສາມາດບັນທຶກຕຳແໜ່ງຈັດເກັບໄດ້');
       }
     } finally {
       setLocSaving(false);
@@ -438,25 +438,25 @@ export function InventoryPage() {
       {/* KPI Summary Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white border border-slate-200 rounded-xl p-4">
-          <div className="text-xs font-medium text-slate-500">สินค้าเปิดขายทั้งหมด</div>
+          <div className="text-xs font-medium text-slate-500">ສິນຄ້າເປີດຂາຍທັງໝົດ</div>
           <div className="text-xl font-bold text-slate-900 mt-1 tabular-nums">
-            {kpiSummary.totalSkus.toLocaleString('en-US')} รายการ
+            {kpiSummary.totalSkus.toLocaleString('en-US')} ລາຍການ
           </div>
         </div>
         <div className="bg-white border border-slate-200 rounded-xl p-4">
-          <div className="text-xs font-medium text-slate-500">ใกล้หมด (ต่ำกว่าจุดสั่งซื้อ)</div>
+          <div className="text-xs font-medium text-slate-500">ໃກ້ໝົດ (ຕ່ຳກວ່າຈຸດສັ່ງຊື້)</div>
           <div className="text-xl font-bold text-amber-600 mt-1 tabular-nums">
-            {kpiSummary.lowStockCount.toLocaleString('en-US')} รายการ
+            {kpiSummary.lowStockCount.toLocaleString('en-US')} ລາຍການ
           </div>
         </div>
         <div className="bg-white border border-slate-200 rounded-xl p-4">
-          <div className="text-xs font-medium text-slate-500">สินค้าหมดสต็อก</div>
+          <div className="text-xs font-medium text-slate-500">ສິນຄ້າໝົດສະຕ໋ອກ</div>
           <div className="text-xl font-bold text-red-600 mt-1 tabular-nums">
-            {kpiSummary.outOfStockCount.toLocaleString('en-US')} รายการ
+            {kpiSummary.outOfStockCount.toLocaleString('en-US')} ລາຍການ
           </div>
         </div>
         <div className="bg-white border border-slate-200 rounded-xl p-4">
-          <div className="text-xs font-medium text-slate-500">มูลค่าคลังสินค้า (WAC)</div>
+          <div className="text-xs font-medium text-slate-500">ມູນຄ່າສາງສິນຄ້າ (WAC)</div>
           <div className="text-xl font-bold text-blue-700 mt-1 tabular-nums">
             {formatLak(kpiSummary.totalValueLak)}
           </div>
@@ -468,11 +468,11 @@ export function InventoryPage() {
         <div className="flex flex-wrap items-center gap-1 p-1 bg-slate-200/70 rounded-lg self-start">
           {(
             [
-              { key: 'balances', label: 'ยอดคงเหลือ', icon: Boxes },
-              { key: 'lots', label: 'ล็อต & วันหมดอายุ', icon: AlertTriangle },
-              { key: 'count', label: 'ตรวจนับสต็อก', icon: ClipboardCheck },
+              { key: 'balances', label: 'ຍອດຄົງເຫຼືອ', icon: Boxes },
+              { key: 'lots', label: 'ລ໋ອດ & ວັນໝົດອາຍຸ', icon: AlertTriangle },
+              { key: 'count', label: 'ກວດນັບສະຕ໋ອກ', icon: ClipboardCheck },
               { key: 'ledger', label: 'Stock Ledger', icon: History },
-              { key: 'locations', label: 'ตำแหน่งจัดเก็บ', icon: MapPin },
+              { key: 'locations', label: 'ຕຳແໜ່ງຈັດເກັບ', icon: MapPin },
             ] as const
           ).map((t) => {
             const Icon = t.icon;
@@ -501,7 +501,7 @@ export function InventoryPage() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="ค้นหาสินค้า SKU หรือเลขล็อต..."
+              placeholder="ຄົ້ນຫາສິນຄ້າ SKU ຫຼື ເລກລ໋ອດ..."
               className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-blue-600"
             />
           </div>
@@ -514,9 +514,9 @@ export function InventoryPage() {
           <div className="inline-flex items-center gap-1 p-1 bg-white border border-slate-200 rounded-lg">
             {(
               [
-                { key: 'all', label: 'ทั้งหมด' },
-                { key: 'low', label: 'ใกล้หมด' },
-                { key: 'out', label: 'หมดสต็อก' },
+                { key: 'all', label: 'ທັງໝົດ' },
+                { key: 'low', label: 'ໃກ້ໝົດ' },
+                { key: 'out', label: 'ໝົດສະຕ໋ອກ' },
               ] as const
             ).map((f) => (
               <button
@@ -538,21 +538,21 @@ export function InventoryPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-600">
-                  <th className="py-3 px-4">สินค้า / SKU</th>
-                  <th className="py-3 px-4">ตำแหน่งจัดเก็บ</th>
-                  <th className="py-3 px-4 text-right">คงเหลือ (แยกหน่วย)</th>
-                  <th className="py-3 px-4 text-right">หน่วยฐาน</th>
-                  <th className="py-3 px-4 text-right">จุดเตือนต่ำ</th>
-                  <th className="py-3 px-4 text-right">ต้นทุน WAC</th>
-                  <th className="py-3 px-4 text-right">มูลค่ารวม</th>
-                  <th className="py-3 px-4">สถานะ</th>
+                  <th className="py-3 px-4">ສິນຄ້າ / SKU</th>
+                  <th className="py-3 px-4">ຕຳແໜ່ງຈັດເກັບ</th>
+                  <th className="py-3 px-4 text-right">ຄົງເຫຼືອ (ແຍກໜ່ວຍ)</th>
+                  <th className="py-3 px-4 text-right">ໜ່ວຍພື້ນຖານ</th>
+                  <th className="py-3 px-4 text-right">ຈຸດເຕືອນຕ່ຳ</th>
+                  <th className="py-3 px-4 text-right">ຕົ້ນທຶນ WAC</th>
+                  <th className="py-3 px-4 text-right">ມູນຄ່າລວມ</th>
+                  <th className="py-3 px-4">ສະຖານະ</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-sm">
                 {filteredBalanceRows.length === 0 && (
                   <tr>
                     <td colSpan={8} className="py-10 text-center text-sm text-slate-500">
-                      ไม่พบข้อมูลสต็อกสินค้า
+                      ບໍ່ພົບຂໍ້ມູນສະຕ໋ອກສິນຄ້າ
                     </td>
                   </tr>
                 )}
@@ -586,11 +586,11 @@ export function InventoryPage() {
                       </td>
                       <td className="py-3 px-4 text-xs font-medium">
                         {isOut ? (
-                          <span className="text-red-600">หมดสต็อก</span>
+                          <span className="text-red-600">ໝົດສະຕ໋ອກ</span>
                         ) : isLow ? (
-                          <span className="text-amber-600">ใกล้หมด</span>
+                          <span className="text-amber-600">ໃກ້ໝົດ</span>
                         ) : (
-                          <span className="text-green-700">ปกติ</span>
+                          <span className="text-green-700">ປົກກະຕິ</span>
                         )}
                       </td>
                     </tr>
@@ -608,9 +608,9 @@ export function InventoryPage() {
           <div className="inline-flex items-center gap-1 p-1 bg-white border border-slate-200 rounded-lg">
             {(
               [
-                { key: 'active', label: 'ล็อตที่มียอดคงเหลือ' },
-                { key: 'expiring', label: `ใกล้หมดอายุ / หมดอายุ (≤ ${expiryWarningDays} วัน)` },
-                { key: 'all', label: 'ล็อตทั้งหมด' },
+                { key: 'active', label: 'ລ໋ອດທີ່ມີຍອດຄົງເຫຼືອ' },
+                { key: 'expiring', label: `ໃກ້ໝົດອາຍຸ / ໝົດອາຍຸ (≤ ${expiryWarningDays} ວັນ)` },
+                { key: 'all', label: 'ລ໋ອດທັງໝົດ' },
               ] as const
             ).map((f) => (
               <button
@@ -632,26 +632,26 @@ export function InventoryPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-600">
-                  <th className="py-3 px-4">เลขล็อต (Lot No.)</th>
-                  <th className="py-3 px-4">สินค้า</th>
-                  <th className="py-3 px-4">วันหมดอายุ</th>
-                  <th className="py-3 px-4 text-right">รับเข้า</th>
-                  <th className="py-3 px-4 text-right">คงเหลือ</th>
-                  <th className="py-3 px-4 text-right">ต้นทุน/หน่วยฐาน</th>
-                  <th className="py-3 px-4">สถานะล็อต</th>
+                  <th className="py-3 px-4">ເລກລ໋ອດ (Lot No.)</th>
+                  <th className="py-3 px-4">ສິນຄ້າ</th>
+                  <th className="py-3 px-4">ວັນໝົດອາຍຸ</th>
+                  <th className="py-3 px-4 text-right">ຮັບເຂົ້າ</th>
+                  <th className="py-3 px-4 text-right">ຄົງເຫຼືອ</th>
+                  <th className="py-3 px-4 text-right">ຕົ້ນທຶນ/ໜ່ວຍພື້ນຖານ</th>
+                  <th className="py-3 px-4">ສະຖານະລ໋ອດ</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-sm">
                 {lotRows.length === 0 && (
                   <tr>
                     <td colSpan={7} className="py-10 text-center text-sm text-slate-500">
-                      ไม่พบข้อมูลล็อตสินค้า
+                      ບໍ່ພົບຂໍ້ມູນລ໋ອດສິນຄ້າ
                     </td>
                   </tr>
                 )}
                 {lotRows.map(({ lot, expiryStatus }) => {
                   const prod = productMap.get(lot.productId);
-                  const unitLabel = prod?.baseUnitName ?? 'หน่วย';
+                  const unitLabel = prod?.baseUnitName ?? 'ໜ່ວຍ';
                   return (
                     <tr key={lot.lotId} className="hover:bg-slate-50/70">
                       <td className="py-3 px-4 font-mono text-xs font-semibold text-slate-900">
@@ -662,7 +662,7 @@ export function InventoryPage() {
                         <div className="text-xs text-slate-500 font-mono">{lot.skuSnapshot}</div>
                       </td>
                       <td className="py-3 px-4 text-xs tabular-nums">
-                        {lot.expiryDate ? formatDateVientiane(lot.expiryDate) : 'ไม่ระบุ'}
+                        {lot.expiryDate ? formatDateVientiane(lot.expiryDate) : 'ບໍ່ລະບຸ'}
                       </td>
                       <td className="py-3 px-4 text-right text-xs text-slate-500 tabular-nums">
                         {lot.initialQtyBase.toLocaleString('en-US')} {unitLabel}
@@ -675,13 +675,13 @@ export function InventoryPage() {
                       </td>
                       <td className="py-3 px-4 text-xs font-medium">
                         {lot.remainingQtyBase <= 0 ? (
-                          <span className="text-slate-400">หมดล็อตแล้ว</span>
+                          <span className="text-slate-400">ໝົດລ໋ອດແລ້ວ</span>
                         ) : expiryStatus === 'expired' ? (
-                          <span className="text-red-600">หมดอายุแล้ว</span>
+                          <span className="text-red-600">ໝົດອາຍຸແລ້ວ</span>
                         ) : expiryStatus === 'warning' ? (
-                          <span className="text-amber-600">ใกล้หมดอายุ</span>
+                          <span className="text-amber-600">ໃກ້ໝົດອາຍຸ</span>
                         ) : (
-                          <span className="text-green-700">ปกติ</span>
+                          <span className="text-green-700">ປົກກະຕິ</span>
                         )}
                       </td>
                     </tr>
@@ -697,9 +697,9 @@ export function InventoryPage() {
       {activeTab === 'count' && (
         <div className="max-w-2xl bg-white border border-slate-200 rounded-xl p-6 space-y-5">
           <div>
-            <h3 className="text-base font-semibold text-slate-900">ตรวจนับสต็อกและปรับยอด</h3>
+            <h3 className="text-base font-semibold text-slate-900">ກວດນັບສະຕ໋ອກ ແລະ ປັບຍອດ</h3>
             <p className="text-xs text-slate-500">
-              บันทึกยอดที่ตรวจนับได้จริง ระบบจะคำนวณผลต่างและบันทึกลง Stock Ledger และ Audit Log อัตโนมัติ
+              ບັນທຶກຍອດທີ່ກວດນັບໄດ້ຈິງ ລະບົບຈະຄິດໄລ່ຜົນຕ່າງ ແລະ ບັນທຶກລົງ Stock Ledger ແລະ Audit Log ອັດຕະໂນມັດ
             </p>
           </div>
 
@@ -718,14 +718,14 @@ export function InventoryPage() {
 
           <form onSubmit={handleApplyStockCount} className="space-y-4">
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">เลือกสินค้า *</label>
+              <label className="block text-xs font-medium text-slate-700 mb-1">ເລືອກສິນຄ້າ *</label>
               <select
                 required
                 value={countProductId}
                 onChange={(e) => handleSelectCountProduct(e.target.value)}
                 className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white"
               >
-                <option value="">— เลือกสินค้าที่ต้องการตรวจนับ —</option>
+                <option value="">— ເລືອກສິນຄ້າທີ່ຕ້ອງການກວດນັບ —</option>
                 {products
                   .filter((p) => p.status === 'active')
                   .map((p) => (
@@ -740,7 +740,7 @@ export function InventoryPage() {
               <>
                 <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                   <div>
-                    <div className="text-slate-500">ยอดในระบบปัจจุบัน</div>
+                    <div className="text-slate-500">ຍອດໃນລະບົບປັດຈຸບັນ</div>
                     <div className="text-base font-bold text-slate-900 mt-0.5 tabular-nums">
                       {(balanceMap.get(selectedCountProduct.productId)?.qtyOnHandBase ?? 0).toLocaleString(
                         'en-US',
@@ -749,7 +749,7 @@ export function InventoryPage() {
                     </div>
                   </div>
                   <div>
-                    <div className="text-slate-500">ยอดที่นับได้จริง (คำนวณเป็นหน่วยฐาน)</div>
+                    <div className="text-slate-500">ຍອດທີ່ນັບໄດ້ຈິງ (ຄິດໄລ່ເປັນໜ່ວຍພື້ນຖານ)</div>
                     <div className="text-base font-bold text-blue-700 mt-0.5 tabular-nums">
                       {Math.round(
                         (Number(countQty) || 0) * (selectedCountUnit?.conversionFactor ?? 1),
@@ -761,7 +761,7 @@ export function InventoryPage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1">หน่วยที่นับ</label>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">ໜ່ວຍທີ່ນັບ</label>
                     <select
                       value={selectedCountUnit?.unitId ?? ''}
                       onChange={(e) => setCountUnitId(e.target.value)}
@@ -776,7 +776,7 @@ export function InventoryPage() {
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-slate-700 mb-1">
-                      จำนวนที่นับได้จริง *
+                      ຈຳນວນທີ່ນັບໄດ້ຈິງ *
                     </label>
                     <input
                       type="number"
@@ -791,14 +791,14 @@ export function InventoryPage() {
 
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1">
-                    หมายเหตุ / สาเหตุผลต่าง
+                    ໝາຍເຫດ / ສາເຫດຜົນຕ່າງ
                   </label>
                   <input
                     type="text"
                     maxLength={300}
                     value={countReason}
                     onChange={(e) => setCountReason(e.target.value)}
-                    placeholder="เช่น ตรวจนับประจำเดือน"
+                    placeholder="ເຊັ່ນ ກວດນັບປະຈຳເດືອນ"
                     className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg"
                   />
                 </div>
@@ -811,7 +811,7 @@ export function InventoryPage() {
                       className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-semibold rounded-lg cursor-pointer"
                     >
                       <PackageCheck className="w-4 h-4" />
-                      {countSaving ? 'กำลังปรับยอด...' : 'ยืนยันปรับยอดสต็อก'}
+                      {countSaving ? 'ກຳລັງປັບຍອດ...' : 'ຢືນຢັນປັບຍອດສະຕ໋ອກ'}
                     </button>
                   </div>
                 )}
@@ -827,21 +827,21 @@ export function InventoryPage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-600">
-                <th className="py-3 px-4">วันเวลา</th>
-                <th className="py-3 px-4">ประเภท</th>
-                <th className="py-3 px-4">สินค้า / ล็อต</th>
-                <th className="py-3 px-4 text-right">จำนวนที่ทำรายการ</th>
-                <th className="py-3 px-4 text-right">เปลี่ยนสุทธิ (ฐาน)</th>
-                <th className="py-3 px-4 text-right">คงเหลือหลังทำรายการ</th>
-                <th className="py-3 px-4 text-right">มูลค่าต้นทุน</th>
-                <th className="py-3 px-4">ผู้ดำเนินการ / เหตุผล</th>
+                <th className="py-3 px-4">ວັນເວລາ</th>
+                <th className="py-3 px-4">ປະເພດ</th>
+                <th className="py-3 px-4">ສິນຄ້າ / ລ໋ອດ</th>
+                <th className="py-3 px-4 text-right">ຈຳນວນທີ່ເຮັດລາຍການ</th>
+                <th className="py-3 px-4 text-right">ປ່ຽນສຸດທິ (ພື້ນຖານ)</th>
+                <th className="py-3 px-4 text-right">ຄົງເຫຼືອຫຼັງເຮັດລາຍການ</th>
+                <th className="py-3 px-4 text-right">ມູນຄ່າຕົ້ນທຶນ</th>
+                <th className="py-3 px-4">ຜູ້ດຳເນີນການ / ເຫດຜົນ</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-xs">
               {movements.length === 0 && (
                 <tr>
                   <td colSpan={8} className="py-10 text-center text-sm text-slate-500">
-                    ยังไม่มีรายการเคลื่อนไหวสต็อกสินค้า
+                    ຍັງບໍ່ມີລາຍການເຄື່ອນໄຫວສະຕ໋ອກສິນຄ້າ
                   </td>
                 </tr>
               )}
@@ -894,7 +894,7 @@ export function InventoryPage() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="text-xs text-slate-500">
-              จัดการชั้นวาง โซนสินค้า ตู้แช่ และจุดจัดเก็บในร้านค้า
+              ຈັດການຊັ້ນວາງ ໂຊນສິນຄ້າ ຕູ້ແຊ່ ແລະ ຈຸດຈັດເກັບໃນຮ້ານຄ້າ
             </div>
             {canEditInventory && (
               <button
@@ -903,7 +903,7 @@ export function InventoryPage() {
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-medium rounded-lg cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
-                เพิ่มตำแหน่งจัดเก็บ
+                ເພີ່ມຕຳແໜ່ງຈັດເກັບ
               </button>
             )}
           </div>
@@ -912,19 +912,19 @@ export function InventoryPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-600">
-                  <th className="py-3 px-4">รหัสตำแหน่ง</th>
-                  <th className="py-3 px-4">ชื่อตำแหน่ง</th>
-                  <th className="py-3 px-4">ประเภทพื้นที่</th>
-                  <th className="py-3 px-4">รายละเอียด</th>
-                  <th className="py-3 px-4">สถานะ</th>
-                  <th className="py-3 px-4 text-right">จัดการ</th>
+                  <th className="py-3 px-4">ລະຫັດຕຳແໜ່ງ</th>
+                  <th className="py-3 px-4">ຊື່ຕຳແໜ່ງ</th>
+                  <th className="py-3 px-4">ປະເພດພື້ນທີ່</th>
+                  <th className="py-3 px-4">ລາຍລະອຽດ</th>
+                  <th className="py-3 px-4">ສະຖານະ</th>
+                  <th className="py-3 px-4 text-right">ຈັດການ</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-sm">
                 {locations.length === 0 && (
                   <tr>
                     <td colSpan={6} className="py-10 text-center text-sm text-slate-500">
-                      ยังไม่มีตำแหน่งจัดเก็บสินค้า
+                      ຍັງບໍ່ມີຕຳແໜ່ງຈັດເກັບສິນຄ້າ
                     </td>
                   </tr>
                 )}
@@ -938,7 +938,7 @@ export function InventoryPage() {
                     <td className="py-3 px-4 text-xs text-slate-500">{loc.description || '-'}</td>
                     <td className="py-3 px-4 text-xs">
                       <span className={loc.status === 'active' ? 'text-green-700 font-medium' : 'text-slate-400'}>
-                        {loc.status === 'active' ? 'ใช้งาน' : 'ปิดใช้งาน'}
+                        {loc.status === 'active' ? 'ໃຊ້ງານ' : 'ປິດໃຊ້ງານ'}
                       </span>
                     </td>
                     <td className="py-3 px-4 text-right">
@@ -966,7 +966,7 @@ export function InventoryPage() {
           <div className="w-full max-w-md bg-white border border-slate-200 rounded-xl p-6">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
               <h3 className="text-base font-semibold text-slate-900">
-                {editingLoc ? 'แก้ไขตำแหน่งจัดเก็บ' : 'เพิ่มตำแหน่งจัดเก็บ'}
+                {editingLoc ? 'ແກ້ໄຂຕຳແໜ່ງຈັດເກັບ' : 'ເພີ່ມຕຳແໜ່ງຈັດເກັບ'}
               </h3>
               <button
                 type="button"
@@ -986,19 +986,19 @@ export function InventoryPage() {
             <form onSubmit={handleSaveLocation} className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">รหัสตำแหน่ง *</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">ລະຫັດຕຳແໜ່ງ *</label>
                   <input
                     type="text"
                     required
                     maxLength={30}
                     value={locCode}
                     onChange={(e) => setLocCode(e.target.value.toUpperCase())}
-                    placeholder="เช่น A-01"
+                    placeholder="ເຊັ່ນ A-01"
                     className="w-full px-3 py-2 text-sm font-mono border border-slate-200 rounded-lg"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">ประเภทพื้นที่</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">ປະເພດພື້ນທີ່</label>
                   <select
                     value={locZone}
                     onChange={(e) => setLocZone(e.target.value as StorageZoneType)}
@@ -1014,20 +1014,20 @@ export function InventoryPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">ชื่อตำแหน่ง *</label>
+                <label className="block text-xs font-medium text-slate-700 mb-1">ຊື່ຕຳແໜ່ງ *</label>
                 <input
                   type="text"
                   required
                   maxLength={100}
                   value={locName}
                   onChange={(e) => setLocName(e.target.value)}
-                  placeholder="เช่น ชั้นเครื่องดื่มโซนหน้า"
+                  placeholder="ເຊັ່ນ ຊັ້ນເຄື່ອງດື່ມໂຊນໜ້າ"
                   className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">หมายเหตุ</label>
+                <label className="block text-xs font-medium text-slate-700 mb-1">ໝາຍເຫດ</label>
                 <input
                   type="text"
                   maxLength={200}
@@ -1038,14 +1038,14 @@ export function InventoryPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">สถานะ</label>
+                <label className="block text-xs font-medium text-slate-700 mb-1">ສະຖານະ</label>
                 <select
                   value={locStatus}
                   onChange={(e) => setLocStatus(e.target.value as 'active' | 'inactive')}
                   className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white"
                 >
-                  <option value="active">ใช้งาน</option>
-                  <option value="inactive">ปิดใช้งาน</option>
+                  <option value="active">ໃຊ້ງານ</option>
+                  <option value="inactive">ປິດໃຊ້ງານ</option>
                 </select>
               </div>
 
@@ -1055,14 +1055,14 @@ export function InventoryPage() {
                   onClick={() => setLocModalOpen(false)}
                   className="px-4 py-2 text-sm font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer"
                 >
-                  ยกเลิก
+                  ຍົກເລີກ
                 </button>
                 <button
                   type="submit"
                   disabled={locSaving}
                   className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-60 rounded-lg cursor-pointer"
                 >
-                  {locSaving ? 'กำลังบันทึก...' : 'บันทึก'}
+                  {locSaving ? 'ກຳລັງບັນທຶກ...' : 'ບັນທຶກ'}
                 </button>
               </div>
             </form>

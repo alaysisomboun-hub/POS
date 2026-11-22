@@ -40,7 +40,7 @@ export function BarcodeLabelModal({ product, storeName, onClose }: BarcodeLabelM
       <div className="w-full max-w-2xl bg-white border border-slate-200 rounded-xl p-6 print:border-none print:p-0 print:max-w-none">
         <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4 print:hidden">
           <h3 className="text-base font-semibold text-slate-900">
-            พิมพ์ฉลากบาร์โค้ด · {product.name}
+            ພິມສະຫຼາກບາໂຄ້ດ · {product.name}
           </h3>
           <button
             type="button"
@@ -54,7 +54,7 @@ export function BarcodeLabelModal({ product, storeName, onClose }: BarcodeLabelM
         {/* Options */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5 print:hidden">
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1">หน่วยสินค้า</label>
+            <label className="block text-xs font-medium text-slate-700 mb-1">ໜ່ວຍສິນຄ້າ</label>
             <select
               value={selectedUnit?.unitId ?? ''}
               onChange={(e) => setSelectedUnitId(e.target.value)}
@@ -68,19 +68,19 @@ export function BarcodeLabelModal({ product, storeName, onClose }: BarcodeLabelM
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1">ระดับราคา</label>
+            <label className="block text-xs font-medium text-slate-700 mb-1">ລະດັບລາຄາ</label>
             <select
               value={priceTier}
               onChange={(e) => setPriceTier(e.target.value as 'retail' | 'wholesale' | 'member')}
               className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white"
             >
-              <option value="retail">ราคาปลีก</option>
-              <option value="wholesale">ราคาส่ง</option>
-              <option value="member">ราคาสมาชิก</option>
+              <option value="retail">ລາຄາຂາຍຍ່ອຍ</option>
+              <option value="wholesale">ລາຄາຂາຍສົ່ງ</option>
+              <option value="member">ລາຄາສະມາຊິກ</option>
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1">จำนวนดวงที่พิมพ์</label>
+            <label className="block text-xs font-medium text-slate-700 mb-1">ຈຳນວນດວງທີ່ພິມ</label>
             <input
               type="number"
               min={1}
@@ -140,7 +140,7 @@ export function BarcodeLabelModal({ product, storeName, onClose }: BarcodeLabelM
             onClick={onClose}
             className="px-4 py-2 text-sm font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer"
           >
-            ปิด
+            ປິດ
           </button>
           <button
             type="button"
@@ -148,7 +148,7 @@ export function BarcodeLabelModal({ product, storeName, onClose }: BarcodeLabelM
             className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg cursor-pointer"
           >
             <Printer className="w-4 h-4" />
-            สั่งพิมพ์ฉลาก
+            ສັ່ງພິມສະຫຼາກ
           </button>
         </div>
       </div>

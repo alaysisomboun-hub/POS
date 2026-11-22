@@ -2,17 +2,26 @@
 
 @layer base {
   :root {
-    --font-sans: 'Plus Jakarta Sans', 'Noto Sans Thai', -apple-system, BlinkMacSystemFont, sans-serif;
-    --font-mono: 'JetBrains Mono', monospace;
+    --font-sans: 'Noto Sans Lao', 'Plus Jakarta Sans', 'Noto Sans Thai', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Noto Sans Lao', monospace;
   }
 
   body {
     font-family: var(--font-sans);
     background-color: #f8fafc;
     color: #0f172a;
+    line-height: 1.55;
+    text-rendering: optimizeLegibility;
   }
 }
 
 .tabular-nums {
   font-variant-numeric: tabular-nums;
+}
+
+@media print {
+  body {
+    font-family: 'Noto Sans Lao', 'Plus Jakarta Sans', 'Noto Sans Thai', sans-serif;
+    background-color: #ffffff;
+  }
 }

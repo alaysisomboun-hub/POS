@@ -139,7 +139,7 @@ export function SuppliersPage() {
           before: { name: editingSupplier.name, status: editingSupplier.status },
           after: payload,
         });
-        setFeedback({ type: 'ok', text: `อัปเดตซัพพลายเออร์ "${payload.name}" เรียบร้อยแล้ว` });
+        setFeedback({ type: 'ok', text: `ອັບເດດຜູ້ສະໜອງ "${payload.name}" ຮຽບຮ້ອຍແລ້ວ` });
       } else {
         const supplierId = generateSafeId('sup');
         await setDoc(doc(db, 'suppliers', supplierId), {
@@ -160,13 +160,13 @@ export function SuppliersPage() {
           before: null,
           after: payload,
         });
-        setFeedback({ type: 'ok', text: `เพิ่มซัพพลายเออร์ "${payload.name}" เรียบร้อยแล้ว` });
+        setFeedback({ type: 'ok', text: `ເພີ່ມຜູ້ສະໜອງ "${payload.name}" ຮຽບຮ້ອຍແລ້ວ` });
       }
       setModalOpen(false);
     } catch (err) {
       setFeedback({
         type: 'err',
-        text: err instanceof Error ? err.message : 'ไม่สามารถบันทึกข้อมูลซัพพลายเออร์ได้',
+        text: err instanceof Error ? err.message : 'ບໍ່ສາມາດບັນທຶກຂໍ້ມູນຜູ້ສະໜອງໄດ້',
       });
     } finally {
       setSaving(false);
@@ -197,24 +197,24 @@ export function SuppliersPage() {
       {/* KPI Row */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white border border-slate-200 rounded-xl p-4">
-          <div className="text-xs text-slate-500">ซัพพลายเออร์ที่ใช้งาน</div>
+          <div className="text-xs text-slate-500">ຜູ້ສະໜອງທີ່ໃຊ້ງານ</div>
           <div className="text-2xl font-bold text-slate-900 tabular-nums mt-1">
-            {suppliers.filter((s) => s.status === 'active').length} ราย
+            {suppliers.filter((s) => s.status === 'active').length} ລາຍ
           </div>
-          <div className="text-[11px] text-slate-400 mt-0.5">จากทั้งหมด {suppliers.length} ราย</div>
+          <div className="text-[11px] text-slate-400 mt-0.5">ຈາກທັງໝົດ {suppliers.length} ລາຍ</div>
         </div>
         <div className="bg-white border border-slate-200 rounded-xl p-4">
-          <div className="text-xs text-slate-500">ยอดเจ้าหนี้ค้างจ่ายรวม (AP)</div>
+          <div className="text-xs text-slate-500">ຍອດເຈົ້າໜີ້ຄ້າງຈ່າຍລວມ (AP)</div>
           <div className="text-2xl font-bold text-amber-700 tabular-nums mt-1">
             {formatLak(totalPayableLak)}
           </div>
-          <div className="text-[11px] text-slate-400 mt-0.5">อัปเดตอัตโนมัติจากใบสั่งซื้อและชำระหนี้</div>
+          <div className="text-[11px] text-slate-400 mt-0.5">ອັບເດດອັດຕະໂນມັດຈາກໃບສັ່ງຊື້ ແລະ ການຊຳລະໜີ້</div>
         </div>
         <div className="bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between">
           <div>
-            <div className="text-xs text-slate-500">คู่ค้าที่มีเครดิตเทอม</div>
+            <div className="text-xs text-slate-500">ຄູ່ຄ້າທີ່ມີເຄຣດິດເທີມ</div>
             <div className="text-xl font-bold text-blue-700 tabular-nums mt-1">
-              {suppliers.filter((s) => s.paymentTermDays > 0).length} ราย
+              {suppliers.filter((s) => s.paymentTermDays > 0).length} ລາຍ
             </div>
           </div>
           <Truck className="w-7 h-7 text-blue-600 shrink-0" />
@@ -229,7 +229,7 @@ export function SuppliersPage() {
             type="text"
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
-            placeholder="ค้นหาชื่อคู่ค้า รหัส ผู้ติดต่อ หรือเบอร์โทร..."
+            placeholder="ຄົ້ນຫາຊື່ຄູ່ຄ້າ ລະຫັດ ຜູ້ຕິດຕໍ່ ຫຼື ເບີໂທ..."
             className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-blue-600"
           />
         </div>
@@ -240,7 +240,7 @@ export function SuppliersPage() {
             className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold rounded-lg cursor-pointer self-start sm:self-auto"
           >
             <Plus className="w-4 h-4" />
-            เพิ่มซัพพลายเออร์
+            ເພີ່ມຜູ້ສະໜອງ
           </button>
         )}
       </div>
@@ -251,13 +251,13 @@ export function SuppliersPage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-600">
-                <th className="py-3 px-4">รหัส</th>
-                <th className="py-3 px-4">ชื่อซัพพลายเออร์ / ที่อยู่</th>
-                <th className="py-3 px-4">ผู้ติดต่อ / เบอร์โทร</th>
-                <th className="py-3 px-4 text-right">เครดิตเทอม</th>
-                <th className="py-3 px-4 text-right">ยอดค้างจ่าย</th>
-                <th className="py-3 px-4">สถานะ</th>
-                <th className="py-3 px-4 text-right">จัดการ</th>
+                <th className="py-3 px-4">ລະຫັດ</th>
+                <th className="py-3 px-4">ຊື່ຜູ້ສະໜອງ / ທີ່ຢູ່</th>
+                <th className="py-3 px-4">ຜູ້ຕິດຕໍ່ / ເບີໂທ</th>
+                <th className="py-3 px-4 text-right">ເຄຣດິດເທີມ</th>
+                <th className="py-3 px-4 text-right">ຍອດຄ້າງຈ່າຍ</th>
+                <th className="py-3 px-4">ສະຖານະ</th>
+                <th className="py-3 px-4 text-right">ຈັດການ</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-sm">
@@ -275,7 +275,7 @@ export function SuppliersPage() {
                     <div className="text-slate-500 tabular-nums">{sup.phone || '-'}</div>
                   </td>
                   <td className="py-3 px-4 text-right tabular-nums text-xs text-slate-700">
-                    {sup.paymentTermDays > 0 ? `${sup.paymentTermDays} วัน` : 'เงินสด'}
+                    {sup.paymentTermDays > 0 ? `${sup.paymentTermDays} ວັນ` : 'ເງິນສົດ'}
                   </td>
                   <td className="py-3 px-4 text-right font-semibold tabular-nums">
                     <span className={sup.payableBalanceLak > 0 ? 'text-amber-700' : 'text-slate-600'}>
@@ -288,7 +288,7 @@ export function SuppliersPage() {
                         sup.status === 'active' ? 'text-green-700' : 'text-slate-400'
                       }`}
                     >
-                      {sup.status === 'active' ? 'ใช้งานอยู่' : 'ปิดใช้งาน'}
+                      {sup.status === 'active' ? 'ໃຊ້ງານຢູ່' : 'ປິດໃຊ້ງານ'}
                     </span>
                   </td>
                   <td className="py-3 px-4 text-right">
@@ -299,7 +299,7 @@ export function SuppliersPage() {
                         className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded-md cursor-pointer"
                       >
                         <Edit2 className="w-3.5 h-3.5" />
-                        แก้ไข
+                        ແກ້ໄຂ
                       </button>
                     )}
                   </td>
@@ -308,7 +308,7 @@ export function SuppliersPage() {
               {filtered.length === 0 && (
                 <tr>
                   <td colSpan={7} className="py-10 text-center text-xs text-slate-500">
-                    ยังไม่มีข้อมูลซัพพลายเออร์ในระบบ
+                    ຍັງບໍ່ມີຂໍ້ມູນຜູ້ສະໜອງໃນລະບົບ
                   </td>
                 </tr>
               )}
@@ -323,7 +323,7 @@ export function SuppliersPage() {
           <div className="w-full max-w-lg bg-white border border-slate-200 rounded-xl p-6">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
               <h3 className="text-base font-semibold text-slate-900">
-                {editingSupplier ? 'แก้ไขซัพพลายเออร์' : 'เพิ่มซัพพลายเออร์ใหม่'}
+                {editingSupplier ? 'ແກ້ໄຂຜູ້ສະໜອງ' : 'ເພີ່ມຜູ້ສະໜອງໃໝ່'}
               </h3>
               <button
                 type="button"
@@ -336,7 +336,7 @@ export function SuppliersPage() {
             <form onSubmit={handleSave} className="space-y-4">
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">รหัส *</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">ລະຫັດ *</label>
                   <input
                     type="text"
                     required
@@ -348,7 +348,7 @@ export function SuppliersPage() {
                 </div>
                 <div className="col-span-2">
                   <label className="block text-xs font-medium text-slate-700 mb-1">
-                    ชื่อบริษัท / ซัพพลายเออร์ *
+                    ຊື່ບໍລິສັດ / ຜູ້ສະໜອງ *
                   </label>
                   <input
                     type="text"
@@ -362,7 +362,7 @@ export function SuppliersPage() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">ผู้ติดต่อ</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">ຜູ້ຕິດຕໍ່</label>
                   <input
                     type="text"
                     maxLength={100}
@@ -372,7 +372,7 @@ export function SuppliersPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">เบอร์โทรศัพท์</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">ເບີໂທລະສັບ</label>
                   <input
                     type="text"
                     maxLength={30}
@@ -384,7 +384,7 @@ export function SuppliersPage() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">อีเมล</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">ອີເມວ</label>
                   <input
                     type="email"
                     maxLength={160}
@@ -395,7 +395,7 @@ export function SuppliersPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1">
-                    เครดิตเทอม (วัน)
+                    ເຄຣດິດເທີມ (ວັນ)
                   </label>
                   <input
                     type="number"
@@ -407,7 +407,7 @@ export function SuppliersPage() {
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">ที่อยู่</label>
+                <label className="block text-xs font-medium text-slate-700 mb-1">ທີ່ຢູ່</label>
                 <input
                   type="text"
                   maxLength={300}
@@ -418,7 +418,7 @@ export function SuppliersPage() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">หมายเหตุ</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">ໝາຍເຫດ</label>
                   <input
                     type="text"
                     maxLength={300}
@@ -428,14 +428,14 @@ export function SuppliersPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">สถานะ</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">ສະຖານະ</label>
                   <select
                     value={status}
                     onChange={(e) => setStatus(e.target.value as 'active' | 'inactive')}
                     className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white"
                   >
-                    <option value="active">ใช้งานอยู่</option>
-                    <option value="inactive">ปิดใช้งาน</option>
+                    <option value="active">ໃຊ້ງານຢູ່</option>
+                    <option value="inactive">ປິດໃຊ້ງານ</option>
                   </select>
                 </div>
               </div>
@@ -445,14 +445,14 @@ export function SuppliersPage() {
                   onClick={() => setModalOpen(false)}
                   className="px-4 py-2 text-sm font-medium text-slate-600 border border-slate-200 rounded-lg cursor-pointer"
                 >
-                  ยกเลิก
+                  ຍົກເລີກ
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
                   className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg cursor-pointer"
                 >
-                  {saving ? 'กำลังบันทึก...' : 'บันทึกซัพพลายเออร์'}
+                  {saving ? 'ກຳລັງບັນທຶກ...' : 'ບັນທຶກຜູ້ສະໜອງ'}
                 </button>
               </div>
             </form>

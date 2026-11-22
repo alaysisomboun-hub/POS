@@ -40,9 +40,9 @@ function addDaysYmd(days: number): string {
 }
 
 const PO_STATUS_LABELS: Record<PurchaseOrder['status'], string> = {
-  ordered: 'รอรับเข้าคลัง',
-  received: 'รับเข้าคลังแล้ว',
-  cancelled: 'ยกเลิกแล้ว',
+  ordered: 'ລໍຖ້າຮັບເຂົ້າສາງ',
+  received: 'ຮັບເຂົ້າສາງແລ້ວ',
+  cancelled: 'ຍົກເລີກແລ້ວ',
 };
 
 export function PurchaseOrdersPage() {
@@ -196,7 +196,7 @@ export function PurchaseOrdersPage() {
     if (!userProfile) return;
     const sup = suppliers.find((s) => s.supplierId === selectedSupplierId);
     if (!sup) {
-      setFeedback({ type: 'err', text: 'กรุณาเลือกซัพพลายเออร์ (เพิ่มซัพพลายเออร์ก่อนหากยังไม่มี)' });
+      setFeedback({ type: 'err', text: 'ກະລຸນາເລືອກຜູ້ສະໜອງ (ເພີ່ມຜູ້ສະໜອງກ່ອນຖ້າຍັງບໍ່ມີ)' });
       return;
     }
 
@@ -246,12 +246,12 @@ export function PurchaseOrdersPage() {
       setCreateOpen(false);
       setFeedback({
         type: 'ok',
-        text: `สร้างใบสั่งซื้อ ${created.poNumber} สำเร็จ กด "รับสินค้าเข้าคลัง" เมื่อสินค้ามาถึง`,
+        text: `ສ້າງໃບສັ່ງຊື້ ${created.poNumber} ສຳເລັດ ກົດ "ຮັບສິນຄ້າເຂົ້າສາງ" ເມື່ອສິນຄ້າມາຮອດ`,
       });
     } catch (err) {
       setFeedback({
         type: 'err',
-        text: err instanceof Error ? err.message : 'ไม่สามารถสร้างใบสั่งซื้อได้',
+        text: err instanceof Error ? err.message : 'ບໍ່ສາມາດສ້າງໃບສັ່ງຊື້ໄດ້',
       });
     } finally {
       setSaving(false);
@@ -272,12 +272,12 @@ export function PurchaseOrdersPage() {
       });
       setFeedback({
         type: 'ok',
-        text: `รับสินค้าตามใบสั่งซื้อ ${po.poNumber} เข้าคลังและคำนวณต้นทุน WAC เรียบร้อยแล้ว`,
+        text: `ຮັບສິນຄ້າຕາມໃບສັ່ງຊື້ ${po.poNumber} ເຂົ້າສາງ ແລະ ຄຳນວນຕົ້ນທຶນ WAC ຮຽບຮ້ອຍແລ້ວ`,
       });
     } catch (err) {
       setFeedback({
         type: 'err',
-        text: err instanceof Error ? err.message : 'ไม่สามารถรับสินค้าตาม PO ได้',
+        text: err instanceof Error ? err.message : 'ບໍ່ສາມາດຮັບສິນຄ້າຕາມ PO ໄດ້',
       });
     } finally {
       setProcessingId(null);
@@ -290,11 +290,11 @@ export function PurchaseOrdersPage() {
     setFeedback(null);
     try {
       await cancelPurchaseOrder({ db, user: userProfile, branchId: activeBranchId, po });
-      setFeedback({ type: 'ok', text: `ยกเลิกใบสั่งซื้อ ${po.poNumber} แล้ว` });
+      setFeedback({ type: 'ok', text: `ຍົກເລີກໃບສັ່ງຊື້ ${po.poNumber} ແລ້ວ` });
     } catch (err) {
       setFeedback({
         type: 'err',
-        text: err instanceof Error ? err.message : 'ไม่สามารถยกเลิกใบสั่งซื้อได้',
+        text: err instanceof Error ? err.message : 'ບໍ່ສາມາດຍົກເລີກໃບສັ່ງຊື້ໄດ້',
       });
     } finally {
       setProcessingId(null);
@@ -328,19 +328,19 @@ export function PurchaseOrdersPage() {
       {/* KPI Row */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white border border-slate-200 rounded-xl p-4">
-          <div className="text-xs text-slate-500">รอรับเข้าคลัง (Ordered)</div>
+          <div className="text-xs text-slate-500">ລໍຖ້າຮັບເຂົ້າສາງ (Ordered)</div>
           <div className="text-2xl font-bold text-amber-700 tabular-nums mt-1">
-            {orders.filter((o) => o.status === 'ordered').length} ใบ
+            {orders.filter((o) => o.status === 'ordered').length} ໃບ
           </div>
         </div>
         <div className="bg-white border border-slate-200 rounded-xl p-4">
-          <div className="text-xs text-slate-500">รับสินค้าแล้ว (Received)</div>
+          <div className="text-xs text-slate-500">ຮັບສິນຄ້າແລ້ວ (Received)</div>
           <div className="text-2xl font-bold text-green-700 tabular-nums mt-1">
-            {orders.filter((o) => o.status === 'received').length} ใบ
+            {orders.filter((o) => o.status === 'received').length} ໃບ
           </div>
         </div>
         <div className="bg-white border border-slate-200 rounded-xl p-4">
-          <div className="text-xs text-slate-500">มูลค่ารับซื้อสะสม</div>
+          <div className="text-xs text-slate-500">ມູນຄ່າຮັບຊື້ສະສົມ</div>
           <div className="text-2xl font-bold text-blue-700 tabular-nums mt-1">
             {formatLak(
               orders
@@ -365,7 +365,7 @@ export function PurchaseOrdersPage() {
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              {st === 'all' ? 'ทั้งหมด' : PO_STATUS_LABELS[st]}
+              {st === 'all' ? 'ທັງໝົດ' : PO_STATUS_LABELS[st]}
             </button>
           ))}
         </div>
@@ -376,7 +376,7 @@ export function PurchaseOrdersPage() {
             className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold rounded-lg cursor-pointer self-start sm:self-auto"
           >
             <Plus className="w-4 h-4" />
-            สร้างใบสั่งซื้อ (PO)
+            ສ້າງໃບສັ່ງຊື້ (PO)
           </button>
         )}
       </div>
@@ -387,13 +387,13 @@ export function PurchaseOrdersPage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-600">
-                <th className="py-3 px-4">เลขที่ PO</th>
-                <th className="py-3 px-4">ซัพพลายเออร์</th>
-                <th className="py-3 px-4">ประเภทชำระ</th>
-                <th className="py-3 px-4 text-right">ยอดสุทธิ</th>
-                <th className="py-3 px-4">สถานะ</th>
-                <th className="py-3 px-4">วันที่สร้าง</th>
-                <th className="py-3 px-4 text-right">จัดการ</th>
+                <th className="py-3 px-4">ເລກທີ PO</th>
+                <th className="py-3 px-4">ຜູ້ສະໜອງ</th>
+                <th className="py-3 px-4">ປະເພດຊຳລະ</th>
+                <th className="py-3 px-4 text-right">ຍອດສຸດທິ</th>
+                <th className="py-3 px-4">ສະຖານະ</th>
+                <th className="py-3 px-4">ວັນທີສ້າງ</th>
+                <th className="py-3 px-4 text-right">ຈັດການ</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-sm">
@@ -404,12 +404,12 @@ export function PurchaseOrdersPage() {
                   </td>
                   <td className="py-3 px-4">
                     <div className="font-medium text-slate-900">{po.supplierName}</div>
-                    <div className="text-xs text-slate-500">{po.items.length} รายการสินค้า</div>
+                    <div className="text-xs text-slate-500">{po.items.length} ລາຍການສິນຄ້າ</div>
                   </td>
                   <td className="py-3 px-4 text-xs text-slate-700">
                     {po.paymentType === 'credit'
-                      ? `เครดิต (ครบกำหนด ${po.dueDate || '-'})`
-                      : 'เงินสด'}
+                      ? `ເຄຣດິດ (ຄົບກຳນົດ ${po.dueDate || '-'})`
+                      : 'ເງິນສົດ'}
                   </td>
                   <td className="py-3 px-4 text-right font-bold tabular-nums text-slate-900">
                     {formatLak(po.grandTotalLak)}
@@ -438,7 +438,7 @@ export function PurchaseOrdersPage() {
                         className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded cursor-pointer"
                       >
                         <Eye className="w-3.5 h-3.5" />
-                        ดู
+                        ເບິ່ງ
                       </button>
                       {po.status === 'ordered' && canApprove && (
                         <>
@@ -449,7 +449,7 @@ export function PurchaseOrdersPage() {
                             className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold bg-green-600 hover:bg-green-700 text-white rounded cursor-pointer disabled:opacity-50"
                           >
                             <PackageCheck className="w-3.5 h-3.5" />
-                            รับเข้าคลัง
+                            ຮັບເຂົ້າສາງ
                           </button>
                           <button
                             type="button"
@@ -458,7 +458,7 @@ export function PurchaseOrdersPage() {
                             className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50 rounded cursor-pointer"
                           >
                             <XCircle className="w-3.5 h-3.5" />
-                            ยกเลิก
+                            ຍົກເລີກ
                           </button>
                         </>
                       )}
@@ -469,7 +469,7 @@ export function PurchaseOrdersPage() {
               {filteredOrders.length === 0 && (
                 <tr>
                   <td colSpan={7} className="py-10 text-center text-xs text-slate-500">
-                    ยังไม่มีรายการใบสั่งซื้อในสถานะที่เลือก
+                    ຍັງບໍ່ມີລາຍການໃບສັ່ງຊື້ໃນສະຖານະທີ່ເລືອກ
                   </td>
                 </tr>
               )}
@@ -483,7 +483,7 @@ export function PurchaseOrdersPage() {
         <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4 overflow-y-auto">
           <div className="w-full max-w-4xl bg-white border border-slate-200 rounded-xl p-6 my-8">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
-              <h3 className="text-base font-semibold text-slate-900">สร้างใบสั่งซื้อสินค้าใหม่ (PO)</h3>
+              <h3 className="text-base font-semibold text-slate-900">ສ້າງໃບສັ່ງຊື້ສິນຄ້າໃໝ່ (PO)</h3>
               <button
                 type="button"
                 onClick={() => setCreateOpen(false)}
@@ -496,7 +496,7 @@ export function PurchaseOrdersPage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1">
-                    ซัพพลายเออร์ *
+                    ຜູ້ສະໜອງ *
                   </label>
                   <select
                     required
@@ -512,7 +512,7 @@ export function PurchaseOrdersPage() {
                     }}
                     className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white"
                   >
-                    <option value="">-- เลือกซัพพลายเออร์ --</option>
+                    <option value="">-- ເລືອກຜູ້ສະໜອງ --</option>
                     {suppliers.map((s) => (
                       <option key={s.supplierId} value={s.supplierId}>
                         {s.code} · {s.name}
@@ -522,21 +522,21 @@ export function PurchaseOrdersPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1">
-                    เงื่อนไขชำระเงิน
+                    ເງື່ອນໄຂຊຳລະເງິນ
                   </label>
                   <select
                     value={paymentType}
                     onChange={(e) => setPaymentType(e.target.value as 'cash' | 'credit')}
                     className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white"
                   >
-                    <option value="cash">เงินสด (ชำระทันทีเมื่อรับของ)</option>
-                    <option value="credit">เครดิต (ตั้งเจ้าหนี้ AP)</option>
+                    <option value="cash">ເງິນສົດ (ຊຳລະທັນທີເມື່ອຮັບເຄື່ອງ)</option>
+                    <option value="credit">ເຄຣດິດ (ຕັ້ງເຈົ້າໜີ້ AP)</option>
                   </select>
                 </div>
                 {paymentType === 'credit' && (
                   <div>
                     <label className="block text-xs font-medium text-slate-700 mb-1">
-                      วันครบกำหนดชำระ
+                      ວັນຄົບກຳນົດຊຳລະ
                     </label>
                     <input
                       type="date"
@@ -551,14 +551,14 @@ export function PurchaseOrdersPage() {
               {/* Line items */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-slate-700">รายการสินค้าที่สั่งซื้อ</span>
+                  <span className="text-xs font-semibold text-slate-700">ລາຍການສິນຄ້າທີ່ສັ່ງຊື້</span>
                   <button
                     type="button"
                     onClick={addDraftLine}
                     className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:underline cursor-pointer"
                   >
                     <Plus className="w-3.5 h-3.5" />
-                    เพิ่มรายการสินค้า
+                    ເພີ່ມລາຍການສິນຄ້າ
                   </button>
                 </div>
 
@@ -628,7 +628,7 @@ export function PurchaseOrdersPage() {
                             next[idx] = { ...next[idx], qty: Math.max(1, Number(e.target.value) || 1) };
                             setDraftLines(next);
                           }}
-                          placeholder="จำนวน"
+                          placeholder="ຈຳນວນ"
                           className="col-span-1 px-2 py-1.5 bg-white border border-slate-200 rounded text-right tabular-nums"
                         />
                         <input
@@ -643,7 +643,7 @@ export function PurchaseOrdersPage() {
                             };
                             setDraftLines(next);
                           }}
-                          placeholder="ทุน/หน่วย"
+                          placeholder="ທຶນ/ໜ່ວຍ"
                           className="col-span-2 px-2 py-1.5 bg-white border border-slate-200 rounded text-right tabular-nums"
                         />
                         <input
@@ -654,7 +654,7 @@ export function PurchaseOrdersPage() {
                             next[idx] = { ...next[idx], expiryDate: e.target.value };
                             setDraftLines(next);
                           }}
-                          title="วันหมดอายุ (ถ้ามี)"
+                          title="ວັນໝົດອາຍຸ (ຖ້າມີ)"
                           className="col-span-2 px-2 py-1.5 bg-white border border-slate-200 rounded"
                         />
                         <button
@@ -674,7 +674,7 @@ export function PurchaseOrdersPage() {
               {/* Costs Breakdown */}
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 pt-2 border-t border-slate-100">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">ส่วนลดรับ (₭)</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">ສ່ວນຫຼຸດຮັບ (₭)</label>
                   <input
                     type="number"
                     min={0}
@@ -684,7 +684,7 @@ export function PurchaseOrdersPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">ค่าขนส่ง (₭)</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">ຄ່າຂົນສົ່ງ (₭)</label>
                   <input
                     type="number"
                     min={0}
@@ -694,7 +694,7 @@ export function PurchaseOrdersPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">ภาษีซื้อ (₭)</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">ພາສີຊື້ (₭)</label>
                   <input
                     type="number"
                     min={0}
@@ -704,13 +704,13 @@ export function PurchaseOrdersPage() {
                   />
                 </div>
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-2.5 flex flex-col justify-center text-right tabular-nums">
-                  <span className="text-[11px] text-slate-600">ยอดสั่งซื้อสุทธิ</span>
+                  <span className="text-[11px] text-slate-600">ຍອດສັ່ງຊື້ສຸດທິ</span>
                   <span className="text-lg font-bold text-blue-700">{formatLak(draftGrandTotalLak)}</span>
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">หมายเหตุ</label>
+                <label className="block text-xs font-medium text-slate-700 mb-1">ໝາຍເຫດ</label>
                 <input
                   type="text"
                   maxLength={300}
@@ -726,14 +726,14 @@ export function PurchaseOrdersPage() {
                   onClick={() => setCreateOpen(false)}
                   className="px-4 py-2 text-sm font-medium text-slate-600 border border-slate-200 rounded-lg cursor-pointer"
                 >
-                  ยกเลิก
+                  ຍົກເລີກ
                 </button>
                 <button
                   type="submit"
                   disabled={saving || draftLines.length === 0}
                   className="px-5 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg cursor-pointer"
                 >
-                  {saving ? 'กำลังบันทึก...' : 'บันทึกใบสั่งซื้อ'}
+                  {saving ? 'ກຳລັງບັນທຶກ...' : 'ບັນທຶກໃບສັ່ງຊື້'}
                 </button>
               </div>
             </form>
@@ -748,10 +748,10 @@ export function PurchaseOrdersPage() {
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
               <div>
                 <h3 className="text-base font-semibold text-slate-900">
-                  รายละเอียดใบสั่งซื้อ {viewingPo.poNumber}
+                  ລາຍລະອຽດໃບສັ່ງຊື້ {viewingPo.poNumber}
                 </h3>
                 <p className="text-xs text-slate-500">
-                  ซัพพลายเออร์: {viewingPo.supplierName} · {PO_STATUS_LABELS[viewingPo.status]}
+                  ຜູ້ສະໜອງ: {viewingPo.supplierName} · {PO_STATUS_LABELS[viewingPo.status]}
                 </p>
               </div>
               <button
@@ -769,7 +769,7 @@ export function PurchaseOrdersPage() {
                   <div>
                     <div className="font-semibold text-slate-900">{it.name}</div>
                     <div className="text-slate-500 font-mono">
-                      {it.sku} · {it.qty} {it.unitName} ({it.baseQty} หน่วยฐาน) · ล็อต {it.lotNumber}
+                      {it.sku} · {it.qty} {it.unitName} ({it.baseQty} ໜ່ວຍພື້ນຖານ) · ລ໋ອດ {it.lotNumber}
                       {it.expiryDate ? ` · EXP ${it.expiryDate}` : ''}
                     </div>
                   </div>
@@ -783,17 +783,17 @@ export function PurchaseOrdersPage() {
 
             <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-1 text-xs tabular-nums">
               <div className="flex justify-between text-slate-600">
-                <span>รวมค่าสินค้า</span>
+                <span>ລວມຄ່າສິນຄ້າ</span>
                 <span>{formatLak(viewingPo.subtotalLak)}</span>
               </div>
               <div className="flex justify-between text-slate-600">
-                <span>ส่วนลด / ค่าขนส่ง / ภาษี</span>
+                <span>ສ່ວນຫຼຸດ / ຄ່າຂົນສົ່ງ / ພາສີ</span>
                 <span>
                   -{formatLak(viewingPo.discountLak)} / +{formatLak(viewingPo.shippingFeeLak)} / +{formatLak(viewingPo.taxAmountLak)}
                 </span>
               </div>
               <div className="flex justify-between font-bold text-sm text-blue-700 pt-1 border-t border-slate-200">
-                <span>ยอดสุทธิทั้งสิ้น</span>
+                <span>ຍອດສຸດທິທັງໝົດ</span>
                 <span>{formatLak(viewingPo.grandTotalLak)}</span>
               </div>
             </div>

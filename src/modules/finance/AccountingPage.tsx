@@ -14,11 +14,11 @@ function todayYmd(): string {
 }
 
 const ACCOUNT_TYPE_LABELS = {
-  asset: 'สินทรัพย์ (Assets)',
-  liability: 'หนี้สิน (Liabilities)',
-  equity: 'ส่วนของเจ้าของ (Equity)',
-  revenue: 'รายได้ (Revenue)',
-  expense: 'ต้นทุนและค่าใช้จ่าย (Expenses)',
+  asset: 'ຊັບສິນ (Assets)',
+  liability: 'ໜີ້ສິນ (Liabilities)',
+  equity: 'ທຶນຂອງເຈົ້າຂອງ (Equity)',
+  revenue: 'ລາຍໄດ້ (Revenue)',
+  expense: 'ຕົ້ນທຶນ ແລະ ຄ່າໃຊ້ຈ່າຍ (Expenses)',
 };
 
 export function AccountingPage() {
@@ -36,8 +36,8 @@ export function AccountingPage() {
   const [description, setDescription] = useState('');
   const [referenceNo, setReferenceNo] = useState('');
   const [lines, setLines] = useState<JournalLine[]>([
-    { accountCode: '1110', accountName: 'เงินสดในมือ', debitLak: 0, creditLak: 0 },
-    { accountCode: '3100', accountName: 'ทุนของเจ้าของกิจการ', debitLak: 0, creditLak: 0 },
+    { accountCode: '1110', accountName: 'ເງິນສົດໃນມື', debitLak: 0, creditLak: 0 },
+    { accountCode: '3100', accountName: 'ທຶນຂອງເຈົ້າຂອງກິດຈະການ', debitLak: 0, creditLak: 0 },
   ]);
   const [saving, setSaving] = useState(false);
 
@@ -169,11 +169,11 @@ export function AccountingPage() {
       setModalOpen(false);
       setDescription('');
       setReferenceNo('');
-      setFeedback({ type: 'ok', text: 'บันทึกสมุดรายวันทั่วไป (Double-Entry) เรียบร้อยแล้ว' });
+      setFeedback({ type: 'ok', text: 'ບັນທຶກປຶ້ມບັນຊີປະຈຳວັນທົ່ວໄປ (Double-Entry) ຮຽບຮ້ອຍແລ້ວ' });
     } catch (err) {
       setFeedback({
         type: 'err',
-        text: err instanceof Error ? err.message : 'ไม่สามารถบันทึกสมุดรายวันได้',
+        text: err instanceof Error ? err.message : 'ບໍ່ສາມາດບັນທຶກປຶ້ມບັນຊີປະຈຳວັນໄດ້',
       });
     } finally {
       setSaving(false);
@@ -209,11 +209,11 @@ export function AccountingPage() {
         <div className="inline-flex bg-slate-100 p-1 rounded-lg self-start flex-wrap gap-0.5">
           {(
             [
-              { key: 'journals', label: `สมุดรายวัน (${journals.length})`, icon: BookOpen },
-              { key: 'coa', label: 'ผังบัญชี (COA)', icon: Layers },
-              { key: 'ledger', label: 'บัญชีแยกประเภท', icon: FileSpreadsheet },
-              { key: 'trial', label: 'งบทดลอง', icon: Scale },
-              { key: 'statements', label: 'งบกำไรขาดทุน & งบดุล', icon: FileSpreadsheet },
+              { key: 'journals', label: `ປຶ້ມບັນຊີປະຈຳວັນ (${journals.length})`, icon: BookOpen },
+              { key: 'coa', label: 'ຜັງບັນຊີ (COA)', icon: Layers },
+              { key: 'ledger', label: 'ບັນຊີແຍກປະເພດ', icon: FileSpreadsheet },
+              { key: 'trial', label: 'ໃບດຸ່ນດ່ຽງທົດລອງ', icon: Scale },
+              { key: 'statements', label: 'ໃບລາຍງານຜົນໄດ້ຮັບ & ໃບສະຫຼຸບຊັບສົມບັດ', icon: FileSpreadsheet },
             ] as const
           ).map((tab) => {
             const Icon = tab.icon;
@@ -240,7 +240,7 @@ export function AccountingPage() {
             className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold rounded-lg cursor-pointer self-start lg:self-auto"
           >
             <Plus className="w-4 h-4" />
-            ลงบัญชีรายวัน (JV)
+            ລົງບັນຊີປະຈຳວັນ (JV)
           </button>
         )}
       </div>
@@ -258,16 +258,16 @@ export function AccountingPage() {
                   <span className="text-sm font-semibold text-slate-900">{j.description}</span>
                 </div>
                 <div className="text-xs text-slate-500 tabular-nums">
-                  {j.entryDate} · โดย {j.createdByName}
+                  {j.entryDate} · ໂດຍ {j.createdByName}
                 </div>
               </div>
               <table className="w-full text-xs">
                 <thead>
                   <tr className="text-slate-500 border-b border-slate-100">
-                    <th className="py-1.5 text-left">รหัสบัญชี</th>
-                    <th className="py-1.5 text-left">ชื่อบัญชี</th>
-                    <th className="py-1.5 text-right">เดบิต (Dr)</th>
-                    <th className="py-1.5 text-right">เครดิต (Cr)</th>
+                    <th className="py-1.5 text-left">ລະຫັດບັນຊີ</th>
+                    <th className="py-1.5 text-left">ຊື່ບັນຊີ</th>
+                    <th className="py-1.5 text-right">ເດບິດ (Dr)</th>
+                    <th className="py-1.5 text-right">ເຄຣດິດ (Cr)</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
@@ -291,7 +291,7 @@ export function AccountingPage() {
           ))}
           {journals.length === 0 && (
             <div className="bg-white border border-slate-200 rounded-xl py-12 text-center text-xs text-slate-500">
-              ยังไม่มีรายการสมุดรายวัน ระบบจะบันทึกรายการคู่ให้อัตโนมัติเมื่อมีการขาย ซื้อ รับ/จ่ายหนี้ หรือลงรายรับ-รายจ่าย
+              ຍັງບໍ່ມີລາຍການປຶ້ມບັນຊີປະຈຳວັນ ລະບົບຈະບັນທຶກລາຍການຄູ່ໃຫ້ອັດຕະໂນມັດເມື່ອມີການຂາຍ ຊື້ ຮັບ/ຈ່າຍໜີ້ ຫຼື ລົງລາຍຮັບ-ລາຍຈ່າຍ
             </div>
           )}
         </div>
@@ -303,10 +303,10 @@ export function AccountingPage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-600">
-                <th className="py-3 px-4">รหัสบัญชี</th>
-                <th className="py-3 px-4">ชื่อบัญชี</th>
-                <th className="py-3 px-4">หมวดบัญชี</th>
-                <th className="py-3 px-4 text-right">ยอดคงเหลือสุทธิ</th>
+                <th className="py-3 px-4">ລະຫັດບັນຊີ</th>
+                <th className="py-3 px-4">ຊື່ບັນຊີ</th>
+                <th className="py-3 px-4">ໝວດບັນຊີ</th>
+                <th className="py-3 px-4 text-right">ຍອດຄົງເຫຼືອສຸດທິ</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-sm">
@@ -331,7 +331,7 @@ export function AccountingPage() {
       {activeTab === 'ledger' && (
         <div className="space-y-4">
           <div className="bg-white border border-slate-200 rounded-xl p-4 flex items-center gap-3">
-            <label className="text-xs font-semibold text-slate-700">เลือกบัญชีแยกประเภท:</label>
+            <label className="text-xs font-semibold text-slate-700">ເລືອກບັນຊີແຍກປະເພດ:</label>
             <select
               value={selectedLedgerAccount}
               onChange={(e) => setSelectedLedgerAccount(e.target.value)}
@@ -348,11 +348,11 @@ export function AccountingPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-600">
-                  <th className="py-3 px-4">วันที่</th>
-                  <th className="py-3 px-4">เลขที่ JV</th>
-                  <th className="py-3 px-4">รายละเอียด</th>
-                  <th className="py-3 px-4 text-right">เดบิต</th>
-                  <th className="py-3 px-4 text-right">เครดิต</th>
+                  <th className="py-3 px-4">ວັນທີ</th>
+                  <th className="py-3 px-4">ເລກທີ JV</th>
+                  <th className="py-3 px-4">ລາຍລະອຽດ</th>
+                  <th className="py-3 px-4 text-right">ເດບິດ</th>
+                  <th className="py-3 px-4 text-right">ເຄຣດິດ</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-sm">
@@ -372,7 +372,7 @@ export function AccountingPage() {
                 {ledgerRows.length === 0 && (
                   <tr>
                     <td colSpan={5} className="py-10 text-center text-xs text-slate-500">
-                      ยังไม่มีความเคลื่อนไหวในบัญชีนี้
+                      ຍັງບໍ່ມີການເຄື່ອນໄຫວໃນບັນຊີນີ້
                     </td>
                   </tr>
                 )}
@@ -388,10 +388,10 @@ export function AccountingPage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-600">
-                <th className="py-3 px-4">รหัสบัญชี</th>
-                <th className="py-3 px-4">ชื่อบัญชี</th>
-                <th className="py-3 px-4 text-right">เดบิตคงเหลือ</th>
-                <th className="py-3 px-4 text-right">เครดิตคงเหลือ</th>
+                <th className="py-3 px-4">ລະຫັດບັນຊີ</th>
+                <th className="py-3 px-4">ຊື່ບັນຊີ</th>
+                <th className="py-3 px-4 text-right">ເດບິດຄົງເຫຼືອ</th>
+                <th className="py-3 px-4 text-right">ເຄຣດິດຄົງເຫຼືອ</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-sm">
@@ -413,7 +413,7 @@ export function AccountingPage() {
                 );
               })}
               <tr className="bg-blue-50/70 font-bold text-slate-900 border-t-2 border-slate-200">
-                <td colSpan={2} className="py-3 px-4">รวมงบทดลอง (Trial Balance)</td>
+                <td colSpan={2} className="py-3 px-4">ລວມໃບດຸ່ນດ່ຽງທົດລອງ (Trial Balance)</td>
                 <td className="py-3 px-4 text-right tabular-nums text-blue-700">
                   {formatLak(trialTotals.dr)}
                 </td>
@@ -432,31 +432,31 @@ export function AccountingPage() {
           {/* Income Statement */}
           <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-3">
             <h3 className="text-sm font-bold text-slate-900 border-b border-slate-100 pb-2">
-              งบกำไรขาดทุน (Income Statement)
+              ໃບລາຍງານຜົນໄດ້ຮັບ (Income Statement)
             </h3>
             <div className="space-y-2 text-sm tabular-nums">
               <div className="flex justify-between">
-                <span className="text-slate-600">รายได้จากการขายและรายได้อื่น</span>
+                <span className="text-slate-600">ລາຍໄດ້ຈາກການຂາຍ ແລະ ລາຍໄດ້ອື່ນ</span>
                 <span className="font-semibold text-slate-900">
                   {formatLak(financialStatements.revenue)}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-600">หัก ต้นทุนขาย (COGS)</span>
+                <span className="text-slate-600">ຫັກ ຕົ້ນທຶນຂາຍ (COGS)</span>
                 <span className="text-red-700">-{formatLak(financialStatements.cogs)}</span>
               </div>
               <div className="flex justify-between pt-2 border-t border-slate-100 font-semibold">
-                <span>กำไรขั้นต้น (Gross Profit)</span>
+                <span>ກຳໄລຂັ້ນຕົ້ນ (Gross Profit)</span>
                 <span className="text-blue-700">
                   {formatLak(financialStatements.grossProfit)}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-600">หัก ค่าใช้จ่ายดำเนินงาน</span>
+                <span className="text-slate-600">ຫັກ ຄ່າໃຊ້ຈ່າຍດຳເນີນງານ</span>
                 <span className="text-red-700">-{formatLak(financialStatements.opExpenses)}</span>
               </div>
               <div className="flex justify-between pt-2 border-t-2 border-slate-200 font-bold text-base">
-                <span>กำไรสุทธิ (Net Profit)</span>
+                <span>ກຳໄລສຸດທິ (Net Profit)</span>
                 <span
                   className={
                     financialStatements.netProfit >= 0 ? 'text-green-700' : 'text-red-700'
@@ -471,29 +471,29 @@ export function AccountingPage() {
           {/* Balance Sheet */}
           <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-3">
             <h3 className="text-sm font-bold text-slate-900 border-b border-slate-100 pb-2">
-              งบดุล / งบแสดงฐานะการเงิน (Balance Sheet)
+              ໃບສະຫຼຸບຊັບສົມບັດ / ງົບດຸນ (Balance Sheet)
             </h3>
             <div className="space-y-2 text-sm tabular-nums">
               <div className="flex justify-between font-semibold text-slate-900">
-                <span>รวมสินทรัพย์ (Assets)</span>
+                <span>ລວມຊັບສິນ (Assets)</span>
                 <span className="text-blue-700">{formatLak(financialStatements.assets)}</span>
               </div>
               <div className="pt-2 border-t border-slate-100 space-y-1.5">
                 <div className="flex justify-between text-slate-600">
-                  <span>หนี้สิน (Liabilities)</span>
+                  <span>ໜີ້ສິນ (Liabilities)</span>
                   <span>{formatLak(financialStatements.liabilities)}</span>
                 </div>
                 <div className="flex justify-between text-slate-600">
-                  <span>ทุนของเจ้าของ (Equity)</span>
+                  <span>ທຶນຂອງເຈົ້າຂອງ (Equity)</span>
                   <span>{formatLak(financialStatements.equity)}</span>
                 </div>
                 <div className="flex justify-between text-slate-600">
-                  <span>กำไร (ขาดทุน) สะสมงวดนี้</span>
+                  <span>ກຳໄລ (ຂາດທຶນ) ສະສົມງວດນີ້</span>
                   <span>{formatLak(financialStatements.netProfit)}</span>
                 </div>
               </div>
               <div className="flex justify-between pt-2 border-t-2 border-slate-200 font-bold text-base">
-                <span>รวมหนี้สินและส่วนของเจ้าของ</span>
+                <span>ລວມໜີ້ສິນ ແລະ ສ່ວນຂອງເຈົ້າຂອງ</span>
                 <span className="text-blue-700">
                   {formatLak(financialStatements.totalLiabAndEquity)}
                 </span>
@@ -509,7 +509,7 @@ export function AccountingPage() {
           <div className="w-full max-w-2xl bg-white border border-slate-200 rounded-xl p-6">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
               <h3 className="text-base font-semibold text-slate-900">
-                บันทึกรายการสมุดรายวันทั่วไป (Double-Entry)
+                ບັນທຶກລາຍການປຶ້ມບັນຊີປະຈຳວັນທົ່ວໄປ (Double-Entry)
               </h3>
               <button
                 type="button"
@@ -522,7 +522,7 @@ export function AccountingPage() {
             <form onSubmit={handleCreateJournal} className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">วันที่</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">ວັນທີ</label>
                   <input
                     type="date"
                     required
@@ -532,7 +532,7 @@ export function AccountingPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">เลขที่อ้างอิง</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">ເລກທີອ້າງອີງ</label>
                   <input
                     type="text"
                     maxLength={60}
@@ -544,7 +544,7 @@ export function AccountingPage() {
               </div>
               <div>
                 <label className="block text-xs font-medium text-slate-700 mb-1">
-                  คำอธิบายรายการ *
+                  ຄຳອະທິບາຍລາຍການ *
                 </label>
                 <input
                   type="text"
@@ -552,25 +552,25 @@ export function AccountingPage() {
                   maxLength={300}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="เช่น เพิ่มทุนหมุนเวียนร้าน / ปรับปรุงบัญชี"
+                  placeholder="ເຊັ່ນ ເພີ່ມທຶນໝູນວຽນຮ້ານ / ປັບປຸງບັນຊີ"
                   className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg"
                 />
               </div>
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-slate-700">บรรทัดบัญชี (เดบิต / เครดิต)</span>
+                  <span className="text-xs font-semibold text-slate-700">ແຖວບັນຊີ (ເດບິດ / ເຄຣດິດ)</span>
                   <button
                     type="button"
                     onClick={() =>
                       setLines((prev) => [
                         ...prev,
-                        { accountCode: '1110', accountName: 'เงินสดในมือ', debitLak: 0, creditLak: 0 },
+                        { accountCode: '1110', accountName: 'ເງິນສົດໃນມື', debitLak: 0, creditLak: 0 },
                       ])
                     }
                     className="text-xs font-semibold text-blue-600 hover:underline cursor-pointer"
                   >
-                    + เพิ่มบรรทัด
+                    + ເພີ່ມແຖວ
                   </button>
                 </div>
                 {lines.map((line, idx) => (
@@ -598,7 +598,7 @@ export function AccountingPage() {
                     <input
                       type="number"
                       min={0}
-                      placeholder="เดบิต"
+                      placeholder="ເດບິດ"
                       value={line.debitLak}
                       onChange={(e) => {
                         const next = [...lines];
@@ -613,7 +613,7 @@ export function AccountingPage() {
                     <input
                       type="number"
                       min={0}
-                      placeholder="เครดิต"
+                      placeholder="ເຄຣດິດ"
                       value={line.creditLak}
                       onChange={(e) => {
                         const next = [...lines];
@@ -639,10 +639,10 @@ export function AccountingPage() {
 
               <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 flex justify-between text-xs tabular-nums">
                 <span>
-                  รวมเดบิต: <strong>{formatLak(modalDebitTotal)}</strong>
+                  ລວມເດບິດ: <strong>{formatLak(modalDebitTotal)}</strong>
                 </span>
                 <span>
-                  รวมเครดิต: <strong>{formatLak(modalCreditTotal)}</strong>
+                  ລວມເຄຣດິດ: <strong>{formatLak(modalCreditTotal)}</strong>
                 </span>
                 <span
                   className={
@@ -652,8 +652,8 @@ export function AccountingPage() {
                   }
                 >
                   {modalDebitTotal > 0 && modalDebitTotal === modalCreditTotal
-                    ? 'สมดุลแล้ว'
-                    : 'ยอดยังไม่สมดุล'}
+                    ? 'ດຸ່ນດ່ຽງແລ້ວ'
+                    : 'ຍອດຍັງບໍ່ດຸ່ນດ່ຽງ'}
                 </span>
               </div>
 
@@ -663,14 +663,14 @@ export function AccountingPage() {
                   onClick={() => setModalOpen(false)}
                   className="px-4 py-2 text-sm font-medium text-slate-600 border border-slate-200 rounded-lg cursor-pointer"
                 >
-                  ยกเลิก
+                  ຍົກເລີກ
                 </button>
                 <button
                   type="submit"
                   disabled={saving || modalDebitTotal <= 0 || modalDebitTotal !== modalCreditTotal}
                   className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-lg cursor-pointer"
                 >
-                  {saving ? 'กำลังบันทึก...' : 'บันทึกลงสมุดรายวัน'}
+                  {saving ? 'ກຳລັງບັນທຶກ...' : 'ບັນທຶກລົງປຶ້ມບັນຊີປະຈຳວັນ'}
                 </button>
               </div>
             </form>

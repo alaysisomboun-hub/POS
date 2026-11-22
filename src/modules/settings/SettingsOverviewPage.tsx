@@ -66,7 +66,7 @@ export function SettingsOverviewPage() {
       setPaperSize(settings.receiptSettings?.paperSize ?? '80mm');
       setReceiptPrefix(settings.receiptSettings?.prefix ?? 'INV');
       setHeaderText(settings.receiptSettings?.headerText ?? organization?.name ?? '');
-      setFooterText(settings.receiptSettings?.footerText ?? 'ขอบคุณที่ใช้บริการ');
+      setFooterText(settings.receiptSettings?.footerText ?? 'ຂອບໃຈທີ່ໃຊ້ບໍລິການ');
       setShowQr(settings.receiptSettings?.showQr ?? true);
       setShowTaxId(Boolean(settings.receiptSettings?.showTaxId));
       setRoundingMode(settings.currencySettings?.roundingMode ?? 'integer');
@@ -202,7 +202,7 @@ export function SettingsOverviewPage() {
       try {
         handleFirestoreError(error, OperationType.UPDATE, `settings/${organization.organizationId}`);
       } catch (err) {
-        setErrorMsg(err instanceof Error ? err.message : 'ไม่สามารถบันทึกการตั้งค่าได้');
+        setErrorMsg(err instanceof Error ? err.message : 'ບໍ່ສາມາດບັນທຶກການຕັ້ງຄ່າໄດ້');
       }
     } finally {
       setSaving(false);
@@ -213,10 +213,10 @@ export function SettingsOverviewPage() {
     <div className="max-w-4xl space-y-5">
       <div>
         <h2 className="text-base font-semibold text-slate-900">
-          ตั้งค่าร้านค้า ใบเสร็จ ภาษี และนโยบายระบบ
+          ຕັ້ງຄ່າຮ້ານຄ້າ ໃບບິນ ພາສີ ແລະ ນະໂຍບາຍລະບົບ
         </h2>
         <p className="text-xs text-slate-500">
-          ระบบร้านค้าเดี่ยว (1 สาขา) · สกุลเงินหลัก: LAK (กีบ) · เขตเวลา: Asia/Vientiane · รูปแบบวันที่: DD/MM/YYYY
+          ລະບົບຮ້ານຄ້າດ່ຽວ (1 ສາຂາ) · ສະກຸນເງິນຫຼັກ: LAK (ກີບ) · ເຂດເວລາ: Asia/Vientiane · ຮູບແບບວັນທີ: DD/MM/YYYY
         </p>
       </div>
 
@@ -229,7 +229,7 @@ export function SettingsOverviewPage() {
       {savedNotice && (
         <div className="p-3 rounded-lg bg-green-50 border border-green-200 text-xs text-green-800 flex items-center gap-2">
           <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" />
-          บันทึกการตั้งค่าและประวัติการแก้ไขลง Audit Log เรียบร้อยแล้ว
+          ບັນທຶກການຕັ້ງຄ່າ ແລະ ປະຫວັດການແກ້ໄຂລົງ Audit Log ຮຽບຮ້ອຍແລ້ວ
         </div>
       )}
 
@@ -238,12 +238,12 @@ export function SettingsOverviewPage() {
         <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-4">
           <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
             <Store className="w-4 h-4 text-blue-600" />
-            <h3 className="text-sm font-semibold text-slate-900">ข้อมูลร้านค้า</h3>
+            <h3 className="text-sm font-semibold text-slate-900">ຂໍ້ມູນຮ້ານຄ້າ</h3>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">ชื่อร้านค้า *</label>
+              <label className="block text-xs font-medium text-slate-700 mb-1">ຊື່ຮ້ານຄ້າ *</label>
               <input
                 type="text"
                 required
@@ -256,7 +256,7 @@ export function SettingsOverviewPage() {
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-700 mb-1">
-                เบอร์โทรศัพท์ร้าน
+                ເບີໂທລະສັບຮ້ານ
               </label>
               <input
                 type="text"
@@ -270,7 +270,7 @@ export function SettingsOverviewPage() {
             </div>
             <div className="sm:col-span-2">
               <label className="block text-xs font-medium text-slate-700 mb-1">
-                ที่อยู่ร้านค้า (สำหรับหัวใบเสร็จ)
+                ທີ່ຢູ່ຮ້ານຄ້າ (ສຳລັບຫົວໃບບິນ)
               </label>
               <input
                 type="text"
@@ -278,13 +278,13 @@ export function SettingsOverviewPage() {
                 maxLength={300}
                 value={storeAddress}
                 onChange={(e) => setStoreAddress(e.target.value)}
-                placeholder="บ้าน ถนน เมือง แขวง"
+                placeholder="ບ້ານ ຖະໜົນ ເມືອງ ແຂວງ"
                 className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg disabled:bg-slate-50"
               />
             </div>
             <div className="sm:col-span-2">
               <label className="block text-xs font-medium text-slate-700 mb-1">
-                URL โลโก้ร้าน (ถ้ามี)
+                URL ໂລໂກ້ຮ້ານ (ຖ້າມີ)
               </label>
               <div className="flex items-center gap-3">
                 <input
@@ -299,7 +299,7 @@ export function SettingsOverviewPage() {
                 {logoUrl.trim() && (
                   <img
                     src={logoUrl.trim()}
-                    alt="โลโก้ร้าน"
+                    alt="ໂລໂກ້ຮ້ານ"
                     onError={(e) => {
                       e.currentTarget.style.display = 'none';
                     }}
@@ -315,13 +315,13 @@ export function SettingsOverviewPage() {
         <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-4">
           <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
             <Printer className="w-4 h-4 text-blue-600" />
-            <h3 className="text-sm font-semibold text-slate-900">รูปแบบใบเสร็จรับเงิน</h3>
+            <h3 className="text-sm font-semibold text-slate-900">ຮູບແບບໃບບິນຮັບເງິນ</h3>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-medium text-slate-700 mb-1">
-                คำนำหน้าเลขที่บิล
+                ຄຳນຳໜ້າເລກທີບິນ
               </label>
               <input
                 type="text"
@@ -334,7 +334,7 @@ export function SettingsOverviewPage() {
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-700 mb-1">
-                ขนาดกระดาษเครื่องพิมพ์ความร้อน
+                ຂະໜາດເຈ້ຍເຄື່ອງພິມຄວາມຮ້ອນ
               </label>
               <select
                 disabled={!canManage}
@@ -342,13 +342,13 @@ export function SettingsOverviewPage() {
                 onChange={(e) => setPaperSize(e.target.value as '80mm' | '58mm')}
                 className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white disabled:bg-slate-50"
               >
-                <option value="80mm">80mm (มาตรฐาน)</option>
-                <option value="58mm">58mm (ขนาดเล็ก)</option>
+                <option value="80mm">80mm (ມາດຕະຖານ)</option>
+                <option value="58mm">58mm (ຂະໜາດນ້ອຍ)</option>
               </select>
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-700 mb-1">
-                ข้อความหัวใบเสร็จ
+                ຂໍ້ຄວາມຫົວໃບບິນ
               </label>
               <input
                 type="text"
@@ -356,13 +356,13 @@ export function SettingsOverviewPage() {
                 maxLength={120}
                 value={headerText}
                 onChange={(e) => setHeaderText(e.target.value)}
-                placeholder="ข้อความบรรทัดบนของใบเสร็จ"
+                placeholder="ຂໍ້ຄວາມແຖວເທິງຂອງໃບບິນ"
                 className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg disabled:bg-slate-50"
               />
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-700 mb-1">
-                ข้อความท้ายใบเสร็จ
+                ຂໍ້ຄວາມທ້າຍໃບບິນ
               </label>
               <input
                 type="text"
@@ -370,7 +370,7 @@ export function SettingsOverviewPage() {
                 maxLength={200}
                 value={footerText}
                 onChange={(e) => setFooterText(e.target.value)}
-                placeholder="เช่น ขอบคุณที่ใช้บริการ"
+                placeholder="ເຊັ່ນ ຂອບໃຈທີ່ໃຊ້ບໍລິການ"
                 className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg disabled:bg-slate-50"
               />
             </div>
@@ -385,7 +385,7 @@ export function SettingsOverviewPage() {
                 onChange={(e) => setShowQr(e.target.checked)}
                 className="w-4 h-4 rounded border-slate-300 text-blue-600"
               />
-              แสดงบาร์โค้ดเลขที่บิลท้ายใบเสร็จ
+              ສະແດງບາໂຄດເລກທີບິນທ້າຍໃບບິນ
             </label>
             <label className="inline-flex items-center gap-2 text-xs sm:text-sm text-slate-700 cursor-pointer">
               <input
@@ -395,7 +395,7 @@ export function SettingsOverviewPage() {
                 onChange={(e) => setShowTaxId(e.target.checked)}
                 className="w-4 h-4 rounded border-slate-300 text-blue-600 disabled:opacity-50"
               />
-              แสดงเลขประจำตัวผู้เสียภาษี (TIN) บนใบเสร็จ
+              ສະແດງເລກປະຈຳຕົວຜູ້ເສຍພາສີ (TIN) ເທິງໃບບິນ
             </label>
           </div>
         </div>
@@ -404,24 +404,24 @@ export function SettingsOverviewPage() {
         <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-4">
           <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
             <Coins className="w-4 h-4 text-blue-600" />
-            <h3 className="text-sm font-semibold text-slate-900">สกุลเงิน (LAK) และภาษี</h3>
+            <h3 className="text-sm font-semibold text-slate-900">ສະກຸນເງິນ (LAK) ແລະ ພາສີ</h3>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-medium text-slate-700 mb-1">
-                สกุลเงินหลักของระบบ
+                ສະກຸນເງິນຫຼັກຂອງລະບົບ
               </label>
               <input
                 type="text"
                 disabled
-                value="LAK (₭ · กีบลาว)"
+                value="LAK (₭ · ກີບລາວ)"
                 className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg text-slate-600"
               />
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-700 mb-1">
-                การปัดเศษยอดขาย (LAK)
+                ການປັດເສດຍອດຂາຍ (LAK)
               </label>
               <select
                 disabled={!canManage}
@@ -431,9 +431,9 @@ export function SettingsOverviewPage() {
                 }
                 className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white disabled:bg-slate-50"
               >
-                <option value="integer">จำนวนเต็ม (1 ₭)</option>
-                <option value="nearest_100">ปัดหลัก 100 ₭</option>
-                <option value="nearest_500">ปัดหลัก 500 ₭</option>
+                <option value="integer">ຈຳນວນເຕັມ (1 ₭)</option>
+                <option value="nearest_100">ປັດຫຼັກ 100 ₭</option>
+                <option value="nearest_500">ປັດຫຼັກ 500 ₭</option>
               </select>
             </div>
           </div>
@@ -442,10 +442,10 @@ export function SettingsOverviewPage() {
             <div className="flex items-center justify-between gap-4">
               <div>
                 <div className="text-sm font-medium text-slate-900">
-                  ตั้งค่าภาษี (เปิดใช้งานตามกฎหมายที่ร้านค้ายื่นจดทะเบียน)
+                  ຕັ້ງຄ່າພາສີ (ເປີດໃຊ້ງານຕາມກົດໝາຍທີ່ຮ້ານຄ້າຈົດທະບຽນ)
                 </div>
                 <div className="text-xs text-slate-500">
-                  ระบบจะคำนวณภาษีเฉพาะเมื่อเปิดใช้งานและกำหนดอัตราที่ถูกต้องแล้วเท่านั้น
+                  ລະບົບຈະຄຳນວນພາສີສະເພາະເມື່ອເປີດໃຊ້ງານ ແລະ ກຳນົດອັດຕາທີ່ຖືກຕ້ອງແລ້ວເທົ່ານັ້ນ
                 </div>
               </div>
               <label className="inline-flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer shrink-0">
@@ -456,14 +456,14 @@ export function SettingsOverviewPage() {
                   onChange={(e) => setTaxEnabled(e.target.checked)}
                   className="w-4 h-4 rounded border-slate-300 text-blue-600"
                 />
-                เปิดใช้งานภาษี
+                ເປີດໃຊ້ງານພາສີ
               </label>
             </div>
             {taxEnabled && (
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1">
-                    อัตราภาษี (%)
+                    ອັດຕາພາສີ (%)
                   </label>
                   <input
                     type="number"
@@ -478,7 +478,7 @@ export function SettingsOverviewPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1">
-                    รูปแบบการคิดภาษี
+                    ຮູບແບບການຄິດພາສີ
                   </label>
                   <select
                     disabled={!canManage}
@@ -486,13 +486,13 @@ export function SettingsOverviewPage() {
                     onChange={(e) => setTaxInclusive(e.target.value === 'inclusive')}
                     className="w-full px-3 py-1.5 text-sm bg-white border border-slate-200 rounded-lg"
                   >
-                    <option value="exclusive">บวกเพิ่มจากราคาสินค้า (Exclusive)</option>
-                    <option value="inclusive">รวมในราคาสินค้าแล้ว (Inclusive)</option>
+                    <option value="exclusive">ບວກເພີ່ມຈາກລາຄາສິນຄ້າ (Exclusive)</option>
+                    <option value="inclusive">ລວມໃນລາຄາສິນຄ້າແລ້ວ (Inclusive)</option>
                   </select>
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1">
-                    เลขประจำตัวผู้เสียภาษี (TIN)
+                    ເລກປະຈຳຕົວຜູ້ເສຍພາສີ (TIN)
                   </label>
                   <input
                     type="text"
@@ -512,18 +512,18 @@ export function SettingsOverviewPage() {
         <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-4">
           <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
             <Boxes className="w-4 h-4 text-blue-600" />
-            <h3 className="text-sm font-semibold text-slate-900">นโยบายคลังสินค้าและการแจ้งเตือน</h3>
+            <h3 className="text-sm font-semibold text-slate-900">ນະໂຍບາຍຄັງສິນຄ້າ ແລະ ການແຈ້ງເຕືອນ</h3>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-medium text-slate-700 mb-1">
-                วิธีคำนวณต้นทุนสินค้า
+                ວິທີຄຳນວນຕົ້ນທຶນສິນຄ້າ
               </label>
               <input
                 type="text"
                 disabled
-                value="WAC (Weighted Average Cost · ถัวเฉลี่ยถ่วงน้ำหนัก)"
+                value="WAC (Weighted Average Cost · ຕົ້ນທຶນສະເລ່ຍຖ່ວງນ້ຳໜັກ)"
                 className="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg text-slate-600"
               />
             </div>
@@ -531,10 +531,10 @@ export function SettingsOverviewPage() {
             <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-200">
               <div>
                 <div className="text-xs font-semibold text-slate-900">
-                  อนุญาตให้ขายเมื่อสต็อกติดลบ
+                  ອະນຸຍາດໃຫ້ຂາຍເມື່ອສະຕັອກຕິດລົບ
                 </div>
                 <div className="text-[11px] text-slate-500">
-                  หากปิดไว้ ระบบ POS จะป้องกันการขายเกินจำนวนคงเหลือจริง
+                  ຫາກປິດໄວ້ ລະບົບ POS ຈະປ້ອງກັນການຂາຍເກີນຈຳນວນຄົງເຫຼືອຕົວຈິງ
                 </div>
               </div>
               <input
@@ -549,7 +549,7 @@ export function SettingsOverviewPage() {
             <div>
               <label className="flex items-center gap-1.5 text-xs font-medium text-slate-700 mb-1">
                 <Bell className="w-3.5 h-3.5 text-blue-600" />
-                แจ้งเตือนสินค้าใกล้หมดอายุล่วงหน้า (วัน)
+                ແຈ້ງເຕືອນສິນຄ້າໃກ້ໝົດອາຍຸລ່ວງໜ້າ (ມື້)
               </label>
               <input
                 type="number"
@@ -564,7 +564,7 @@ export function SettingsOverviewPage() {
 
             <div>
               <label className="block text-xs font-medium text-slate-700 mb-1">
-                เกณฑ์แจ้งเตือนค่าใช้จ่ายสูงผิดปกติ (%)
+                ເກນແຈ້ງເຕືອນລາຍຈ່າຍສູງຜິດປົກກະຕິ (%)
               </label>
               <input
                 type="number"
@@ -587,7 +587,7 @@ export function SettingsOverviewPage() {
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-semibold rounded-lg transition-colors cursor-pointer"
             >
               <Save className="w-4 h-4" />
-              {saving ? 'กำลังบันทึก...' : 'บันทึกการตั้งค่าทั้งหมด'}
+              {saving ? 'ກຳລັງບັນທຶກ...' : 'ບັນທຶກການຕັ້ງຄ່າທັງໝົດ'}
             </button>
           </div>
         )}

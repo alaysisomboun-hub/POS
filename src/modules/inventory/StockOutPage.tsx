@@ -25,10 +25,10 @@ import type {
 type OutReasonType = 'stock_out' | 'damaged' | 'expired' | 'lost';
 
 const OUT_TYPE_LABELS: Record<OutReasonType, string> = {
-  stock_out: 'เบิกใช้งาน / เบิกหน้าร้าน',
-  damaged: 'สินค้าชำรุด / เสียหาย',
-  expired: 'ตัดสินค้าหมดอายุ',
-  lost: 'สินค้าสูญหาย',
+  stock_out: 'ເບີກໃຊ້ງານ / ເບີກໜ້າຮ້ານ',
+  damaged: 'ສິນຄ້າຊຳລຸດ / ເສຍຫາຍ',
+  expired: 'ຕັດສິນຄ້າໝົດອາຍຸ',
+  lost: 'ສິນຄ້າສູນຫາຍ',
 };
 
 export function StockOutPage() {
@@ -212,7 +212,7 @@ export function StockOutPage() {
 
       setNotice({
         type: 'ok',
-        text: `บันทึกตัดสต็อก "${selectedProduct.name}" จำนวน -${deductBaseQty.toLocaleString('en-US')} ${selectedProduct.baseUnitName} เรียบร้อยแล้ว`,
+        text: `ບັນທຶກຕັດສະຕ໋ອກ "${selectedProduct.name}" ຈຳນວນ -${deductBaseQty.toLocaleString('en-US')} ${selectedProduct.baseUnitName} ສຳເລັດແລ້ວ`,
       });
       setInputQty('1');
       setSpecificLotId('');
@@ -221,7 +221,7 @@ export function StockOutPage() {
     } catch (err) {
       setNotice({
         type: 'err',
-        text: err instanceof Error ? err.message : 'ไม่สามารถเบิกสินค้าออกได้',
+        text: err instanceof Error ? err.message : 'ບໍ່ສາມາດເບີກສິນຄ້າອອກໄດ້',
       });
     } finally {
       setSaving(false);
@@ -233,10 +233,10 @@ export function StockOutPage() {
       <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-5">
         <div>
           <h2 className="text-base font-semibold text-slate-900">
-            เบิกสินค้าออก / ตัดสินค้าเสียหาย หมดอายุ สูญหาย
+            ເບີກສິນຄ້າອອກ / ຕັດສິນຄ້າເສຍຫາຍ ໝົດອາຍຸ ສູນຫາຍ
           </h2>
           <p className="text-xs text-slate-500">
-            รองรับการตัดสต็อกแบบ FEFO (ล็อตหมดอายุก่อนออกก่อน) หรือเลือกล็อตเฉพาะ พร้อมอัปเดต Stock Ledger ทันที
+            ຮອງຮັບການຕັດສະຕ໋ອກແບບ FEFO (ລ໋ອດໝົດອາຍຸກ່ອນອອກກ່ອນ) ຫຼື ເລືອກລ໋ອດສະເພາະ ພ້ອມອັບເດດ Stock Ledger ທັນທີ
           </p>
         </div>
 
@@ -257,7 +257,7 @@ export function StockOutPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-medium text-slate-700 mb-1">
-                ค้นหาสินค้า (ชื่อ / SKU / บาร์โค้ด)
+                ຄົ້ນຫາສິນຄ້າ (ຊື່ / SKU / ບາໂຄ້ດ)
               </label>
               <div className="relative">
                 <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -274,21 +274,21 @@ export function StockOutPage() {
                     );
                     if (exact) handleSelectProduct(exact.productId);
                   }}
-                  placeholder="พิมพ์ชื่อสินค้า หรือยิงสแกนบาร์โค้ด..."
+                  placeholder="ພິມຊື່ສິນຄ້າ ຫຼື ສະແກນບາໂຄ້ດ..."
                   className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">เลือกสินค้า *</label>
+              <label className="block text-xs font-medium text-slate-700 mb-1">ເລືອກສິນຄ້າ *</label>
               <select
                 required
                 value={selectedProductId}
                 onChange={(e) => handleSelectProduct(e.target.value)}
                 className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white"
               >
-                <option value="">— เลือกสินค้า —</option>
+                <option value="">— ເລືອກສິນຄ້າ —</option>
                 {filteredProducts.map((p) => (
                   <option key={p.productId} value={p.productId}>
                     {p.sku} · {p.name}
@@ -302,7 +302,7 @@ export function StockOutPage() {
             <>
               <div className="p-3.5 rounded-lg bg-slate-50 border border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs">
                 <div>
-                  คงเหลือปัจจุบัน:{' '}
+                  ຄົງເຫຼືອປັດຈຸບັນ:{' '}
                   <strong className="text-slate-900 tabular-nums">
                     {formatMultiUnitBreakdown(
                       currentBaseQty,
@@ -313,7 +313,7 @@ export function StockOutPage() {
                   </strong>
                 </div>
                 <div>
-                  หลังตัดสต็อก:{' '}
+                  ຫຼັງຕັດສະຕ໋ອກ:{' '}
                   <strong
                     className={`tabular-nums ${
                       currentBaseQty - deductBaseQty < 0 ? 'text-red-600' : 'text-blue-700'
@@ -327,7 +327,7 @@ export function StockOutPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">ประเภทการเบิกออก *</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">ປະເພດການເບີກອອກ *</label>
                   <select
                     value={movementType}
                     onChange={(e) => setMovementType(e.target.value as OutReasonType)}
@@ -342,7 +342,7 @@ export function StockOutPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">หน่วยที่เบิก *</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">ໜ່ວຍທີ່ເບີກ *</label>
                   <select
                     value={selectedUnit?.unitId ?? ''}
                     onChange={(e) => setSelectedUnitId(e.target.value)}
@@ -357,7 +357,7 @@ export function StockOutPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">จำนวนที่เบิก *</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">ຈຳນວນທີ່ເບີກ *</label>
                   <input
                     type="number"
                     min={1}
@@ -370,18 +370,18 @@ export function StockOutPage() {
 
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1">
-                    เลือกล็อต (ค่าเริ่มต้น: FEFO)
+                    ເລືອກລ໋ອດ (ຄ່າເລີ່ມຕົ້ນ: FEFO)
                   </label>
                   <select
                     value={specificLotId}
                     onChange={(e) => setSpecificLotId(e.target.value)}
                     className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white"
                   >
-                    <option value="">ตัดอัตโนมัติ (FEFO)</option>
+                    <option value="">ຕັດອັດຕະໂນມັດ (FEFO)</option>
                     {productActiveLots.map((l) => (
                       <option key={l.lotId} value={l.lotId}>
-                        {l.lotNumber} · คงเหลือ {l.remainingQtyBase}{' '}
-                        {l.expiryDate ? `(หมดอายุ ${formatDateVientiane(l.expiryDate)})` : ''}
+                        {l.lotNumber} · ຄົງເຫຼືອ {l.remainingQtyBase}{' '}
+                        {l.expiryDate ? `(ໝົດອາຍຸ ${formatDateVientiane(l.expiryDate)})` : ''}
                       </option>
                     ))}
                   </select>
@@ -391,7 +391,7 @@ export function StockOutPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1">
-                    เลขที่เอกสารอ้างอิง (ถ้ามี)
+                    ເລກທີເອກະສານອ້າງອີງ (ຖ້າມີ)
                   </label>
                   <input
                     type="text"
@@ -403,7 +403,7 @@ export function StockOutPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1">
-                    เหตุผล / หมายเหตุ *
+                    ເຫດຜົນ / ໝາຍເຫດ *
                   </label>
                   <input
                     type="text"
@@ -411,7 +411,7 @@ export function StockOutPage() {
                     maxLength={300}
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
-                    placeholder="ระบุสาเหตุการเบิกหรือตัดสต็อก"
+                    placeholder="ລະບຸສາເຫດການເບີກ ຫຼື ຕັດສະຕ໋ອກ"
                     className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg"
                   />
                 </div>
@@ -425,7 +425,7 @@ export function StockOutPage() {
                     className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-semibold rounded-lg cursor-pointer"
                   >
                     <PackageMinus className="w-4 h-4" />
-                    {saving ? 'กำลังบันทึก...' : 'ยืนยันเบิกสินค้าออก'}
+                    {saving ? 'ກຳລັງບັນທຶກ...' : 'ຢືນຢັນເບີກສິນຄ້າອອກ'}
                   </button>
                 </div>
               )}
@@ -437,25 +437,25 @@ export function StockOutPage() {
       {/* Recent Stock Out History */}
       <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
         <div className="px-5 py-3.5 border-b border-slate-200 text-sm font-semibold text-slate-900">
-          ประวัติการเบิกและตัดสต็อกล่าสุด
+          ປະຫວັດການເບີກ ແລະ ຕັດສະຕ໋ອກຫຼ້າສຸດ
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-600">
-                <th className="py-2.5 px-4">วันเวลา</th>
-                <th className="py-2.5 px-4">ประเภท</th>
-                <th className="py-2.5 px-4">สินค้า / ล็อต</th>
-                <th className="py-2.5 px-4 text-right">จำนวนตัดออก (ฐาน)</th>
-                <th className="py-2.5 px-4 text-right">มูลค่าต้นทุน</th>
-                <th className="py-2.5 px-4">เหตุผล / ผู้บันทึก</th>
+                <th className="py-2.5 px-4">ວັນເວລາ</th>
+                <th className="py-2.5 px-4">ປະເພດ</th>
+                <th className="py-2.5 px-4">ສິນຄ້າ / ລ໋ອດ</th>
+                <th className="py-2.5 px-4 text-right">ຈຳນວນຕັດອອກ (ພື້ນຖານ)</th>
+                <th className="py-2.5 px-4 text-right">ມູນຄ່າຕົ້ນທຶນ</th>
+                <th className="py-2.5 px-4">ເຫດຜົນ / ຜູ້ບັນທຶກ</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-xs">
               {recentMoves.length === 0 && (
                 <tr>
                   <td colSpan={6} className="py-8 text-center text-slate-500">
-                    ยังไม่มีรายการเบิกสินค้าออก
+                    ຍັງບໍ່ມີລາຍການເບີກສິນຄ້າອອກ
                   </td>
                 </tr>
               )}
@@ -481,7 +481,7 @@ export function StockOutPage() {
                   </td>
                   <td className="py-2.5 px-4 text-slate-600">
                     <div className="font-medium text-slate-800">{m.reason}</div>
-                    <div className="text-slate-400">โดย {m.performedByName}</div>
+                    <div className="text-slate-400">ໂດຍ {m.performedByName}</div>
                   </td>
                 </tr>
               ))}

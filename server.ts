@@ -40,7 +40,7 @@ app.post('/api/ai/analyze', async (req, res) => {
   if (!apiKey) {
     res.status(500).json({
       error:
-        'ไม่พบ GEMINI_API_KEY ในเซิร์ฟเวอร์ กรุณาตรวจสอบการตั้งค่าคีย์ใน Settings > Secrets ก่อนใช้งาน AI วิเคราะห์ธุรกิจ',
+        'ບໍ່ພົບ GEMINI_API_KEY ໃນເຊີບເວີ ກະລຸນາກວດສອບການຕັ້ງຄ່າຄີໃນ Settings > Secrets ກ່ອນໃຊ້ງານ AI ວິເຄາະທຸລະກິດ',
     });
     return;
   }
@@ -51,7 +51,7 @@ app.post('/api/ai/analyze', async (req, res) => {
   };
 
   if (!metrics || typeof metrics !== 'object') {
-    res.status(400).json({ error: 'กรุณาส่งข้อมูลสรุปธุรกิจ (metrics) เพื่อทำการวิเคราะห์' });
+    res.status(400).json({ error: 'ກະລຸນາສົ່ງຂໍ້ມູນສະຫຼຸບທຸລະກິດ (metrics) ເພື່ອທຳການວິເຄາະ' });
     return;
   }
 
@@ -68,12 +68,12 @@ app.post('/api/ai/analyze', async (req, res) => {
     const userQuestion =
       typeof question === 'string' && question.trim().length > 0
         ? question.trim()
-        : 'วิเคราะห์ภาพรวมธุรกิจร้านขายของชำในรอบ 30 วันที่ผ่านมา ทั้งยอดขาย กำไรขั้นต้น สินค้าขายดี สินค้าเสี่ยงขาดสต็อก/หมดอายุ ค่าใช้จ่าย ลูกหนี้/เจ้าหนี้ พร้อมข้อเสนอแนะที่ทำได้ทันที';
+        : 'ວິເຄາະພາບລວມທຸລະກິດຮ້ານຂາຍເຄື່ອງຍ່ອຍ-ຂາຍສົ່ງໃນຮອບ 30 ວັນທີ່ຜ່ານມາ ທັງຍອດຂາຍ ກຳໄລຂັ້ນຕົ້ນ ສິນຄ້າຂາຍດີ ສິນຄ້າສ່ຽງຂາດສະຕັອກ/ໝົດອາຍຸ ຄ່າໃຊ້ຈ່າຍ ລູກໜີ້/ເຈົ້າໜີ້ ພ້ອມຂໍ້ສະເໜີແນະທີ່ທຳໄດ້ທັນທີ';
 
     const promptText = [
-      `คำถาม/โจทย์จากเจ้าของร้าน: ${userQuestion}`,
+      `ຄຳຖາມ/ໂຈດຈາກເຈົ້າຂອງຮ້ານ: ${userQuestion}`,
       '',
-      'ข้อมูลธุรกิจจริงจากระบบ POS (สกุลเงินกีบลาว LAK):',
+      'ຂໍ້ມູນທຸລະກິດຈິງຈາກລະບົບ POS (ສະກຸນເງິນກີບລາວ LAK):',
       JSON.stringify(metrics, null, 2),
     ].join('\n');
 
@@ -83,40 +83,40 @@ app.post('/api/ai/analyze', async (req, res) => {
       config: {
         thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
         systemInstruction:
-          'คุณคือผู้เชี่ยวชาญด้านการวิเคราะห์ธุรกิจค้าปลีกและร้านขายของชำ (Grocery POS Business Analyst) ที่ให้คำปรึกษาเจ้าของร้านในประเทศลาว/ไทย ใช้สกุลเงินกีบ (LAK) แบบจำนวนเต็มเสมอ ' +
-          'จงวิเคราะห์โดยอ้างอิงจากตัวเลขจริงในข้อมูล JSON ที่ได้รับเท่านั้น ห้ามแต่งตัวเลขขึ้นมาเอง ' +
-          'ตอบเป็นภาษาไทยที่กระชับ ชัดเจน ปฏิบัติตามได้จริง และสอดคล้องกับโครงสร้าง JSON ที่กำหนด',
+          'ທ່ານຄືຜູ້ຊ່ຽວຊານດ້ານການວິເຄາະທຸລະກິດຄ້າປີກ-ຄ້າສົ່ງ (Grocery POS Business Analyst) ທີ່ໃຫ້ຄຳປຶກສາເຈົ້າຂອງຮ້ານໃນປະເທດລາວ ໃຊ້ສະກຸນເງິນກີບ (LAK) ແບບຈຳນວນເຕັມສະເໝີ ' +
+          'ຈົ່ງວິເຄາະໂດຍອ້າງອີງຈາກຕົວເລກຈິງໃນຂໍ້ມູນ JSON ທີ່ໄດ້ຮັບເທົ່ານັ້ນ ຫ້າມສ້າງຕົວເລກຂຶ້ນມາເອງ ' +
+          'ຕອບເປັນພາສາລາວທີ່ກະຊັບ ຊັດເຈນ ປະຕິບັດຕາມໄດ້ຈິງ ແລະ ສອດຄ່ອງກັບໂຄງສ້າງ JSON ທີ່ກຳນົດ',
         responseMimeType: 'application/json',
         responseSchema: {
           type: Type.OBJECT,
           properties: {
             executiveSummary: {
               type: Type.STRING,
-              description: 'สรุปภาพรวมสถานะธุรกิจ 2-4 ประโยคพร้อมตัวเลขสำคัญจริง',
+              description: 'ສະຫຼຸບພາບລວມສະຖານະທຸລະກິດ 2-4 ປະໂຫຍກພ້ອມຕົວເລກສຳຄັນຈິງເປັນພາສາລາວ',
             },
             directAnswer: {
               type: Type.STRING,
-              description: 'คำตอบตรงประเด็นสำหรับคำถามที่เจ้าของร้านถาม',
+              description: 'ຄຳຕອບຕົງປະເດັນສຳລັບຄຳຖາມທີ່ເຈົ້າຂອງຮ້ານຖາມເປັນພາສາລາວ',
             },
             salesInsights: {
               type: Type.ARRAY,
               items: { type: Type.STRING },
-              description: 'ข้อค้นพบด้านยอดขาย สินค้าขายดี และสินค้าที่เคลื่อนไหวช้า 2-4 ข้อ',
+              description: 'ຂໍ້ຄົ້ນພົບດ້ານຍອດຂາຍ ສິນຄ້າຂາຍດີ ແລະ ສິນຄ້າທີ່ເຄື່ອນໄຫວຊ້າ 2-4 ຂໍ້',
             },
             stockAndExpiryRisks: {
               type: Type.ARRAY,
               items: { type: Type.STRING },
-              description: 'ความเสี่ยงด้านสต็อกใกล้หมด สินค้าหมด และล็อตใกล้หมดอายุ/หมดอายุ 2-4 ข้อ',
+              description: 'ຄວາມສ່ຽງດ້ານສະຕັອກໃກ້ໝົດ ສິນຄ້າໝົດ ແລະ ລັອດໃກ້ໝົດອາຍຸ/ໝົດອາຍຸ 2-4 ຂໍ້',
             },
             profitAndExpenseInsights: {
               type: Type.ARRAY,
               items: { type: Type.STRING },
-              description: 'การวิเคราะห์กำไรขั้นต้น ค่าใช้จ่ายเทียบยอดขาย ลูกหนี้ และเจ้าหนี้ 2-4 ข้อ',
+              description: 'ການວິເຄາະກຳໄລຂັ້ນຕົ້ນ ຄ່າໃຊ້ຈ່າຍທຽບຍອດຂາຍ ລູກໜີ້ ແລະ ເຈົ້າໜີ້ 2-4 ຂໍ້',
             },
             actionRecommendations: {
               type: Type.ARRAY,
               items: { type: Type.STRING },
-              description: 'แผนปฏิบัติการเร่งด่วนที่เจ้าของร้านทำได้ทันที 3-5 ข้อ',
+              description: 'ແຜນປະຕິບັດການເລັ່ງດ່ວນທີ່ເຈົ້າຂອງຮ້ານທຳໄດ້ທັນທີ 3-5 ຂໍ້',
             },
           },
           required: [
@@ -133,7 +133,7 @@ app.post('/api/ai/analyze', async (req, res) => {
 
     const rawText = (response.text ?? '').trim();
     if (!rawText) {
-      res.status(502).json({ error: 'Gemini AI ไม่ได้ส่งข้อมูลการวิเคราะห์กลับมา กรุณาลองใหม่อีกครั้ง' });
+      res.status(502).json({ error: 'Gemini AI ບໍ່ໄດ້ສົ່ງຂໍ້ມູນການວິເຄາະກັບມາ ກະລຸນາລອງໃໝ່ອີກຄັ້ງ' });
       return;
     }
 
@@ -169,7 +169,7 @@ app.post('/api/ai/analyze', async (req, res) => {
       generatedAt: new Date().toISOString(),
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการเรียก Gemini AI';
+    const message = error instanceof Error ? error.message : 'ເກີດຂໍ້ຜິດພາດໃນການເອີ້ນ Gemini AI';
     const lower = message.toLowerCase();
     const statusCode =
       lower.includes('429') || lower.includes('resource_exhausted')
@@ -178,7 +178,7 @@ app.post('/api/ai/analyze', async (req, res) => {
           ? 403
           : 500;
     res.status(statusCode).json({
-      error: `ไม่สามารถวิเคราะห์ด้วย Gemini AI ได้: ${message}`,
+      error: `ບໍ່ສາມາດວິເຄາະດ້ວຍ Gemini AI ໄດ້: ${message}`,
     });
   }
 });

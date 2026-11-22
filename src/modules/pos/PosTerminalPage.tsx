@@ -76,9 +76,9 @@ interface CartLineState {
 }
 
 const PRICE_TIER_LABELS: Record<PriceTier, string> = {
-  retail: 'ขายปลีก',
-  wholesale: 'ขายส่ง',
-  member: 'สมาชิก',
+  retail: 'ຂາຍຍ່ອຍ',
+  wholesale: 'ຂາຍສົ່ງ',
+  member: 'ສະມາຊິກ',
 };
 
 const PAYMENT_METHOD_OPTIONS: Array<{
@@ -86,11 +86,11 @@ const PAYMENT_METHOD_OPTIONS: Array<{
   label: string;
   icon: React.ComponentType<{ className?: string }>;
 }> = [
-  { key: 'cash', label: 'เงินสด', icon: Banknote },
-  { key: 'transfer', label: 'โอนเงิน', icon: Wallet },
+  { key: 'cash', label: 'ເງິນສົດ', icon: Banknote },
+  { key: 'transfer', label: 'ໂອນເງິນ', icon: Wallet },
   { key: 'qr', label: 'QR Pay', icon: QrCode },
-  { key: 'credit', label: 'ขายเชื่อ', icon: CreditCard },
-  { key: 'split', label: 'หลายช่องทาง', icon: Split },
+  { key: 'credit', label: 'ຂາຍເຊື່ອ', icon: CreditCard },
+  { key: 'split', label: 'ຫຼາຍຊ່ອງທາງ', icon: Split },
 ];
 
 const QUICK_LAK_AMOUNTS = [10000, 20000, 50000, 100000, 200000, 500000];
@@ -106,7 +106,7 @@ function ProductImageThumb({ src, name }: { src?: string; name: string }) {
     return (
       <div className="w-full h-28 rounded-lg bg-slate-50 border border-slate-100 flex flex-col items-center justify-center text-slate-400 gap-1">
         <Package className="w-7 h-7 stroke-[1.5]" />
-        <span className="text-[11px] text-slate-400">ไม่มีรูปสินค้า</span>
+        <span className="text-[11px] text-slate-400">ບໍ່ມີຮູບສິນຄ້າ</span>
       </div>
     );
   }
@@ -145,7 +145,7 @@ export function PosTerminalPage() {
 
   const [cartLines, setCartLines] = useState<CartLineState[]>([]);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>('');
-  const [customerName, setCustomerName] = useState('ลูกค้าทั่วไป');
+  const [customerName, setCustomerName] = useState('ລູກຄ້າທົ່ວໄປ');
   const [selectedPromotionId, setSelectedPromotionId] = useState<string>('');
   const [billDiscountLak, setBillDiscountLak] = useState<number>(0);
   const [billNotes, setBillNotes] = useState('');
@@ -526,7 +526,7 @@ export function PosTerminalPage() {
     if (!allowNegativeStock && stockBase < neededBase) {
       setFeedback({
         type: 'err',
-        text: `สินค้า "${product.name}" คงเหลือ ${stockBase.toLocaleString('en-US')} ${product.baseUnitName} ไม่พอตัดเพิ่ม (${neededBase.toLocaleString('en-US')} ${product.baseUnitName})`,
+        text: `ສິນຄ້າ "${product.name}" ຄົງເຫຼືອ ${stockBase.toLocaleString('en-US')} ${product.baseUnitName} ບໍ່ພໍຕັດເພີ່ມ (${neededBase.toLocaleString('en-US')} ${product.baseUnitName})`,
       });
       return;
     }
@@ -559,7 +559,7 @@ export function PosTerminalPage() {
     if (!canCreateProduct) {
       setFeedback({
         type: 'err',
-        text: 'บัญชีของคุณไม่มีสิทธิ์เพิ่มสินค้าใหม่ กรุณาติดต่อเจ้าของร้านหรือผู้จัดการร้าน',
+        text: 'ບັນຊີຂອງທ່ານບໍ່ມີສິດເພີ່ມສິນຄ້າໃໝ່ ກະລຸນາຕິດຕໍ່ເຈົ້າຂອງຮ້ານ ຫຼື ຜູ້ຈັດການຮ້ານ',
       });
       return;
     }
@@ -598,7 +598,7 @@ export function PosTerminalPage() {
       if (!allowNegativeStock && balance.qtyOnHandBase < neededBase) {
         setFeedback({
           type: 'ok',
-          text: `เพิ่มสินค้าสำเร็จ: "${product.name}" (สต็อกเริ่มต้น ${balance.qtyOnHandBase} ${product.baseUnitName} — กรุณารับสินค้าเข้าคลังก่อนเพิ่มลงรายการขาย)`,
+          text: `ເພີ່ມສິນຄ້າສຳເລັດແລ້ວ: "${product.name}" (ສະຕັອກເລີ່ມຕົ້ນ ${balance.qtyOnHandBase} ${product.baseUnitName} — ກະລຸນາຮັບສິນຄ້າເຂົ້າສາງກ່ອນເພີ່ມລົງກະຕ່າ)`,
         });
       } else {
         setCartLines((prev) => [
@@ -614,13 +614,13 @@ export function PosTerminalPage() {
         ]);
         setFeedback({
           type: 'ok',
-          text: `เพิ่มสินค้าสำเร็จ: เพิ่ม "${product.name}" ลงในรายการขายเรียบร้อยแล้ว`,
+          text: `ເພີ່ມສິນຄ້າສຳເລັດແລ້ວ: ເພີ່ມ "${product.name}" ລົງໃນກະຕ່າສິນຄ້າຮຽບຮ້ອຍແລ້ວ`,
         });
       }
     } else {
       setFeedback({
         type: 'ok',
-        text: 'เพิ่มสินค้าสำเร็จ',
+        text: 'ເພີ່ມສິນຄ້າສຳເລັດແລ້ວ',
       });
     }
 
@@ -676,7 +676,7 @@ export function PosTerminalPage() {
     if (inactiveMatch) {
       setFeedback({
         type: 'err',
-        text: `พบสินค้า "${inactiveMatch.name}" (${raw}) แต่อยู่ในสถานะหยุดขายชั่วคราว กรุณาเปิดขายในหน้าจัดการสินค้า`,
+        text: `ພົບສິນຄ້າ "${inactiveMatch.name}" (${raw}) ແຕ່ຢູ່ໃນສະຖານະຢຸດຂາຍຊົ່ວຄາວ ກະລຸນາເປີດຂາຍໃນໜ້າຈັດການສິນຄ້າ`,
       });
       return false;
     }
@@ -692,7 +692,7 @@ export function PosTerminalPage() {
       searchInputRef.current?.focus();
       setFeedback({
         type: 'ok',
-        text: 'พร้อมรับบาร์โค้ดแล้ว — ยิงบาร์โค้ดจากเครื่องสแกน หรือพิมพ์ชื่อสินค้าแล้วกด Enter ได้เลย',
+        text: 'ພ້ອມຮັບບາໂຄ້ດແລ້ວ — ຍິງບາໂຄ້ດຈາກເຄື່ອງສະແກນ ຫຼື ພິມຊື່ສິນຄ້າແລ້ວກົດ Enter ໄດ້ເລີຍ',
       });
       return;
     }
@@ -715,7 +715,7 @@ export function PosTerminalPage() {
     if (!allowNegativeStock && stockBase < totalNeeded) {
       setFeedback({
         type: 'err',
-        text: `สินค้า "${prod.name}" มีสต็อกคงเหลือ ${stockBase.toLocaleString('en-US')} ${prod.baseUnitName}`,
+        text: `ສິນຄ້າ "${prod.name}" ມີສະຕັອກຄົງເຫຼືອ ${stockBase.toLocaleString('en-US')} ${prod.baseUnitName}`,
       });
       return;
     }
@@ -739,7 +739,7 @@ export function PosTerminalPage() {
     if (!allowNegativeStock && stockBase < totalNeeded) {
       setFeedback({
         type: 'err',
-        text: `สต็อกคงเหลือไม่พอสำหรับเปลี่ยนเป็นหน่วยนี้ (คงเหลือ ${stockBase.toLocaleString('en-US')} ${prod.baseUnitName})`,
+        text: `ສະຕັອກຄົງເຫຼືອບໍ່ພໍສຳລັບປ່ຽນເປັນໜ່ວຍນີ້ (ຄົງເຫຼືອ ${stockBase.toLocaleString('en-US')} ${prod.baseUnitName})`,
       });
       return;
     }
@@ -769,7 +769,7 @@ export function PosTerminalPage() {
   const clearCart = () => {
     setCartLines([]);
     setSelectedCustomerId('');
-    setCustomerName('ลูกค้าทั่วไป');
+    setCustomerName('ລູກຄ້າທົ່ວໄປ');
     setSelectedPromotionId('');
     setBillDiscountLak(0);
     setBillNotes('');
@@ -793,7 +793,7 @@ export function PosTerminalPage() {
         db,
         user: userProfile,
         branchId: activeBranchId,
-        label: holdLabel || `บิลพัก · ${customerName}`,
+        label: holdLabel || `ບິນພັກ · ${customerName}`,
         priceTier,
         customerName,
         billDiscountLak,
@@ -808,11 +808,11 @@ export function PosTerminalPage() {
       setHoldModalOpen(false);
       setHoldLabel('');
       clearCart();
-      setFeedback({ type: 'ok', text: 'พักบิลเรียบร้อยแล้ว สามารถเรียกกลับมาขายได้ตลอดเวลา' });
+      setFeedback({ type: 'ok', text: 'ພັກບິນສຳເລັດແລ້ວ ສາມາດເອີ້ນກັບມາຂາຍໄດ້ຕະຫຼອດເວລາ' });
     } catch (err) {
       setFeedback({
         type: 'err',
-        text: err instanceof Error ? err.message : 'ไม่สามารถพักบิลได้',
+        text: err instanceof Error ? err.message : 'ບໍ່ສາມາດພັກບິນໄດ້',
       });
     } finally {
       setHoldSaving(false);
@@ -840,7 +840,7 @@ export function PosTerminalPage() {
     setBillNotes(held.notes);
     setActiveHeldBillId(held.heldId);
     setHeldListModalOpen(false);
-    setFeedback({ type: 'ok', text: `ดึงบิล "${held.label}" กลับมาที่ตะกร้าแล้ว` });
+    setFeedback({ type: 'ok', text: `ດຶງບິນ "${held.label}" ກັບມາທີ່ກະຕ່າແລ້ວ` });
   };
 
   const handleDiscardHeldBill = async (heldId: string) => {
@@ -849,7 +849,7 @@ export function PosTerminalPage() {
     } catch (err) {
       setFeedback({
         type: 'err',
-        text: err instanceof Error ? err.message : 'ไม่สามารถลบบิลพักได้',
+        text: err instanceof Error ? err.message : 'ບໍ່ສາມາດລຶບບິນພັກໄດ້',
       });
     }
   };
@@ -915,7 +915,7 @@ export function PosTerminalPage() {
 
     if (computedPaymentSummary.remaining > 0) {
       setCheckoutError(
-        `ยอดชำระยังขาดอีก ${formatLak(computedPaymentSummary.remaining)}`,
+        `ຍອດຊຳລະຍັງຂາດອີກ ${formatLak(computedPaymentSummary.remaining)}`,
       );
       return;
     }
@@ -952,12 +952,12 @@ export function PosTerminalPage() {
       setCompletedSale(created);
       setFeedback({
         type: 'ok',
-        text: `บันทึกการขายเลขที่ ${created.invoiceNumber} สำเร็จ (${formatLak(created.grandTotalLak)})`,
+        text: `ບັນທຶກການຂາຍສຳເລັດ ເລກທີ ${created.invoiceNumber} (${formatLak(created.grandTotalLak)})`,
       });
       searchInputRef.current?.focus();
     } catch (err) {
       setCheckoutError(
-        err instanceof Error ? err.message : 'ไม่สามารถบันทึกการขายได้ กรุณาลองใหม่',
+        err instanceof Error ? err.message : 'ບໍ່ສາມາດບັນທຶກການຂາຍໄດ້ ກະລຸນາລອງໃໝ່',
       );
     } finally {
       setCheckoutSaving(false);
@@ -965,8 +965,8 @@ export function PosTerminalPage() {
   };
 
   const selectedCategoryName = useMemo(() => {
-    if (selectedCategoryId === 'all') return 'ทั้งหมด';
-    return categories.find((c) => c.categoryId === selectedCategoryId)?.name ?? 'ทั้งหมด';
+    if (selectedCategoryId === 'all') return 'ທັງໝົດ';
+    return categories.find((c) => c.categoryId === selectedCategoryId)?.name ?? 'ທັງໝົດ';
   }, [categories, selectedCategoryId]);
 
   return (
@@ -974,7 +974,7 @@ export function PosTerminalPage() {
       {/* Top Helper Toolbar: Price Tier, Held Bills & First-time Guide */}
       <div className="bg-white border border-slate-200 rounded-xl px-4 py-3 flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-3">
-          <div className="text-xs font-semibold text-slate-600">ประเภทราคาขาย</div>
+          <div className="text-xs font-semibold text-slate-600">ປະເພດລາຄາຂາຍ</div>
           <div className="inline-flex items-center bg-slate-100 p-1 rounded-lg">
             {(['retail', 'wholesale', 'member'] as const).map((tier) => (
               <button
@@ -1000,7 +1000,7 @@ export function PosTerminalPage() {
             className="min-h-[40px] inline-flex items-center gap-1.5 px-3.5 py-2 text-xs sm:text-sm font-medium bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg cursor-pointer tabular-nums whitespace-nowrap shrink-0"
           >
             <PlayCircle className="w-4 h-4 text-blue-600" />
-            <span>บิลพัก ({heldBills.length})</span>
+            <span>ບິນພັກ ({heldBills.length})</span>
           </button>
 
           <button
@@ -1009,7 +1009,7 @@ export function PosTerminalPage() {
             className="min-h-[40px] inline-flex items-center gap-1.5 px-3.5 py-2 text-xs sm:text-sm font-medium bg-blue-50 border border-blue-200 hover:bg-blue-100 text-blue-700 rounded-lg cursor-pointer whitespace-nowrap shrink-0"
           >
             <BookOpen className="w-4 h-4" />
-            <span>คู่มือใช้งาน POS</span>
+            <span>ຄູ່ມືໃຊ້ງານ POS</span>
           </button>
         </div>
       </div>
@@ -1035,7 +1035,7 @@ export function PosTerminalPage() {
             type="button"
             onClick={() => setFeedback(null)}
             className="p-1 text-current opacity-70 hover:opacity-100 cursor-pointer"
-            aria-label="ปิดข้อความแจ้งเตือน"
+            aria-label="ປິດຂໍ້ຄວາມແຈ້ງເຕືອນ"
           >
             <X className="w-4 h-4" />
           </button>
@@ -1055,9 +1055,9 @@ export function PosTerminalPage() {
             }`}
           >
             <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <h2 className="text-sm sm:text-base font-bold text-slate-900">1. ค้นหาสินค้า</h2>
+              <h2 className="text-sm sm:text-base font-bold text-slate-900">1. ຄົ້ນຫາສິນຄ້າ</h2>
               <span className="text-xs text-slate-500">
-                พิมพ์ชื่อสินค้า รหัส SKU หรือยิงบาร์โค้ดแล้วกด Enter
+                ພິມຊື່ສິນຄ້າ ລະຫັດ SKU ຫຼື ຍິງບາໂຄ້ດແລ້ວກົດ Enter
               </span>
             </div>
 
@@ -1070,7 +1070,7 @@ export function PosTerminalPage() {
                   autoFocus
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
-                  placeholder="ค้นหาชื่อสินค้า หรือสแกนบาร์โค้ด"
+                  placeholder="ຄົ້ນຫາຊື່ສິນຄ້າ ຫຼື ສະແກນບາໂຄ້ດ"
                   className="w-full min-h-[48px] pl-11 pr-10 py-2.5 text-base bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
                 />
                 {searchText && (
@@ -1081,7 +1081,7 @@ export function PosTerminalPage() {
                       searchInputRef.current?.focus();
                     }}
                     className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-700 cursor-pointer"
-                    aria-label="ล้างคำค้นหา"
+                    aria-label="ລ້າງຄຳຄົ້ນຫາ"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -1095,8 +1095,8 @@ export function PosTerminalPage() {
                 >
                   <ScanBarcode className="w-5 h-5 shrink-0" />
                   <div className="text-left leading-tight">
-                    <div className="text-sm font-semibold whitespace-nowrap">สแกนบาร์โค้ด</div>
-                    <div className="text-[11px] text-blue-100">ค้นหาหรือยิงรหัสสินค้า</div>
+                    <div className="text-sm font-semibold whitespace-nowrap">ສະແກນບາໂຄ້ດ</div>
+                    <div className="text-[11px] text-blue-100">ຄົ້ນຫາ ຫຼື ຍິງລະຫັດສິນຄ້າ</div>
                   </div>
                 </button>
 
@@ -1107,8 +1107,8 @@ export function PosTerminalPage() {
                 >
                   <QrCode className="w-5 h-5 shrink-0" />
                   <div className="text-left leading-tight">
-                    <div className="text-sm font-semibold whitespace-nowrap">สแกนด้วยกล้อง</div>
-                    <div className="text-[11px] text-slate-300">เปิดกล้องสแกน Barcode / QR</div>
+                    <div className="text-sm font-semibold whitespace-nowrap">ສະແກນດ້ວຍກ້ອງ</div>
+                    <div className="text-[11px] text-slate-300">ເປີດກ້ອງສະແກນ Barcode / QR</div>
                   </div>
                 </button>
               </div>
@@ -1128,7 +1128,7 @@ export function PosTerminalPage() {
                 <Tag className="w-4 h-4 text-blue-600 shrink-0" />
                 <div>
                   <h2 className="text-sm font-bold text-slate-900">
-                    2. เลือกหมวดหมู่ ({categories.length} หมวดหมู่)
+                    2. ເລືອກໝວດໝູ່ ({categories.length} ໝວດໝູ່)
                   </h2>
                 </div>
               </div>
@@ -1140,7 +1140,7 @@ export function PosTerminalPage() {
                     type="text"
                     value={categorySearch}
                     onChange={(e) => setCategorySearch(e.target.value)}
-                    placeholder="ค้นหาหมวดหมู่..."
+                    placeholder="ຄົ້ນຫາໝວດໝູ່..."
                     className="w-full min-h-[38px] pl-8 pr-8 py-1.5 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:outline-none focus:border-blue-600"
                   />
                   {categorySearch && (
@@ -1148,7 +1148,7 @@ export function PosTerminalPage() {
                       type="button"
                       onClick={() => setCategorySearch('')}
                       className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 cursor-pointer"
-                      aria-label="ล้างคำค้นหาหมวดหมู่"
+                      aria-label="ລ້າງຄຳຄົ້ນຫາໝວດໝູ່"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
@@ -1161,7 +1161,7 @@ export function PosTerminalPage() {
                       type="button"
                       onClick={() => scrollCategories('left')}
                       className="min-h-[38px] min-w-[38px] flex items-center justify-center text-slate-600 hover:text-blue-600 hover:bg-blue-50 border border-slate-200 rounded-lg cursor-pointer"
-                      aria-label="เลื่อนดูหมวดหมู่ทางซ้าย"
+                      aria-label="ເລື່ອນເບິ່ງໝວດໝູ່ທາງຊ້າຍ"
                     >
                       <ChevronLeft className="w-4 h-4" />
                     </button>
@@ -1169,7 +1169,7 @@ export function PosTerminalPage() {
                       type="button"
                       onClick={() => scrollCategories('right')}
                       className="min-h-[38px] min-w-[38px] flex items-center justify-center text-slate-600 hover:text-blue-600 hover:bg-blue-50 border border-slate-200 rounded-lg cursor-pointer"
-                      aria-label="เลื่อนดูหมวดหมู่ทางขวา"
+                      aria-label="ເລື່ອນເບິ່ງໝວດໝູ່ທາງຂວາ"
                     >
                       <ChevronRight className="w-4 h-4" />
                     </button>
@@ -1191,7 +1191,7 @@ export function PosTerminalPage() {
                     : 'bg-white text-slate-700 border-slate-200 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200'
                 }`}
               >
-                ทั้งหมด ({products.length})
+                ທັງໝົດ ({products.length})
               </button>
 
               {filteredCategories.map((cat) => {
@@ -1215,13 +1215,13 @@ export function PosTerminalPage() {
 
               {categorySearch.trim() && filteredCategories.length === 0 && (
                 <div className="flex items-center gap-2 px-3 py-2 text-xs text-slate-500 whitespace-nowrap">
-                  <span>ไม่พบหมวดหมู่ &ldquo;{categorySearch.trim()}&rdquo;</span>
+                  <span>ບໍ່ພົບໝວດໝູ່ &ldquo;{categorySearch.trim()}&rdquo;</span>
                   <button
                     type="button"
                     onClick={() => setCategorySearch('')}
                     className="text-blue-600 font-semibold hover:underline cursor-pointer"
                   >
-                    แสดงทั้งหมด
+                    ສະແດງທັງໝົດ
                   </button>
                 </div>
               )}
@@ -1236,10 +1236,10 @@ export function PosTerminalPage() {
           >
             <div className="flex items-center justify-between px-1">
               <div className="text-sm font-bold text-slate-900">
-                3. รายการสินค้า ({selectedCategoryName})
+                3. ລາຍການສິນຄ້າ ({selectedCategoryName})
               </div>
               <div className="text-xs text-slate-500 tabular-nums">
-                แสดง {filteredProducts.length} รายการ · ราคา{PRICE_TIER_LABELS[priceTier]}
+                ສະແດງ {filteredProducts.length} ລາຍການ · ລາຄາ{PRICE_TIER_LABELS[priceTier]}
               </div>
             </div>
 
@@ -1252,10 +1252,10 @@ export function PosTerminalPage() {
                     </div>
                     <div className="space-y-1">
                       <p className="text-base font-bold text-slate-900">
-                        ไม่พบสินค้านี้ในระบบ ต้องการเพิ่มสินค้าใหม่หรือไม่?
+                        ບໍ່ພົບສິນຄ້າໃນລະບົບ ທ່ານຕ້ອງການເພີ່ມສິນຄ້າໃໝ່ຫຼືບໍ່?
                       </p>
                       <p className="text-xs sm:text-sm text-slate-500">
-                        คำค้นหา / บาร์โค้ด:{' '}
+                        ຄຳຄົ້ນຫາ / ບາໂຄ້ດ:{' '}
                         <span className="font-mono font-semibold text-slate-800">
                           &ldquo;{searchText.trim()}&rdquo;
                         </span>
@@ -1268,7 +1268,7 @@ export function PosTerminalPage() {
                         className="min-h-[44px] inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition-colors cursor-pointer"
                       >
                         <PackagePlus className="w-4 h-4" />
-                        <span>เพิ่มสินค้าใหม่</span>
+                        <span>ເພີ່ມສິນຄ້າໃໝ່</span>
                       </button>
                       <button
                         type="button"
@@ -1279,20 +1279,20 @@ export function PosTerminalPage() {
                         }}
                         className="min-h-[44px] px-4 py-2.5 text-sm font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer"
                       >
-                        ยกเลิก
+                        ຍົກເລີກ
                       </button>
                     </div>
                   </div>
                 ) : (
                   <div className="space-y-2 text-sm text-slate-500">
-                    <p>ไม่มีสินค้าในหมวดหมู่ &ldquo;{selectedCategoryName}&rdquo;</p>
+                    <p>ບໍ່ມີສິນຄ້າໃນໝວດໝູ່ &ldquo;{selectedCategoryName}&rdquo;</p>
                     {selectedCategoryId !== 'all' && (
                       <button
                         type="button"
                         onClick={() => setSelectedCategoryId('all')}
                         className="text-blue-600 font-semibold hover:underline cursor-pointer"
                       >
-                        ดูสินค้าทั้งหมด
+                        ເບິ່ງສິນຄ້າທັງໝົດ
                       </button>
                     )}
                   </div>
@@ -1324,7 +1324,7 @@ export function PosTerminalPage() {
                             {prod.name}
                           </h3>
                           <div className="text-[11px] font-mono text-slate-400">
-                            รหัส: {prod.sku}
+                            ລະຫັດ: {prod.sku}
                           </div>
                         </div>
 
@@ -1351,11 +1351,11 @@ export function PosTerminalPage() {
                             {isOut ? (
                               <>
                                 <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                                <span>สินค้าหมด (0 {prod.baseUnitName})</span>
+                                <span>ສິນຄ້າໝົດ (0 {prod.baseUnitName})</span>
                               </>
                             ) : (
                               <span>
-                                {isLow ? 'ใกล้หมด · ' : ''}คงเหลือ {qtyOnHand.toLocaleString('en-US')}{' '}
+                                {isLow ? 'ໃກ້ໝົດ · ' : ''}ຄົງເຫຼືອ {qtyOnHand.toLocaleString('en-US')}{' '}
                                 {prod.baseUnitName}
                               </span>
                             )}
@@ -1372,7 +1372,7 @@ export function PosTerminalPage() {
                           className="w-full min-h-[44px] px-3 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-500 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-lg inline-flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
                         >
                           <Plus className="w-4 h-4 shrink-0" />
-                          <span>{disableBaseAdd ? 'สินค้าหมด' : 'เพิ่มลงตะกร้า'}</span>
+                          <span>{disableBaseAdd ? 'ສິນຄ້າໝົດ' : 'ເພີ່ມໃສ່ກະຕ່າ'}</span>
                         </button>
 
                         {/* Additional Unit Options (Wholesale / Pack / Box) */}
@@ -1420,10 +1420,10 @@ export function PosTerminalPage() {
               </div>
               <div>
                 <h2 className="text-sm sm:text-base font-bold text-slate-900">
-                  4. ตะกร้าสินค้า
+                  4. ກະຕ່າສິນຄ້າ
                 </h2>
                 <div className="text-xs text-slate-500 tabular-nums">
-                  {cartLines.length} รายการ · รวม {totalCartUnits.toLocaleString('en-US')} ชิ้น
+                  {cartLines.length} ລາຍການ · ລວມ {totalCartUnits.toLocaleString('en-US')} ອັນ
                 </div>
               </div>
             </div>
@@ -1437,19 +1437,19 @@ export function PosTerminalPage() {
                     setHoldModalOpen(true);
                   }}
                   className="min-h-[38px] inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold bg-white border border-slate-200 hover:border-amber-400 text-amber-600 rounded-lg cursor-pointer"
-                  title="พักบิลนี้ไว้ก่อน เพื่อขายให้ลูกค้าคนถัดไป"
+                  title="ພັກບິນນີ້ໄວ້ກ່ອນ ເພື່ອຂາຍໃຫ້ລູກຄ້າຄົນຕໍ່ໄປ"
                 >
                   <PauseCircle className="w-4 h-4" />
-                  <span>พักบิล</span>
+                  <span>ພັກບິນ</span>
                 </button>
                 <button
                   type="button"
                   onClick={clearCart}
                   className="min-h-[38px] inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 border border-transparent hover:border-red-200 rounded-lg cursor-pointer"
-                  title="ลบสินค้าทั้งหมดออกจากตะกร้า"
+                  title="ລຶບສິນຄ້າທັງໝົດອອກຈາກກະຕ່າ"
                 >
                   <Trash2 className="w-4 h-4" />
-                  <span>ล้างตะกร้า</span>
+                  <span>ລ້າງກະຕ່າ</span>
                 </button>
               </div>
             )}
@@ -1469,12 +1469,12 @@ export function PosTerminalPage() {
                     setCustomerName(found.name);
                     if (found.tierId) setPriceTier('member');
                   } else {
-                    setCustomerName('ลูกค้าทั่วไป');
+                    setCustomerName('ລູກຄ້າທົ່ວໄປ');
                   }
                 }}
                 className="flex-1 min-h-[38px] text-xs sm:text-sm text-slate-800 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-blue-600"
               >
-                <option value="">ลูกค้าทั่วไป (Walk-in)</option>
+                <option value="">ລູກຄ້າທົ່ວໄປ (Walk-in)</option>
                 {customers.map((c) => (
                   <option key={c.customerId} value={c.customerId}>
                     {c.name} {c.phone ? `(${c.phone})` : ''} {c.tierName ? `· ${c.tierName}` : ''}
@@ -1489,16 +1489,16 @@ export function PosTerminalPage() {
             {selectedCustomer ? (
               <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-600 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 tabular-nums">
                 <span>
-                  แต้มสะสม:{' '}
+                  ຄະແນນສະສົມ:{' '}
                   <strong className="text-blue-600">
                     {selectedCustomer.pointsBalance.toLocaleString('en-US')}
                   </strong>
                   {selectedMembershipTier
-                    ? ` · ส่วนลดสมาชิก ${selectedMembershipTier.discountPercent}%`
+                    ? ` · ສ່ວນຫຼຸດສະມາຊິກ ${selectedMembershipTier.discountPercent}%`
                     : ''}
                 </span>
                 <span>
-                  ค้างชำระ:{' '}
+                  ຄ້າງຊຳລະ:{' '}
                   <strong
                     className={
                       selectedCustomer.creditBalanceLak > 0 ? 'text-amber-600' : 'text-slate-800'
@@ -1514,7 +1514,7 @@ export function PosTerminalPage() {
                 maxLength={120}
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
-                placeholder="ชื่อลูกค้า (ค่าเริ่มต้น: ลูกค้าทั่วไป)"
+                placeholder="ຊື່ລູກຄ້າ (ຄ່າເລີ່ມຕົ້ນ: ລູກຄ້າທົ່ວໄປ)"
                 className="w-full text-xs text-slate-700 bg-transparent border-b border-slate-200 pb-1.5 focus:outline-none focus:border-blue-600"
               />
             )}
@@ -1527,9 +1527,9 @@ export function PosTerminalPage() {
                 <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
                   <ShoppingCart className="w-6 h-6" />
                 </div>
-                <div className="text-sm font-semibold text-slate-700">ยังไม่มีสินค้าในตะกร้า</div>
+                <div className="text-sm font-semibold text-slate-700">ຍັງບໍ່ມີສິນຄ້າໃນກະຕ່າ</div>
                 <div className="text-xs text-slate-500">
-                  กดปุ่ม &ldquo;เพิ่มลงตะกร้า&rdquo; ที่สินค้าด้านซ้าย หรือสแกนบาร์โค้ดเพื่อเริ่มขาย
+                  ກົດປຸ່ມ &ldquo;ເພີ່ມໃສ່ກະຕ່າ&rdquo; ທີ່ສິນຄ້າດ້ານຊ້າຍ ຫຼື ສະແກນບາໂຄ້ດເພື່ອເລີ່ມຂາຍ
                 </div>
               </div>
             )}
@@ -1548,7 +1548,7 @@ export function PosTerminalPage() {
                         {prod.name}
                       </div>
                       <div className="text-xs text-slate-500 tabular-nums">
-                        ราคาต่อหน่วย: {formatLak(computedItem.unitPriceLak)} / {computedItem.unitName}
+                        ລາຄາຕໍ່ໜ່ວຍ: {formatLak(computedItem.unitPriceLak)} / {computedItem.unitName}
                       </div>
                     </div>
 
@@ -1556,17 +1556,17 @@ export function PosTerminalPage() {
                       type="button"
                       onClick={() => removeCartLine(line.lineKey)}
                       className="min-h-[34px] inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-red-600 hover:bg-red-50 border border-red-100 rounded-lg cursor-pointer shrink-0"
-                      title="ลบสินค้าออกจากตะกร้า"
+                      title="ລຶບສິນຄ້າອອກຈາກກະຕ່າ"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
-                      <span>ลบสินค้า</span>
+                      <span>ລຶບສິນຄ້າ</span>
                     </button>
                   </div>
 
                   {/* Unit, Qty +/- and Line Subtotal */}
                   <div className="grid grid-cols-12 gap-2.5 items-center">
                     <div className="col-span-4">
-                      <label className="block text-[10px] text-slate-500 mb-0.5">หน่วยสินค้า</label>
+                      <label className="block text-[10px] text-slate-500 mb-0.5">ໜ່ວຍສິນຄ້າ</label>
                       <select
                         value={line.unitId}
                         onChange={(e) => updateCartUnit(line.lineKey, e.target.value)}
@@ -1582,7 +1582,7 @@ export function PosTerminalPage() {
 
                     <div className="col-span-4">
                       <label className="block text-[10px] text-slate-500 mb-0.5 text-center">
-                        เพิ่ม / ลดจำนวน
+                        ເພີ່ມ / ຫຼຸດຈຳນວນ
                       </label>
                       <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden bg-white min-h-[40px]">
                         <button
@@ -1593,7 +1593,7 @@ export function PosTerminalPage() {
                               : removeCartLine(line.lineKey)
                           }
                           className="w-9 min-h-[40px] flex items-center justify-center bg-slate-50 hover:bg-slate-100 text-slate-700 cursor-pointer"
-                          aria-label="ลดจำนวนสินค้า"
+                          aria-label="ຫຼຸດຈຳນວນສິນຄ້າ"
                         >
                           <Minus className="w-3.5 h-3.5" />
                         </button>
@@ -1603,13 +1603,13 @@ export function PosTerminalPage() {
                           value={line.qty}
                           onChange={(e) => updateCartQty(line.lineKey, Number(e.target.value) || 1)}
                           className="w-full text-center text-sm font-bold text-slate-900 tabular-nums focus:outline-none"
-                          aria-label="จำนวนสินค้า"
+                          aria-label="ຈຳນວນສິນຄ້າ"
                         />
                         <button
                           type="button"
                           onClick={() => updateCartQty(line.lineKey, line.qty + 1)}
                           className="w-9 min-h-[40px] flex items-center justify-center bg-slate-50 hover:bg-slate-100 text-slate-700 cursor-pointer"
-                          aria-label="เพิ่มจำนวนสินค้า"
+                          aria-label="ເພີ່ມຈຳນວນສິນຄ້າ"
                         >
                           <Plus className="w-3.5 h-3.5" />
                         </button>
@@ -1617,7 +1617,7 @@ export function PosTerminalPage() {
                     </div>
 
                     <div className="col-span-4 text-right">
-                      <div className="text-[10px] text-slate-500 mb-0.5">รวมรายการ</div>
+                      <div className="text-[10px] text-slate-500 mb-0.5">ລວມລາຍການ</div>
                       <div className="text-sm sm:text-base font-bold text-slate-900 tabular-nums">
                         {formatLak(computedItem.lineTotalLak)}
                       </div>
@@ -1629,7 +1629,7 @@ export function PosTerminalPage() {
                     <div className="grid grid-cols-2 gap-2 pt-1 text-xs">
                       {canEditPrice && (
                         <div className="flex items-center gap-1.5">
-                          <span className="text-slate-500 shrink-0">แก้ราคา:</span>
+                          <span className="text-slate-500 shrink-0">ແກ້ລາຄາ:</span>
                           <input
                             type="number"
                             min={0}
@@ -1642,7 +1642,7 @@ export function PosTerminalPage() {
                         </div>
                       )}
                       <div className="flex items-center gap-1.5">
-                        <span className="text-slate-500 shrink-0">ลดรายการ:</span>
+                        <span className="text-slate-500 shrink-0">ຫຼຸດລາຍການ:</span>
                         <input
                           type="number"
                           min={0}
@@ -1663,13 +1663,13 @@ export function PosTerminalPage() {
           {/* SECTION 5: Checkout Summary & Primary CTA */}
           <div className="p-4 sm:p-5 border-t border-slate-200 bg-slate-50 space-y-3.5">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-slate-900">5. สรุปยอดและชำระเงิน</h3>
+              <h3 className="text-sm font-bold text-slate-900">5. ສະຫຼຸບຍອດ ແລະ ຊຳລະເງິນ</h3>
               <button
                 type="button"
                 onClick={() => setShowDiscountOptions((prev) => !prev)}
                 className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:underline cursor-pointer"
               >
-                <span>{showDiscountOptions ? 'ซ่อนส่วนลด/โปรโมชั่น' : 'ใส่ส่วนลด / โปรโมชั่น'}</span>
+                <span>{showDiscountOptions ? 'ເຊື່ອງສ່ວນຫຼຸດ/ໂປຣໂມຊັນ' : 'ໃສ່ສ່ວນຫຼຸດ / ໂປຣໂມຊັນ'}</span>
                 {showDiscountOptions ? (
                   <ChevronUp className="w-3.5 h-3.5" />
                 ) : (
@@ -1682,16 +1682,16 @@ export function PosTerminalPage() {
               <div className="p-3 bg-white border border-slate-200 rounded-xl space-y-2.5 text-xs">
                 {eligiblePromotions.length > 0 && (
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-slate-600 shrink-0">โปรโมชั่น:</span>
+                    <span className="text-slate-600 shrink-0">ໂປຣໂມຊັນ:</span>
                     <select
                       value={selectedPromotionId}
                       onChange={(e) => setSelectedPromotionId(e.target.value)}
                       className="flex-1 min-h-[36px] px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs"
                     >
-                      <option value="">ไม่ใช้โปรโมชั่น</option>
+                      <option value="">ບໍ່ໃຊ້ໂປຣໂມຊັນ</option>
                       {eligiblePromotions.map((p) => (
                         <option key={p.promotionId} value={p.promotionId}>
-                          {p.code} · {p.name} (ขั้นต่ำ {formatLak(p.minSpendLak, false)})
+                          {p.code} · {p.name} (ຂັ້ນຕ່ຳ {formatLak(p.minSpendLak, false)})
                         </option>
                       ))}
                     </select>
@@ -1699,7 +1699,7 @@ export function PosTerminalPage() {
                 )}
 
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-slate-600">ส่วนลดท้ายบิล (₭):</span>
+                  <span className="text-slate-600">ສ່ວນຫຼຸດທ້າຍບິນ (₭):</span>
                   <input
                     type="number"
                     min={0}
@@ -1716,7 +1716,7 @@ export function PosTerminalPage() {
             {/* Financial Totals */}
             <div className="space-y-1.5 text-xs sm:text-sm tabular-nums">
               <div className="flex justify-between text-slate-600">
-                <span>ยอดรวมสินค้า ({totalCartUnits.toLocaleString('en-US')} ชิ้น)</span>
+                <span>ຍອດລວມສິນຄ້າ ({totalCartUnits.toLocaleString('en-US')} ອັນ)</span>
                 <span className="font-medium text-slate-800">
                   {formatLak(billTotals.subtotalLak)}
                 </span>
@@ -1724,7 +1724,7 @@ export function PosTerminalPage() {
 
               {totalCombinedDiscountLak > 0 && (
                 <div className="flex justify-between text-amber-600">
-                  <span>ส่วนลดรวม</span>
+                  <span>ສ່ວນຫຼຸດລວມ</span>
                   <span className="font-semibold">-{formatLak(totalCombinedDiscountLak)}</span>
                 </div>
               )}
@@ -1732,8 +1732,8 @@ export function PosTerminalPage() {
               {billTotals.taxRate > 0 && (
                 <div className="flex justify-between text-slate-600">
                   <span>
-                    ภาษี ({billTotals.taxRate}%
-                    {settings?.taxSettings?.taxInclusive ? ' รวมในราคา' : ''})
+                    ອາກອນ ({billTotals.taxRate}%
+                    {settings?.taxSettings?.taxInclusive ? ' ລວມໃນລາຄາ' : ''})
                   </span>
                   <span>{formatLak(billTotals.taxAmountLak)}</span>
                 </div>
@@ -1744,9 +1744,9 @@ export function PosTerminalPage() {
             {cartLines.length > 0 && (
               <div className="p-3 bg-white border border-slate-200 rounded-xl space-y-2.5">
                 <div className="flex items-center justify-between text-xs text-slate-600">
-                  <span className="font-semibold text-slate-700">วิธีชำระเงิน</span>
+                  <span className="font-semibold text-slate-700">ວິທີຊຳລະເງິນ</span>
                   <span>
-                    {PAYMENT_METHOD_OPTIONS.find((m) => m.key === payMode)?.label ?? 'เงินสด'}
+                    {PAYMENT_METHOD_OPTIONS.find((m) => m.key === payMode)?.label ?? 'ເງິນສົດ'}
                   </span>
                 </div>
 
@@ -1776,7 +1776,7 @@ export function PosTerminalPage() {
                   <div className="grid grid-cols-2 gap-2 pt-1 items-center text-xs tabular-nums">
                     <div>
                       <label className="block text-[11px] text-slate-500 mb-0.5">
-                        จำนวนเงินที่ลูกค้าชำระ (₭)
+                        ຈຳນວນເງິນທີ່ລູກຄ້າຊຳລະ (₭)
                       </label>
                       <input
                         type="number"
@@ -1787,7 +1787,7 @@ export function PosTerminalPage() {
                       />
                     </div>
                     <div className="text-right">
-                      <div className="text-[11px] text-slate-500 mb-0.5">เงินทอน</div>
+                      <div className="text-[11px] text-slate-500 mb-0.5">ເງິນທອນ</div>
                       <div
                         className={`text-base font-bold ${
                           computedPaymentSummary.remaining > 0
@@ -1796,7 +1796,7 @@ export function PosTerminalPage() {
                         }`}
                       >
                         {computedPaymentSummary.remaining > 0
-                          ? `ขาด ${formatLak(computedPaymentSummary.remaining)}`
+                          ? `ຂາດ ${formatLak(computedPaymentSummary.remaining)}`
                           : formatLak(computedPaymentSummary.change)}
                       </div>
                     </div>
@@ -1807,7 +1807,7 @@ export function PosTerminalPage() {
 
             {/* Net Total + Prominent Checkout CTA */}
             <div className="pt-2 border-t border-slate-200 flex items-baseline justify-between">
-              <span className="text-sm sm:text-base font-bold text-slate-900">ยอดที่ต้องชำระ</span>
+              <span className="text-sm sm:text-base font-bold text-slate-900">ຍອດລວມທີ່ຕ້ອງຊຳລະ</span>
               <span className="text-2xl sm:text-3xl font-bold text-blue-600 tabular-nums">
                 {formatLak(billTotals.grandTotalLak)}
               </span>
@@ -1820,12 +1820,12 @@ export function PosTerminalPage() {
               className="w-full min-h-[56px] px-5 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:text-slate-500 disabled:cursor-not-allowed text-white rounded-xl shadow-sm transition-colors cursor-pointer flex flex-col items-center justify-center"
             >
               <span className="text-base font-bold tabular-nums">
-                ชำระเงิน · {formatLak(billTotals.grandTotalLak)}
+                ຊຳລະເງິນ · {formatLak(billTotals.grandTotalLak)}
               </span>
               <span className="text-[11px] font-normal text-blue-100">
                 {cartLines.length === 0
-                  ? 'กรุณาเพิ่มสินค้าลงตะกร้าก่อนชำระเงิน'
-                  : 'กดเพื่อตรวจสอบเงินทอน ยืนยันการขาย และพิมพ์ใบเสร็จ'}
+                  ? 'ກະລຸນາເພີ່ມສິນຄ້າໃສ່ກະຕ່າກ່ອນຊຳລະເງິນ'
+                  : 'ກົດເພື່ອກວດສອບເງິນທອນ ຢືນຢັນການຂາຍ ແລະ ພິມໃບບິນ'}
               </span>
             </button>
           </div>
@@ -1837,7 +1837,7 @@ export function PosTerminalPage() {
         <div className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-slate-200 px-4 py-2.5 shadow-lg flex items-center justify-between gap-3">
           <div className="min-w-0">
             <div className="text-xs text-slate-500 tabular-nums">
-              ตะกร้า: {totalCartUnits} ชิ้น ({cartLines.length} รายการ)
+              ກະຕ່າ: {totalCartUnits} ອັນ ({cartLines.length} ລາຍການ)
             </div>
             <div className="text-base font-bold text-blue-600 tabular-nums truncate">
               {formatLak(billTotals.grandTotalLak)}
@@ -1851,7 +1851,7 @@ export function PosTerminalPage() {
               }
               className="min-h-[42px] px-3.5 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg cursor-pointer"
             >
-              ดูตะกร้า
+              ເບິ່ງກະຕ່າ
             </button>
             <button
               type="button"
@@ -1859,7 +1859,7 @@ export function PosTerminalPage() {
               onClick={openCheckoutModal}
               className="min-h-[42px] px-4 py-2 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg cursor-pointer"
             >
-              ชำระเงิน
+              ຊຳລະເງິນ
             </button>
           </div>
         </div>
@@ -1870,12 +1870,12 @@ export function PosTerminalPage() {
         <div className="fixed inset-0 z-50 bg-slate-900/45 flex items-center justify-center p-4">
           <div className="w-full max-w-md bg-white border border-slate-200 rounded-xl p-6">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
-              <h3 className="text-base font-semibold text-slate-900">พักบิลขายชั่วคราว</h3>
+              <h3 className="text-base font-semibold text-slate-900">ພັກບິນຂາຍຊົ່ວຄາວ</h3>
               <button
                 type="button"
                 onClick={() => setHoldModalOpen(false)}
                 className="p-1 text-slate-400 hover:text-slate-700 cursor-pointer"
-                aria-label="ปิด"
+                aria-label="ປິດ"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1883,7 +1883,7 @@ export function PosTerminalPage() {
             <form onSubmit={handleConfirmHoldBill} className="space-y-4">
               <div>
                 <label className="block text-xs font-medium text-slate-700 mb-1">
-                  ป้ายชื่อ / หมายเลขอ้างอิงบิลพัก *
+                  ປ້າຍຊື່ / ເລກອ້າງອີງບິນພັກ *
                 </label>
                 <input
                   type="text"
@@ -1891,18 +1891,18 @@ export function PosTerminalPage() {
                   maxLength={100}
                   value={holdLabel}
                   onChange={(e) => setHoldLabel(e.target.value)}
-                  placeholder="เช่น ลูกค้าเสื้อน้ำเงิน / รอหยิบของเพิ่ม"
+                  placeholder="ເຊັ່ນ ລູກຄ້າເສື້ອສີຟ້າ / ລໍຖ້າເລືອກເຄື່ອງເພີ່ມ"
                   className="w-full min-h-[42px] px-3 py-2 text-sm border border-slate-200 rounded-lg"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">หมายเหตุ</label>
+                <label className="block text-xs font-medium text-slate-700 mb-1">ໝາຍເຫດ</label>
                 <input
                   type="text"
                   maxLength={300}
                   value={billNotes}
                   onChange={(e) => setBillNotes(e.target.value)}
-                  placeholder="หมายเหตุเพิ่มเติม (ถ้ามี)"
+                  placeholder="ໝາຍເຫດເພີ່ມເຕີມ (ຖ້າມີ)"
                   className="w-full min-h-[42px] px-3 py-2 text-sm border border-slate-200 rounded-lg"
                 />
               </div>
@@ -1912,14 +1912,14 @@ export function PosTerminalPage() {
                   onClick={() => setHoldModalOpen(false)}
                   className="min-h-[42px] px-4 py-2 text-sm font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer"
                 >
-                  ยกเลิก
+                  ຍົກເລີກ
                 </button>
                 <button
                   type="submit"
                   disabled={holdSaving}
                   className="min-h-[42px] px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg cursor-pointer"
                 >
-                  {holdSaving ? 'กำลังพักบิล...' : 'ยืนยันพักบิล'}
+                  {holdSaving ? 'ກຳລັງພັກບິນ...' : 'ຢືນຢັນພັກບິນ'}
                 </button>
               </div>
             </form>
@@ -1933,13 +1933,13 @@ export function PosTerminalPage() {
           <div className="w-full max-w-lg bg-white border border-slate-200 rounded-xl p-6 max-h-[85vh] flex flex-col">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
               <h3 className="text-base font-semibold text-slate-900">
-                รายการบิลที่พักไว้ ({heldBills.length})
+                ລາຍການບິນທີ່ພັກໄວ້ ({heldBills.length})
               </h3>
               <button
                 type="button"
                 onClick={() => setHeldListModalOpen(false)}
                 className="p-1 text-slate-400 hover:text-slate-700 cursor-pointer"
-                aria-label="ปิด"
+                aria-label="ປິດ"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1947,7 +1947,7 @@ export function PosTerminalPage() {
             <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
               {heldBills.length === 0 && (
                 <div className="py-10 text-center text-xs text-slate-500">
-                  ไม่มีบิลที่พักไว้ในขณะนี้
+                  ບໍ່ມີບິນທີ່ພັກໄວ້ໃນຂະນະນີ້
                 </div>
               )}
               {heldBills.map((held) => (
@@ -1957,7 +1957,7 @@ export function PosTerminalPage() {
                       {held.label}
                     </div>
                     <div className="text-xs text-slate-500 tabular-nums">
-                      {held.customerName} · {held.items.length} รายการ ·{' '}
+                      {held.customerName} · {held.items.length} ລາຍການ ·{' '}
                       {formatDateTimeVientiane(held.createdAt)}
                     </div>
                   </div>
@@ -1967,14 +1967,14 @@ export function PosTerminalPage() {
                       onClick={() => handleResumeHeldBill(held)}
                       className="min-h-[38px] px-3 py-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-lg cursor-pointer"
                     >
-                      เรียกคืน
+                      ເອີ້ນຄືນ
                     </button>
                     <button
                       type="button"
                       onClick={() => handleDiscardHeldBill(held.heldId)}
                       className="min-h-[38px] px-2.5 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 rounded-lg cursor-pointer"
                     >
-                      ลบ
+                      ລຶບ
                     </button>
                   </div>
                 </div>
@@ -1991,18 +1991,18 @@ export function PosTerminalPage() {
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
               <div>
                 <h3 className="text-base sm:text-lg font-bold text-slate-900">
-                  รับชำระเงินและยืนยันการขาย
+                  ຮັບຊຳລະເງິນ ແລະ ຢືນຢັນການຂາຍ
                 </h3>
                 <p className="text-xs text-slate-500">
-                  ลูกค้า: {customerName || 'ลูกค้าทั่วไป'} · {billTotals.items.length} รายการ (
-                  {totalCartUnits} ชิ้น)
+                  ລູກຄ້າ: {customerName || 'ລູກຄ້າທົ່ວໄປ'} · {billTotals.items.length} ລາຍການ (
+                  {totalCartUnits} ອັນ)
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setCheckoutOpen(false)}
                 className="p-1.5 text-slate-400 hover:text-slate-700 cursor-pointer"
-                aria-label="ปิดหน้าต่างชำระเงิน"
+                aria-label="ປິດໜ້າຕ່າງຊຳລະເງິນ"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -2018,17 +2018,17 @@ export function PosTerminalPage() {
               {/* Totals Summary Box */}
               <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5 tabular-nums">
                 <div className="flex justify-between text-xs text-slate-600">
-                  <span>ยอดรวมสินค้า</span>
+                  <span>ຍອດລວມສິນຄ້າ</span>
                   <span>{formatLak(billTotals.subtotalLak)}</span>
                 </div>
                 {totalCombinedDiscountLak > 0 && (
                   <div className="flex justify-between text-xs text-amber-600 font-medium">
-                    <span>ส่วนลด</span>
+                    <span>ສ່ວນຫຼຸດ</span>
                     <span>-{formatLak(totalCombinedDiscountLak)}</span>
                   </div>
                 )}
                 <div className="pt-1.5 border-t border-slate-200 flex items-center justify-between">
-                  <span className="text-sm font-bold text-slate-900">ยอดที่ต้องชำระสุทธิ</span>
+                  <span className="text-sm font-bold text-slate-900">ຍອດທີ່ຕ້ອງຊຳລະສຸດທິ</span>
                   <span className="text-2xl font-bold text-blue-600">
                     {formatLak(billTotals.grandTotalLak)}
                   </span>
@@ -2037,7 +2037,7 @@ export function PosTerminalPage() {
 
               {/* Payment Method Tabs */}
               <div className="space-y-1.5">
-                <div className="text-xs font-semibold text-slate-700">เลือกวิธีชำระเงิน</div>
+                <div className="text-xs font-semibold text-slate-700">ເລືອກວິທີຊຳລະເງິນ</div>
                 <div className="grid grid-cols-5 gap-1.5">
                   {PAYMENT_METHOD_OPTIONS.map((pm) => {
                     const Icon = pm.icon;
@@ -2068,7 +2068,7 @@ export function PosTerminalPage() {
                 <div className="space-y-3">
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      จำนวนเงินที่ลูกค้าชำระ (₭)
+                      ຈຳນວນເງິນທີ່ລູກຄ້າຊຳລະ (₭)
                     </label>
                     <input
                       type="number"
@@ -2085,7 +2085,7 @@ export function PosTerminalPage() {
                       onClick={() => setCashTendered(String(billTotals.grandTotalLak))}
                       className="min-h-[38px] px-3 py-1.5 text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200 rounded-lg cursor-pointer"
                     >
-                      รับพอดี
+                      ຮັບພໍດີ
                     </button>
                     {QUICK_LAK_AMOUNTS.map((amt) => (
                       <button
@@ -2105,8 +2105,8 @@ export function PosTerminalPage() {
               {(payMode === 'transfer' || payMode === 'qr' || payMode === 'credit') && (
                 <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs sm:text-sm text-slate-700">
                   {payMode === 'credit'
-                    ? `บันทึกยอดค้างชำระ (ขายเชื่อ) จำนวน ${formatLak(billTotals.grandTotalLak)} ในนาม "${customerName || 'ลูกค้าทั่วไป'}"`
-                    : `รับชำระเต็มจำนวน ${formatLak(billTotals.grandTotalLak)} ผ่านช่องทาง ${payMode === 'transfer' ? 'โอนเงินผ่านธนาคาร' : 'QR Payment'}`}
+                    ? `ບັນທຶກຍອດຄ້າງຊຳລະ (ຂາຍເຊື່ອ) ຈຳນວນ ${formatLak(billTotals.grandTotalLak)} ໃນນາມ "${customerName || 'ລູກຄ້າທົ່ວໄປ'}"`
+                    : `ຮັບຊຳລະເຕັມຈຳນວນ ${formatLak(billTotals.grandTotalLak)} ຜ່ານຊ່ອງທາງ ${payMode === 'transfer' ? 'ໂອນເງິນຜ່ານທະນາຄານ' : 'QR Payment'}`}
                 </div>
               )}
 
@@ -2127,10 +2127,10 @@ export function PosTerminalPage() {
                         }}
                         className="col-span-5 min-h-[42px] px-3 py-2 text-xs border border-slate-200 rounded-lg bg-white"
                       >
-                        <option value="cash">เงินสด</option>
-                        <option value="transfer">โอนเงิน</option>
+                        <option value="cash">ເງິນສົດ</option>
+                        <option value="transfer">ໂອນເງິນ</option>
                         <option value="qr">QR Payment</option>
-                        <option value="credit">ค้างชำระ (เครดิต)</option>
+                        <option value="credit">ຄ້າງຊຳລະ (ເຄຣດິດ)</option>
                       </select>
                       <input
                         type="number"
@@ -2151,7 +2151,7 @@ export function PosTerminalPage() {
                         disabled={splitRows.length <= 1}
                         onClick={() => setSplitRows((prev) => prev.filter((_, i) => i !== idx))}
                         className="col-span-1 p-2 text-slate-400 hover:text-red-600 disabled:opacity-30 cursor-pointer"
-                        aria-label="ลบช่องทาง"
+                        aria-label="ລຶບຊ່ອງທາງ"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -2166,7 +2166,7 @@ export function PosTerminalPage() {
                       className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:underline cursor-pointer"
                     >
                       <Plus className="w-3.5 h-3.5" />
-                      เพิ่มช่องทางชำระเงิน
+                      ເພີ່ມຊ່ອງທາງຊຳລະເງິນ
                     </button>
                   )}
                 </div>
@@ -2175,14 +2175,14 @@ export function PosTerminalPage() {
               {/* Notes */}
               <div>
                 <label className="block text-xs font-medium text-slate-700 mb-1">
-                  หมายเหตุบิล (ไม่บังคับ)
+                  ໝາຍເຫດບິນ (ບໍ່ບັງຄັບ)
                 </label>
                 <input
                   type="text"
                   maxLength={300}
                   value={billNotes}
                   onChange={(e) => setBillNotes(e.target.value)}
-                  placeholder="เช่น เลขที่อ้างอิงสลิปโอนเงิน หรือข้อมูลจัดส่ง"
+                  placeholder="ເຊັ່ນ ເລກທີອ້າງອີງສະລິບໂອນເງິນ ຫຼື ຂໍ້ມູນຈັດສົ່ງ"
                   className="w-full min-h-[40px] px-3 py-2 text-sm border border-slate-200 rounded-lg"
                 />
               </div>
@@ -2196,7 +2196,7 @@ export function PosTerminalPage() {
                 }`}
               >
                 <div>
-                  <span className="text-xs text-slate-600">จำนวนเงินที่ลูกค้าชำระ</span>
+                  <span className="text-xs text-slate-600">ຈຳນວນເງິນທີ່ລູກຄ້າຊຳລະ</span>
                   <div className="text-lg font-bold text-slate-900">
                     {formatLak(computedPaymentSummary.covered)}
                   </div>
@@ -2204,14 +2204,14 @@ export function PosTerminalPage() {
                 <div className="text-right">
                   {computedPaymentSummary.remaining > 0 ? (
                     <>
-                      <span className="text-xs text-red-600 font-semibold">ยังขาดอีก</span>
+                      <span className="text-xs text-red-600 font-semibold">ຍັງຂາດອີກ</span>
                       <div className="text-lg font-bold text-red-600">
                         {formatLak(computedPaymentSummary.remaining)}
                       </div>
                     </>
                   ) : (
                     <>
-                      <span className="text-xs text-green-700 font-semibold">เงินทอน</span>
+                      <span className="text-xs text-green-700 font-semibold">ເງິນທອນ</span>
                       <div className="text-xl font-bold text-green-600">
                         {formatLak(computedPaymentSummary.change)}
                       </div>
@@ -2226,7 +2226,7 @@ export function PosTerminalPage() {
                   onClick={() => setCheckoutOpen(false)}
                   className="min-h-[48px] px-4 py-2.5 text-sm font-medium text-slate-700 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer"
                 >
-                  กลับไปแก้ไข
+                  ກັບໄປແກ້ໄຂ
                 </button>
                 <button
                   type="submit"
@@ -2234,7 +2234,7 @@ export function PosTerminalPage() {
                   className="min-h-[48px] flex-1 sm:flex-none px-6 py-2.5 text-sm sm:text-base font-bold text-white bg-green-600 hover:bg-green-700 disabled:bg-slate-300 disabled:cursor-not-allowed rounded-xl cursor-pointer inline-flex items-center justify-center gap-2 transition-colors"
                 >
                   <CheckCircle2 className="w-5 h-5" />
-                  <span>{checkoutSaving ? 'กำลังบันทึกการขาย...' : 'ยืนยันการขาย'}</span>
+                  <span>{checkoutSaving ? 'ກຳລັງບັນທຶກການຂາຍ...' : 'ຢືນຢັນການຂາຍ'}</span>
                 </button>
               </div>
             </form>
@@ -2254,8 +2254,8 @@ export function PosTerminalPage() {
 
       {posScannerOpen && (
         <BarcodeQrScannerModal
-          title="สแกนบาร์โค้ด / QR Code เพื่อขายสินค้า"
-          subtitle="สแกนรหัสสินค้าเพื่อเพิ่มลงตะกร้าขายหน้าร้านทันที"
+          title="ສະແກນບາໂຄ້ດ / QR Code ເພື່ອຂາຍສິນຄ້າ"
+          subtitle="ສະແກນລະຫັດສິນຄ້າເພື່ອເພີ່ມໃສ່ກະຕ່າຂາຍໜ້າຮ້ານທັນທີ"
           onDetected={(code) => {
             setPosScannerOpen(false);
             tryAddScannedCodeToCart(code, false);
@@ -2274,10 +2274,10 @@ export function PosTerminalPage() {
               </div>
               <div className="space-y-1">
                 <h3 className="text-base font-semibold text-slate-900">
-                  ไม่พบสินค้านี้ในระบบ ต้องการเพิ่มสินค้าใหม่หรือไม่?
+                  ບໍ່ພົບສິນຄ້າໃນລະບົບ ທ່ານຕ້ອງການເພີ່ມສິນຄ້າໃໝ່ຫຼືບໍ່?
                 </h3>
                 <p className="text-xs text-slate-600">
-                  รหัส / คำค้นหา:{' '}
+                  ລະຫັດ / ຄຳຄົ້ນຫາ:{' '}
                   <span className="font-mono font-semibold text-slate-900">
                     &ldquo;{notFoundPrompt.query}&rdquo;
                   </span>
@@ -2294,7 +2294,7 @@ export function PosTerminalPage() {
                 }}
                 className="min-h-[42px] px-4 py-2 text-sm font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer"
               >
-                ยกเลิก
+                ຍົກເລີກ
               </button>
               <button
                 type="button"
@@ -2302,7 +2302,7 @@ export function PosTerminalPage() {
                 className="min-h-[42px] inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg cursor-pointer"
               >
                 <PackagePlus className="w-4 h-4" />
-                <span>เพิ่มสินค้าใหม่</span>
+                <span>ເພີ່ມສິນຄ້າໃໝ່</span>
               </button>
             </div>
           </div>

@@ -21,7 +21,7 @@ export function PhaseRoadmapPage({ moduleKey, onNavigate }: PhaseRoadmapPageProp
             {item?.label ?? moduleKey}
           </h2>
           <p className="text-xs text-slate-500">
-            กำหนดพัฒนาใน Phase {item?.phase ?? '-'} ตามแผนการพัฒนาแบบแบ่งระยะ
+            ກຳນົດພັດທະນາໃນ Phase {item?.phase ?? '-'} ຕາມແຜນການພັດທະນາແບບແບ່ງໄລຍະ
           </p>
         </div>
       </div>
@@ -31,8 +31,8 @@ export function PhaseRoadmapPage({ moduleKey, onNavigate }: PhaseRoadmapPageProp
       </p>
 
       <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-600 leading-relaxed">
-        ขณะนี้ระบบพัฒนาเสร็จถึง <strong>Phase 4 (องค์กร สิทธิ์ 7 ระดับ สินค้า คลังสินค้า ระบบขายหน้าร้าน POS พิมพ์ใบเสร็จ และประวัติการขาย/รับคืน)</strong>{' '}
-        โมดูลนี้จะถูกสร้างพร้อมฐานข้อมูลจริงใน Phase {item?.phase ?? '-'} โดยไม่มีข้อมูลจำลองหรือปุ่มตัวอย่าง
+        ປັດຈຸບັນລະບົບພັດທະນາສຳເລັດເຖິງ <strong>Phase 4 (ອົງກອນ, ສິດ 7 ລະດັບ, ສິນຄ້າ, ສາງສິນຄ້າ, ລະບົບຂາຍໜ້າຮ້ານ POS, ພິມໃບບິນ ແລະ ປະຫວັດການຂາຍ/ຮັບຄືນ)</strong>{' '}
+        ໂມດູນນີ້ຈະຖືກສ້າງພ້ອມຖານຂໍ້ມູນຈິງໃນ Phase {item?.phase ?? '-'} ໂດຍບໍ່ມີຂໍ້ມູນຈຳລອງຫຼືປຸ່ມຕົວຢ່າງ
       </div>
 
       <div className="flex flex-wrap gap-2.5 pt-2">
@@ -41,7 +41,7 @@ export function PhaseRoadmapPage({ moduleKey, onNavigate }: PhaseRoadmapPageProp
           onClick={() => onNavigate('pos')}
           className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-medium rounded-lg cursor-pointer"
         >
-          ไปที่ POS ขายสินค้า
+          ໄປທີ່ POS ຂາຍສິນຄ້າ
           <ArrowRight className="w-4 h-4" />
         </button>
         <button
@@ -49,14 +49,14 @@ export function PhaseRoadmapPage({ moduleKey, onNavigate }: PhaseRoadmapPageProp
           onClick={() => onNavigate('products')}
           className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs sm:text-sm font-medium rounded-lg cursor-pointer"
         >
-          ไปที่จัดการสินค้า
+          ໄປທີ່ຈັດການສິນຄ້າ
         </button>
         <button
           type="button"
           onClick={() => onNavigate('inventory')}
           className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs sm:text-sm font-medium rounded-lg cursor-pointer"
         >
-          ไปที่คลังสินค้า
+          ໄປທີ່ສາງສິນຄ້າ
         </button>
       </div>
     </div>

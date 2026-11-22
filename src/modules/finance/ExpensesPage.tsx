@@ -129,11 +129,11 @@ export function ExpensesPage() {
       setAmountLak('0');
       setReferenceNo('');
       setNotes('');
-      setFeedback({ type: 'ok', text: 'บันทึกรายจ่ายและลงสมุดรายวันอัตโนมัติเรียบร้อยแล้ว' });
+      setFeedback({ type: 'ok', text: 'ບັນທຶກລາຍຈ່າຍ ແລະ ລົງປຶ້ມບັນຊີປະຈຳວັນອັດຕະໂນມັດຮຽບຮ້ອຍແລ້ວ' });
     } catch (err) {
       setFeedback({
         type: 'err',
-        text: err instanceof Error ? err.message : 'ไม่สามารถบันทึกรายจ่ายได้',
+        text: err instanceof Error ? err.message : 'ບໍ່ສາມາດບັນທຶກລາຍຈ່າຍໄດ້',
       });
     } finally {
       setSaving(false);
@@ -168,9 +168,9 @@ export function ExpensesPage() {
         <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 flex items-center gap-2.5">
           <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
           <span>
-            แจ้งเตือนค่าใช้จ่ายสูง: ค่าใช้จ่ายดำเนินงานคิดเป็น{' '}
-            <strong className="tabular-nums">{opExRatioPercent}%</strong> ของรายรับรวม
-            (เกินเกณฑ์ที่ตั้งไว้ {highExpenseThreshold}%)
+            ແຈ້ງເຕືອນຄ່າໃຊ້ຈ່າຍສູງ: ຄ່າໃຊ້ຈ່າຍດຳເນີນງານຄິດເປັນ{' '}
+            <strong className="tabular-nums">{opExRatioPercent}%</strong> ຂອງລາຍຮັບລວມ
+            (ເກີນເກນທີ່ຕັ້ງໄວ້ {highExpenseThreshold}%)
           </span>
         </div>
       )}
@@ -178,12 +178,12 @@ export function ExpensesPage() {
       {/* 7 Categories Breakdown Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="bg-white border border-slate-200 rounded-xl p-4">
-          <div className="text-xs text-slate-500">รายจ่ายรวมทั้งหมด</div>
+          <div className="text-xs text-slate-500">ລາຍຈ່າຍລວມທັງໝົດ</div>
           <div className="text-xl font-bold text-red-700 tabular-nums mt-1">
             {formatLak(totalExpenseLak)}
           </div>
           <div className="text-[11px] text-slate-400 mt-0.5 tabular-nums">
-            ค่าใช้จ่ายดำเนินงาน {formatLak(operatingExpenseLak)}
+            ຄ່າໃຊ້ຈ່າຍດຳເນີນງານ {formatLak(operatingExpenseLak)}
           </div>
         </div>
         {ALL_EXPENSE_CATEGORIES.map((c) => (
@@ -199,13 +199,13 @@ export function ExpensesPage() {
       {/* Filter & Add Bar */}
       <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-xs font-medium text-slate-600">หมวดหมู่:</span>
+          <span className="text-xs font-medium text-slate-600">ໝວດໝູ່:</span>
           <select
             value={catFilter}
             onChange={(e) => setCatFilter(e.target.value as 'all' | ExpenseCategory)}
             className="px-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-white"
           >
-            <option value="all">ทุกหมวดหมู่ (7 หมวด)</option>
+            <option value="all">ທຸກໝວດໝູ່ (7 ໝວດ)</option>
             {ALL_EXPENSE_CATEGORIES.map((c) => (
               <option key={c} value={c}>
                 {EXPENSE_CATEGORY_META[c].label}
@@ -220,7 +220,7 @@ export function ExpensesPage() {
             className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold rounded-lg cursor-pointer self-start sm:self-auto"
           >
             <Plus className="w-4 h-4" />
-            บันทึกรายจ่ายใหม่
+            ບັນທຶກລາຍຈ່າຍໃໝ່
           </button>
         )}
       </div>
@@ -231,13 +231,13 @@ export function ExpensesPage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-600">
-                <th className="py-3 px-4">วันที่</th>
-                <th className="py-3 px-4">หมวดหมู่ (7 หมวด)</th>
-                <th className="py-3 px-4">รายการค่าใช้จ่าย</th>
-                <th className="py-3 px-4">อ้างอิง</th>
-                <th className="py-3 px-4">ช่องทาง</th>
-                <th className="py-3 px-4 text-right">จำนวนเงิน</th>
-                <th className="py-3 px-4">ผู้บันทึก</th>
+                <th className="py-3 px-4">ວັນທີ</th>
+                <th className="py-3 px-4">ໝວດໝູ່ (7 ໝວດ)</th>
+                <th className="py-3 px-4">ລາຍການຄ່າໃຊ້ຈ່າຍ</th>
+                <th className="py-3 px-4">ອ້າງອີງ</th>
+                <th className="py-3 px-4">ຊ່ອງທາງ</th>
+                <th className="py-3 px-4 text-right">ຈຳນວນເງິນ</th>
+                <th className="py-3 px-4">ຜູ້ບັນທຶກ</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-sm">
@@ -256,9 +256,9 @@ export function ExpensesPage() {
                   </td>
                   <td className="py-3 px-4 text-xs text-slate-600">
                     {item.paymentMethod === 'cash'
-                      ? 'เงินสด'
+                      ? 'ເງິນສົດ'
                       : item.paymentMethod === 'transfer'
-                        ? 'โอนเงิน'
+                        ? 'ໂອນເງິນ'
                         : 'QR Payment'}
                   </td>
                   <td className="py-3 px-4 text-right font-bold text-red-700 tabular-nums">
@@ -273,7 +273,7 @@ export function ExpensesPage() {
               {filtered.length === 0 && (
                 <tr>
                   <td colSpan={7} className="py-10 text-center text-xs text-slate-500">
-                    ยังไม่มีรายการรายจ่ายในหมวดหมู่ที่เลือก
+                    ຍັງບໍ່ມີລາຍການລາຍຈ່າຍໃນໝວດໝູ່ທີ່ເລືອກ
                   </td>
                 </tr>
               )}
@@ -287,7 +287,7 @@ export function ExpensesPage() {
         <div className="fixed inset-0 z-50 bg-slate-900/45 flex items-center justify-center p-4">
           <div className="w-full max-w-md bg-white border border-slate-200 rounded-xl p-6">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
-              <h3 className="text-base font-semibold text-slate-900">บันทึกรายจ่ายร้านค้า</h3>
+              <h3 className="text-base font-semibold text-slate-900">ບັນທຶກລາຍຈ່າຍຮ້ານຄ້າ</h3>
               <button
                 type="button"
                 onClick={() => setModalOpen(false)}
@@ -299,7 +299,7 @@ export function ExpensesPage() {
             <form onSubmit={handleSave} className="space-y-4">
               <div>
                 <label className="block text-xs font-medium text-slate-700 mb-1">
-                  หมวดหมู่ค่าใช้จ่าย (7 หมวด) *
+                  ໝວດໝູ່ຄ່າໃຊ້ຈ່າຍ (7 ໝວດ) *
                 </label>
                 <select
                   value={category}
@@ -315,7 +315,7 @@ export function ExpensesPage() {
               </div>
               <div>
                 <label className="block text-xs font-medium text-slate-700 mb-1">
-                  ชื่อรายการค่าใช้จ่าย *
+                  ຊື່ລາຍການຄ່າໃຊ້ຈ່າຍ *
                 </label>
                 <input
                   type="text"
@@ -323,14 +323,14 @@ export function ExpensesPage() {
                   maxLength={160}
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="เช่น ค่าไฟฟ้าประจำเดือน / เงินเดือนแคชเชียร์"
+                  placeholder="ເຊັ່ນ ຄ່າໄຟຟ້າປະຈຳເດືອນ / ເງິນເດືອນແຄັດເຊຍ"
                   className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1">
-                    จำนวนเงิน (₭) *
+                    ຈຳນວນເງິນ (₭) *
                   </label>
                   <input
                     type="number"
@@ -342,7 +342,7 @@ export function ExpensesPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">วันที่จ่าย</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">ວັນທີຈ່າຍ</label>
                   <input
                     type="date"
                     required
@@ -354,19 +354,19 @@ export function ExpensesPage() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">ช่องทางจ่าย</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">ຊ່ອງທາງຈ່າຍ</label>
                   <select
                     value={paymentMethod}
                     onChange={(e) => setPaymentMethod(e.target.value as 'cash' | 'transfer' | 'qr')}
                     className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white"
                   >
-                    <option value="cash">เงินสด</option>
-                    <option value="transfer">โอนเงินธนาคาร</option>
+                    <option value="cash">ເງິນສົດ</option>
+                    <option value="transfer">ໂອນເງິນທະນາຄານ</option>
                     <option value="qr">QR Payment</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">เลขที่ใบเสร็จ/อ้างอิง</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">ເລກທີໃບບິນ/ອ້າງອີງ</label>
                   <input
                     type="text"
                     maxLength={60}
@@ -377,7 +377,7 @@ export function ExpensesPage() {
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">หมายเหตุ</label>
+                <label className="block text-xs font-medium text-slate-700 mb-1">ໝາຍເຫດ</label>
                 <input
                   type="text"
                   maxLength={300}
@@ -392,14 +392,14 @@ export function ExpensesPage() {
                   onClick={() => setModalOpen(false)}
                   className="px-4 py-2 text-sm font-medium text-slate-600 border border-slate-200 rounded-lg cursor-pointer"
                 >
-                  ยกเลิก
+                  ຍົກເລີກ
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
                   className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg cursor-pointer"
                 >
-                  {saving ? 'กำลังบันทึก...' : 'บันทึกรายจ่าย'}
+                  {saving ? 'ກຳລັງບັນທຶກ...' : 'ບັນທຶກລາຍຈ່າຍ'}
                 </button>
               </div>
             </form>

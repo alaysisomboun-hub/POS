@@ -57,7 +57,7 @@ export async function createPurchaseOrder(params: {
   } = params;
 
   if (items.length === 0) {
-    throw new Error('กรุณาเพิ่มรายการสินค้าในใบสั่งซื้ออย่างน้อย 1 รายการ');
+    throw new Error('ກະລຸນາເພີ່ມລາຍການສິນຄ້າໃນໃບສັ່ງຊື້ຢ່າງໜ້ອຍ 1 ລາຍການ');
   }
 
   const subtotalLak = items.reduce((s, it) => s + it.lineTotalLak, 0);
@@ -149,7 +149,7 @@ export async function receivePurchaseOrder(params: {
 }): Promise<void> {
   const { db, user, branchId, po, productsMap } = params;
   if (po.status !== 'ordered') {
-    throw new Error('ใบสั่งซื้อนี้ไม่อยู่ในสถานะรอรับเข้า');
+    throw new Error('ໃບສັ່ງຊື້ນີ້ບໍ່ໄດ້ຢູ່ໃນສະຖານະລໍຖ້າຮັບເຂົ້າ');
   }
 
   const uniqueProductIds = Array.from(new Set(po.items.map((i) => i.productId)));
@@ -158,10 +158,10 @@ export async function receivePurchaseOrder(params: {
     // 1. ALL READS FIRST
     const poRef = doc(db, 'purchaseOrders', po.poId);
     const poSnap = await tx.get(poRef);
-    if (!poSnap.exists()) throw new Error('ไม่พบข้อมูลใบสั่งซื้อ');
+    if (!poSnap.exists()) throw new Error('ບໍ່ພົບຂໍ້ມູນໃບສັ່ງຊື້');
     const latestPo = poSnap.data() as PurchaseOrder;
     if (latestPo.status !== 'ordered') {
-      throw new Error('ใบสั่งซื้อนี้ถูกรับเข้าหรือยกเลิกไปแล้ว');
+      throw new Error('ໃບສັ່ງຊື້ນີ້ຖືກຮັບເຂົ້າ ຫຼື ຍົກເລີກໄປແລ້ວ');
     }
 
     const supRef = doc(db, 'suppliers', latestPo.supplierId);
@@ -306,7 +306,7 @@ export async function receivePurchaseOrder(params: {
         balanceAfterBase: afterQty,
         unitCostBaseLak,
         totalCostLak: landedTotal,
-        reason: `รับสินค้าจากใบสั่งซื้อ ${latestPo.poNumber} (${latestPo.supplierName})`.slice(0, 300),
+        reason: `ຮັບສິນຄ້າຈາກໃບສັ່ງຊື້ ${latestPo.poNumber} (${latestPo.supplierName})`.slice(0, 300),
         referenceNo: latestPo.poNumber.slice(0, 60),
         performedByUid: user.uid,
         performedByName: user.name.slice(0, 120),
@@ -339,7 +339,7 @@ export async function receivePurchaseOrder(params: {
         branchId,
         ownerUid: user.ownerUid,
         category: 'inventory_purchase',
-        title: `ซื้อสินค้าเข้าคลัง ${latestPo.poNumber} (${latestPo.supplierName})`.slice(0, 160),
+        title: `ຊື້ສິນຄ້າເຂົ້າສາງ ${latestPo.poNumber} (${latestPo.supplierName})`.slice(0, 160),
         amountLak: latestPo.grandTotalLak,
         paymentMethod: 'cash',
         referenceNo: latestPo.poNumber.slice(0, 60),
@@ -355,20 +355,20 @@ export async function receivePurchaseOrder(params: {
       const lines: JournalLine[] = [
         {
           accountCode: '1140',
-          accountName: 'สินค้าคงเหลือ',
+          accountName: 'ສິນຄ້າຄົງເຫຼືອ',
           debitLak: latestPo.grandTotalLak,
           creditLak: 0,
         },
         isCredit
           ? {
               accountCode: '2110',
-              accountName: 'เจ้าหนี้การค้า',
+              accountName: 'ເຈົ້າໜີ້ການຄ້າ',
               debitLak: 0,
               creditLak: latestPo.grandTotalLak,
             }
           : {
               accountCode: '1110',
-              accountName: 'เงินสดในมือ',
+              accountName: 'ເງິນສົດໃນມື',
               debitLak: 0,
               creditLak: latestPo.grandTotalLak,
             },
@@ -381,7 +381,7 @@ export async function receivePurchaseOrder(params: {
         branchId,
         ownerUid: user.ownerUid,
         entryDate,
-        description: `รับสินค้าตามใบสั่งซื้อ ${latestPo.poNumber} (${latestPo.supplierName})`.slice(0, 300),
+        description: `ຮັບສິນຄ້າຕາມໃບສັ່ງຊື້ ${latestPo.poNumber} (${latestPo.supplierName})`.slice(0, 300),
         sourceType: 'purchase',
         referenceNo: latestPo.poNumber.slice(0, 60),
         lines,
@@ -418,7 +418,7 @@ export async function cancelPurchaseOrder(params: {
 }): Promise<void> {
   const { db, user, branchId, po } = params;
   if (po.status !== 'ordered') {
-    throw new Error('ยกเลิกได้เฉพาะใบสั่งซื้อที่ยังไม่รับสินค้าเข้าคลังเท่านั้น');
+    throw new Error('ຍົກເລີກໄດ້ສະເພາະໃບສັ່ງຊື້ທີ່ຍັງບໍ່ຮັບສິນຄ້າເຂົ້າສາງເທົ່ານັ້ນ');
   }
   await updateDoc(doc(db, 'purchaseOrders', po.poId), {
     status: 'cancelled',

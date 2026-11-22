@@ -182,7 +182,7 @@ export function CustomersPage() {
           before: { name: editingCustomer.name, creditLimitLak: editingCustomer.creditLimitLak },
           after: payload,
         });
-        setFeedback({ type: 'ok', text: `อัปเดตข้อมูลลูกค้า "${payload.name}" แล้ว` });
+        setFeedback({ type: 'ok', text: `ອັບເດດຂໍ້ມູນລູກຄ້າ "${payload.name}" ແລ້ວ` });
       } else {
         const customerId = generateSafeId('cus');
         await setDoc(doc(db, 'customers', customerId), {
@@ -205,13 +205,13 @@ export function CustomersPage() {
           before: null,
           after: payload,
         });
-        setFeedback({ type: 'ok', text: `เพิ่มลูกค้า "${payload.name}" เรียบร้อยแล้ว` });
+        setFeedback({ type: 'ok', text: `ເພີ່ມລູກຄ້າ "${payload.name}" ຮຽບຮ້ອຍແລ້ວ` });
       }
       setModalOpen(false);
     } catch (err) {
       setFeedback({
         type: 'err',
-        text: err instanceof Error ? err.message : 'ไม่สามารถบันทึกข้อมูลลูกค้าได้',
+        text: err instanceof Error ? err.message : 'ບໍ່ສາມາດບັນທຶກຂໍ້ມູນລູກຄ້າໄດ້',
       });
     } finally {
       setSaving(false);
@@ -247,22 +247,22 @@ export function CustomersPage() {
       {/* KPI */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white border border-slate-200 rounded-xl p-4">
-          <div className="text-xs text-slate-500">ลูกค้าในฐานข้อมูล</div>
+          <div className="text-xs text-slate-500">ລູກຄ້າໃນຖານຂໍ້ມູນ</div>
           <div className="text-2xl font-bold text-slate-900 tabular-nums mt-1">
-            {customers.filter((c) => c.status === 'active').length} ราย
+            {customers.filter((c) => c.status === 'active').length} ລາຍ
           </div>
         </div>
         <div className="bg-white border border-slate-200 rounded-xl p-4">
-          <div className="text-xs text-slate-500">ยอดลูกหนี้ค้างรับ (AR)</div>
+          <div className="text-xs text-slate-500">ຍອດລູກໜີ້ຄ້າງຮັບ (AR)</div>
           <div className="text-2xl font-bold text-amber-700 tabular-nums mt-1">
             {formatLak(totalCreditBalance)}
           </div>
         </div>
         <div className="bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between">
           <div>
-            <div className="text-xs text-slate-500">คะแนนสะสมสมาชิกรวม</div>
+            <div className="text-xs text-slate-500">ຄະແນນສະສົມສະມາຊິກລວມ</div>
             <div className="text-xl font-bold text-blue-700 tabular-nums mt-1">
-              {customers.reduce((s, c) => s + c.pointsBalance, 0).toLocaleString('en-US')} แต้ม
+              {customers.reduce((s, c) => s + c.pointsBalance, 0).toLocaleString('en-US')} ແຕ້ມ
             </div>
           </div>
           <Users className="w-7 h-7 text-blue-600 shrink-0" />
@@ -277,7 +277,7 @@ export function CustomersPage() {
             type="text"
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
-            placeholder="ค้นหาชื่อลูกค้า รหัส หรือเบอร์โทรศัพท์..."
+            placeholder="ຄົ້ນຫາຊື່ລູກຄ້າ ລະຫັດ ຫຼື ເບີໂທລະສັບ..."
             className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-blue-600"
           />
         </div>
@@ -288,7 +288,7 @@ export function CustomersPage() {
             className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold rounded-lg cursor-pointer self-start sm:self-auto"
           >
             <Plus className="w-4 h-4" />
-            เพิ่มลูกค้าใหม่
+            ເພີ່ມລູກຄ້າໃໝ່
           </button>
         )}
       </div>
@@ -299,13 +299,13 @@ export function CustomersPage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-600">
-                <th className="py-3 px-4">รหัส</th>
-                <th className="py-3 px-4">ชื่อลูกค้า / เบอร์โทร</th>
-                <th className="py-3 px-4">ระดับสมาชิก</th>
-                <th className="py-3 px-4 text-right">แต้มสะสม</th>
-                <th className="py-3 px-4 text-right">ยอดซื้อสะสม</th>
-                <th className="py-3 px-4 text-right">หนี้ค้าง / วงเงิน</th>
-                <th className="py-3 px-4 text-right">จัดการ</th>
+                <th className="py-3 px-4">ລະຫັດ</th>
+                <th className="py-3 px-4">ຊື່ລູກຄ້າ / ເບີໂທ</th>
+                <th className="py-3 px-4">ລະດັບສະມາຊິກ</th>
+                <th className="py-3 px-4 text-right">ແຕ້ມສະສົມ</th>
+                <th className="py-3 px-4 text-right">ຍອດຊື້ສະສົມ</th>
+                <th className="py-3 px-4 text-right">ໜີ້ຄ້າງ / ວົງເງິນ</th>
+                <th className="py-3 px-4 text-right">ຈັດການ</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-sm">
@@ -317,7 +317,7 @@ export function CustomersPage() {
                     <div className="text-xs text-slate-500 tabular-nums">{c.phone || '-'}</div>
                   </td>
                   <td className="py-3 px-4 text-xs text-blue-700 font-medium">
-                    {c.tierName || 'ลูกค้าทั่วไป'}
+                    {c.tierName || 'ລູກຄ້າທົ່ວໄປ'}
                   </td>
                   <td className="py-3 px-4 text-right tabular-nums font-medium text-slate-800">
                     {c.pointsBalance.toLocaleString('en-US')}
@@ -334,7 +334,7 @@ export function CustomersPage() {
                       {formatLak(c.creditBalanceLak)}
                     </div>
                     <div className="text-slate-400">
-                      วงเงิน: {c.creditLimitLak > 0 ? formatLak(c.creditLimitLak) : 'ไม่จำกัด'}
+                      ວົງເງິນ: {c.creditLimitLak > 0 ? formatLak(c.creditLimitLak) : 'ບໍ່ຈຳກັດ'}
                     </div>
                   </td>
                   <td className="py-3 px-4 text-right">
@@ -345,7 +345,7 @@ export function CustomersPage() {
                         className="inline-flex items-center gap-1 px-2 py-1 text-xs text-slate-600 hover:bg-slate-100 rounded cursor-pointer"
                       >
                         <Eye className="w-3.5 h-3.5" />
-                        ประวัติ
+                        ປະຫວັດ
                       </button>
                       {canEdit && (
                         <button
@@ -354,7 +354,7 @@ export function CustomersPage() {
                           className="inline-flex items-center gap-1 px-2 py-1 text-xs text-blue-600 hover:bg-blue-50 rounded cursor-pointer"
                         >
                           <Edit2 className="w-3.5 h-3.5" />
-                          แก้ไข
+                          ແກ້ໄຂ
                         </button>
                       )}
                     </div>
@@ -364,7 +364,7 @@ export function CustomersPage() {
               {filtered.length === 0 && (
                 <tr>
                   <td colSpan={7} className="py-10 text-center text-xs text-slate-500">
-                    ยังไม่มีข้อมูลลูกค้าในระบบ
+                    ຍັງບໍ່ມີຂໍ້ມູນລູກຄ້າໃນລະບົບ
                   </td>
                 </tr>
               )}
@@ -379,7 +379,7 @@ export function CustomersPage() {
           <div className="w-full max-w-lg bg-white border border-slate-200 rounded-xl p-6">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
               <h3 className="text-base font-semibold text-slate-900">
-                {editingCustomer ? 'แก้ไขข้อมูลลูกค้า' : 'เพิ่มลูกค้าใหม่'}
+                {editingCustomer ? 'ແກ້ໄຂຂໍ້ມູນລູກຄ້າ' : 'ເພີ່ມລູກຄ້າໃໝ່'}
               </h3>
               <button
                 type="button"
@@ -392,7 +392,7 @@ export function CustomersPage() {
             <form onSubmit={handleSave} className="space-y-4">
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">รหัสลูกค้า *</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">ລະຫັດລູກຄ້າ *</label>
                   <input
                     type="text"
                     required
@@ -404,7 +404,7 @@ export function CustomersPage() {
                 </div>
                 <div className="col-span-2">
                   <label className="block text-xs font-medium text-slate-700 mb-1">
-                    ชื่อลูกค้า / ร้านค้า *
+                    ຊື່ລູກຄ້າ / ຮ້ານຄ້າ *
                   </label>
                   <input
                     type="text"
@@ -418,7 +418,7 @@ export function CustomersPage() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">เบอร์โทรศัพท์</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">ເບີໂທລະສັບ</label>
                   <input
                     type="text"
                     maxLength={30}
@@ -428,16 +428,16 @@ export function CustomersPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">ระดับสมาชิก</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">ລະດັບສະມາຊິກ</label>
                   <select
                     value={tierId}
                     onChange={(e) => setTierId(e.target.value)}
                     className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white"
                   >
-                    <option value="">ลูกค้าทั่วไป</option>
+                    <option value="">ລູກຄ້າທົ່ວໄປ</option>
                     {tiers.map((t) => (
                       <option key={t.tierId} value={t.tierId}>
-                        {t.name} (ลด {t.discountPercent}%)
+                        {t.name} (ຫຼຸດ {t.discountPercent}%)
                       </option>
                     ))}
                   </select>
@@ -446,7 +446,7 @@ export function CustomersPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1">
-                    วงเงินเครดิตสูงสุด (₭, 0 = ไม่จำกัด)
+                    ວົງເງິນເຄຣດິດສູງສຸດ (₭, 0 = ບໍ່ຈຳກັດ)
                   </label>
                   <input
                     type="number"
@@ -458,7 +458,7 @@ export function CustomersPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1">
-                    คะแนนสะสมปัจจุบัน
+                    ຄະແນນສະສົມປັດຈຸບັນ
                   </label>
                   <input
                     type="number"
@@ -471,7 +471,7 @@ export function CustomersPage() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">อีเมล</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">ອີເມວ</label>
                   <input
                     type="email"
                     maxLength={160}
@@ -481,19 +481,19 @@ export function CustomersPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">สถานะ</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">ສະຖານະ</label>
                   <select
                     value={status}
                     onChange={(e) => setStatus(e.target.value as 'active' | 'inactive')}
                     className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white"
                   >
-                    <option value="active">ใช้งานอยู่</option>
-                    <option value="inactive">ปิดใช้งาน</option>
+                    <option value="active">ໃຊ້ງານຢູ່</option>
+                    <option value="inactive">ປິດໃຊ້ງານ</option>
                   </select>
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">ที่อยู่</label>
+                <label className="block text-xs font-medium text-slate-700 mb-1">ທີ່ຢູ່</label>
                 <input
                   type="text"
                   maxLength={300}
@@ -503,7 +503,7 @@ export function CustomersPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">หมายเหตุ</label>
+                <label className="block text-xs font-medium text-slate-700 mb-1">ໝາຍເຫດ</label>
                 <input
                   type="text"
                   maxLength={300}
@@ -518,14 +518,14 @@ export function CustomersPage() {
                   onClick={() => setModalOpen(false)}
                   className="px-4 py-2 text-sm font-medium text-slate-600 border border-slate-200 rounded-lg cursor-pointer"
                 >
-                  ยกเลิก
+                  ຍົກເລີກ
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
                   className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg cursor-pointer"
                 >
-                  {saving ? 'กำลังบันทึก...' : 'บันทึกลูกค้า'}
+                  {saving ? 'ກຳລັງບັນທຶກ...' : 'ບັນທຶກລູກຄ້າ'}
                 </button>
               </div>
             </form>
@@ -540,11 +540,11 @@ export function CustomersPage() {
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
               <div>
                 <h3 className="text-base font-semibold text-slate-900">
-                  ประวัติการซื้อ: {viewingCustomer.name}
+                  ປະຫວັດການຊື້: {viewingCustomer.name}
                 </h3>
                 <p className="text-xs text-slate-500 tabular-nums">
-                  ยอดซื้อสะสม {formatLak(viewingCustomer.totalSpentLak)} · คงค้าง{' '}
-                  {formatLak(viewingCustomer.creditBalanceLak)} · แต้ม{' '}
+                  ຍອດຊື້ສະສົມ {formatLak(viewingCustomer.totalSpentLak)} · ຄົງຄ້າງ{' '}
+                  {formatLak(viewingCustomer.creditBalanceLak)} · ແຕ້ມ{' '}
                   {viewingCustomer.pointsBalance.toLocaleString('en-US')}
                 </p>
               </div>
@@ -562,20 +562,20 @@ export function CustomersPage() {
                   <div>
                     <div className="font-mono font-bold text-blue-700">{s.invoiceNumber}</div>
                     <div className="text-slate-500 tabular-nums">
-                      {formatDateTimeVientiane(s.createdAt)} · {s.items.length} รายการ
+                      {formatDateTimeVientiane(s.createdAt)} · {s.items.length} ລາຍການ
                     </div>
                   </div>
                   <div className="text-right tabular-nums">
                     <div className="font-bold text-slate-900">{formatLak(s.grandTotalLak)}</div>
                     {s.creditDueLak > 0 && (
-                      <div className="text-amber-700">ค้างชำระ {formatLak(s.creditDueLak)}</div>
+                      <div className="text-amber-700">ຄ້າງຊຳລະ {formatLak(s.creditDueLak)}</div>
                     )}
                   </div>
                 </div>
               ))}
               {customerSales.length === 0 && (
                 <div className="py-10 text-center text-slate-500">
-                  ยังไม่มีประวัติการซื้อในนามลูกค้ารายนี้
+                  ຍັງບໍ່ມີປະຫວັດການຊື້ໃນນາມລູກຄ້າລາຍນີ້
                 </div>
               )}
             </div>

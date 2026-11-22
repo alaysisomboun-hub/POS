@@ -115,12 +115,12 @@ export function AccountsPayablePage() {
       setPayModalOpen(false);
       setFeedback({
         type: 'ok',
-        text: `บันทึกจ่ายชำระหนี้ให้ "${targetSupplier.name}" จำนวน ${formatLak(amt)} แล้ว`,
+        text: `ບັນທຶກຈ່າຍຊຳລະໜີ້ໃຫ້ "${targetSupplier.name}" ຈຳນວນ ${formatLak(amt)} ແລ້ວ`,
       });
     } catch (err) {
       setFeedback({
         type: 'err',
-        text: err instanceof Error ? err.message : 'ไม่สามารถบันทึกการจ่ายชำระหนี้ได้',
+        text: err instanceof Error ? err.message : 'ບໍ່ສາມາດບັນທຶກການຈ່າຍຊຳລະໜີ້ໄດ້',
       });
     } finally {
       setSaving(false);
@@ -154,21 +154,21 @@ export function AccountsPayablePage() {
       {/* KPI */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white border border-slate-200 rounded-xl p-4">
-          <div className="text-xs text-slate-500">ยอดเจ้าหนี้ค้างจ่ายรวม (AP)</div>
+          <div className="text-xs text-slate-500">ຍອດເຈົ້າໜີ້ຄ້າງຈ່າຍລວມ (AP)</div>
           <div className="text-2xl font-bold text-red-700 tabular-nums mt-1">
             {formatLak(totalApLak)}
           </div>
         </div>
         <div className="bg-white border border-slate-200 rounded-xl p-4">
-          <div className="text-xs text-slate-500">จำนวนซัพพลายเออร์ที่ค้างจ่าย</div>
+          <div className="text-xs text-slate-500">ຈຳນວນຜູ້ສະໜອງທີ່ຄ້າງຈ່າຍ</div>
           <div className="text-2xl font-bold text-slate-900 tabular-nums mt-1">
-            {creditors.length} ราย
+            {creditors.length} ລາຍ
           </div>
         </div>
         <div className="bg-white border border-slate-200 rounded-xl p-4">
-          <div className="text-xs text-slate-500">ใบสั่งซื้อเครดิตค้างจ่าย</div>
+          <div className="text-xs text-slate-500">ໃບສັ່ງຊື້ເຄຣດິດຄ້າງຈ່າຍ</div>
           <div className="text-2xl font-bold text-blue-700 tabular-nums mt-1">
-            {creditPos.length} ใบ
+            {creditPos.length} ໃບ
           </div>
         </div>
       </div>
@@ -184,7 +184,7 @@ export function AccountsPayablePage() {
             }`}
           >
             <FileSpreadsheet className="w-3.5 h-3.5" />
-            เจ้าหนี้คงค้าง
+            ເຈົ້າໜີ້ຄົງຄ້າງ
           </button>
           <button
             type="button"
@@ -194,7 +194,7 @@ export function AccountsPayablePage() {
             }`}
           >
             <History className="w-3.5 h-3.5" />
-            ประวัติจ่ายชำระ ({payments.length})
+            ປະຫວັດຈ່າຍຊຳລະ ({payments.length})
           </button>
         </div>
       </div>
@@ -203,7 +203,7 @@ export function AccountsPayablePage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
             <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-700">
-              ยอดเจ้าหนี้คงค้างตามซัพพลายเออร์
+              ຍອດເຈົ້າໜີ້ຄົງຄ້າງຕາມຜູ້ສະໜອງ
             </div>
             <div className="divide-y divide-slate-100">
               {creditors.map((sup) => (
@@ -211,7 +211,7 @@ export function AccountsPayablePage() {
                   <div>
                     <div className="text-sm font-semibold text-slate-900">{sup.name}</div>
                     <div className="text-xs text-slate-500">
-                      {sup.phone || '-'} · เครดิต {sup.paymentTermDays} วัน
+                      {sup.phone || '-'} · ເຄຣດິດ {sup.paymentTermDays} ວັນ
                     </div>
                   </div>
                   <div className="text-right flex items-center gap-3">
@@ -224,7 +224,7 @@ export function AccountsPayablePage() {
                         onClick={() => openPayModal(sup, null)}
                         className="px-3 py-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-lg cursor-pointer"
                       >
-                        จ่ายชำระหนี้
+                        ຈ່າຍຊຳລະໜີ້
                       </button>
                     )}
                   </div>
@@ -232,7 +232,7 @@ export function AccountsPayablePage() {
               ))}
               {creditors.length === 0 && (
                 <div className="py-10 text-center text-xs text-slate-500">
-                  ไม่มีซัพพลายเออร์ที่มียอดค้างจ่าย
+                  ບໍ່ມີຜູ້ສະໜອງທີ່ມີຍອດຄ້າງຈ່າຍ
                 </div>
               )}
             </div>
@@ -240,7 +240,7 @@ export function AccountsPayablePage() {
 
           <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
             <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-700">
-              ใบสั่งซื้อเครดิตค้างจ่าย
+              ໃບສັ່ງຊື້ເຄຣດິດຄ້າງຈ່າຍ
             </div>
             <div className="divide-y divide-slate-100">
               {creditPos.map((po) => {
@@ -251,7 +251,7 @@ export function AccountsPayablePage() {
                       <div className="text-xs font-mono font-bold text-blue-700">{po.poNumber}</div>
                       <div className="text-sm font-medium text-slate-900">{po.supplierName}</div>
                       <div className="text-[11px] text-slate-500 tabular-nums">
-                        ครบกำหนด: {po.dueDate || '-'} · ยอดเต็ม {formatLak(po.grandTotalLak)}
+                        ຄົບກຳນົດ: {po.dueDate || '-'} · ຍອດເຕັມ {formatLak(po.grandTotalLak)}
                       </div>
                     </div>
                     <div className="text-right flex items-center gap-3">
@@ -264,7 +264,7 @@ export function AccountsPayablePage() {
                           onClick={() => openPayModal(sup, po)}
                           className="px-3 py-1.5 text-xs font-semibold bg-green-600 hover:bg-green-700 text-white rounded-lg cursor-pointer"
                         >
-                          ชำระ PO นี้
+                          ຊຳລະ PO ນີ້
                         </button>
                       )}
                     </div>
@@ -273,7 +273,7 @@ export function AccountsPayablePage() {
               })}
               {creditPos.length === 0 && (
                 <div className="py-10 text-center text-xs text-slate-500">
-                  ไม่มีใบสั่งซื้อเครดิตที่ค้างชำระ
+                  ບໍ່ມີໃບສັ່ງຊື້ເຄຣດິດທີ່ຄ້າງຊຳລະ
                 </div>
               )}
             </div>
@@ -287,12 +287,12 @@ export function AccountsPayablePage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-600">
-                  <th className="py-3 px-4">วันเวลา</th>
-                  <th className="py-3 px-4">ซัพพลายเออร์</th>
-                  <th className="py-3 px-4">อ้างอิง PO</th>
-                  <th className="py-3 px-4">ช่องทาง</th>
-                  <th className="py-3 px-4 text-right">จำนวนจ่ายชำระ</th>
-                  <th className="py-3 px-4">ผู้บันทึก</th>
+                  <th className="py-3 px-4">ວັນເວລາ</th>
+                  <th className="py-3 px-4">ຜູ້ສະໜອງ</th>
+                  <th className="py-3 px-4">ອ້າງອີງ PO</th>
+                  <th className="py-3 px-4">ຊ່ອງທາງ</th>
+                  <th className="py-3 px-4 text-right">ຈຳນວນຈ່າຍຊຳລະ</th>
+                  <th className="py-3 px-4">ຜູ້ບັນທຶກ</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-sm">
@@ -305,9 +305,9 @@ export function AccountsPayablePage() {
                     <td className="py-3 px-4 font-mono text-xs text-blue-700">{p.poNumber}</td>
                     <td className="py-3 px-4 text-xs text-slate-600">
                       {p.paymentMethod === 'cash'
-                        ? 'เงินสด'
+                        ? 'ເງິນສົດ'
                         : p.paymentMethod === 'transfer'
-                          ? 'โอนเงิน'
+                          ? 'ໂອນເງິນ'
                           : 'QR Payment'}
                     </td>
                     <td className="py-3 px-4 text-right font-bold text-red-700 tabular-nums">
@@ -319,7 +319,7 @@ export function AccountsPayablePage() {
                 {payments.length === 0 && (
                   <tr>
                     <td colSpan={6} className="py-10 text-center text-xs text-slate-500">
-                      ยังไม่มีประวัติจ่ายชำระหนี้ซัพพลายเออร์
+                      ຍັງບໍ່ມີປະຫວັດຈ່າຍຊຳລະໜີ້ຜູ້ສະໜອງ
                     </td>
                   </tr>
                 )}
@@ -335,7 +335,7 @@ export function AccountsPayablePage() {
           <div className="w-full max-w-md bg-white border border-slate-200 rounded-xl p-6">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
               <div>
-                <h3 className="text-base font-semibold text-slate-900">จ่ายชำระหนี้ซัพพลายเออร์</h3>
+                <h3 className="text-base font-semibold text-slate-900">ຈ່າຍຊຳລະໜີ້ຜູ້ສະໜອງ</h3>
                 <p className="text-xs text-slate-500">
                   {targetSupplier.name}
                   {targetPo ? ` · ${targetPo.poNumber}` : ''}
@@ -352,7 +352,7 @@ export function AccountsPayablePage() {
             <form onSubmit={handleRecordPayment} className="space-y-4">
               <div>
                 <label className="block text-xs font-medium text-slate-700 mb-1">
-                  จำนวนเงินที่จ่ายชำระ (₭) *
+                  ຈຳນວນເງິນທີ່ຈ່າຍຊຳລະ (₭) *
                 </label>
                 <input
                   type="number"
@@ -364,19 +364,19 @@ export function AccountsPayablePage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">ช่องทางจ่ายเงิน</label>
+                <label className="block text-xs font-medium text-slate-700 mb-1">ຊ່ອງທາງຈ່າຍເງິນ</label>
                 <select
                   value={paymentMethod}
                   onChange={(e) => setPaymentMethod(e.target.value as 'cash' | 'transfer' | 'qr')}
                   className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white"
                 >
-                  <option value="transfer">โอนเงินธนาคาร</option>
-                  <option value="cash">เงินสด</option>
+                  <option value="transfer">ໂອນເງິນທະນາຄານ</option>
+                  <option value="cash">ເງິນສົດ</option>
                   <option value="qr">QR Payment</option>
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">หมายเหตุ</label>
+                <label className="block text-xs font-medium text-slate-700 mb-1">ໝາຍເຫດ</label>
                 <input
                   type="text"
                   maxLength={300}
@@ -391,14 +391,14 @@ export function AccountsPayablePage() {
                   onClick={() => setPayModalOpen(false)}
                   className="px-4 py-2 text-sm font-medium text-slate-600 border border-slate-200 rounded-lg cursor-pointer"
                 >
-                  ยกเลิก
+                  ຍົກເລີກ
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
                   className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg cursor-pointer"
                 >
-                  {saving ? 'กำลังบันทึก...' : 'ยืนยันจ่ายชำระ'}
+                  {saving ? 'ກຳລັງບັນທຶກ...' : 'ຢືນຢັນຈ່າຍຊຳລະ'}
                 </button>
               </div>
             </form>

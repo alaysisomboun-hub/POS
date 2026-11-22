@@ -13,16 +13,16 @@ interface ReceiptPrintModalProps {
 }
 
 const PRICE_TIER_LABEL: Record<SaleOrder['priceTier'], string> = {
-  retail: 'ขายปลีก',
-  wholesale: 'ขายส่ง',
-  member: 'ราคาสมาชิก',
+  retail: 'ຂາຍຍ່ອຍ',
+  wholesale: 'ຂາຍສົ່ງ',
+  member: 'ລາຄາສະມາຊິກ',
 };
 
 const PAYMENT_SPLIT_LABEL: Record<'cash' | 'transfer' | 'qr' | 'credit', string> = {
-  cash: 'เงินสด',
-  transfer: 'โอนเงิน',
+  cash: 'ເງິນສົດ',
+  transfer: 'ໂອນເງິນ',
   qr: 'QR Payment',
-  credit: 'ขายเชื่อ/ค้างชำระ',
+  credit: 'ຂາຍເຊື່ອ/ຄ້າງຊຳລະ',
 };
 
 export function ReceiptPrintModal({
@@ -45,7 +45,7 @@ export function ReceiptPrintModal({
   const address = settings?.storeProfile?.address?.trim() || '';
   const phone = settings?.storeProfile?.phone?.trim() || '';
   const headerText = settings?.receiptSettings?.headerText?.trim() || '';
-  const footerText = settings?.receiptSettings?.footerText?.trim() || 'ขอบคุณที่ใช้บริการ';
+  const footerText = settings?.receiptSettings?.footerText?.trim() || 'ຂອບໃຈທີ່ໃຊ້ບໍລິການ';
   const showTaxId =
     Boolean(settings?.receiptSettings?.showTaxId) &&
     Boolean(settings?.taxSettings?.taxId?.trim());
@@ -59,7 +59,7 @@ export function ReceiptPrintModal({
         {/* Toolbar (hidden on print) */}
         <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4 print:hidden">
           <div className="flex items-center gap-3">
-            <h3 className="text-base font-semibold text-slate-900">ใบเสร็จรับเงิน</h3>
+            <h3 className="text-base font-semibold text-slate-900">ໃບບິນຮັບເງິນ</h3>
             <div className="inline-flex items-center bg-slate-100 p-0.5 rounded-md text-xs">
               <button
                 type="button"
@@ -89,6 +89,7 @@ export function ReceiptPrintModal({
             type="button"
             onClick={onClose}
             className="p-1 text-slate-400 hover:text-slate-700 cursor-pointer"
+            aria-label="ປິດໜ້າຕ່າງ"
           >
             <X className="w-5 h-5" />
           </button>
@@ -118,7 +119,7 @@ export function ReceiptPrintModal({
                 <div className="text-[11px] text-slate-700">{headerText}</div>
               )}
               {address && <div className="text-[10px] text-slate-600">{address}</div>}
-              {phone && <div className="text-[10px] text-slate-600">โทร: {phone}</div>}
+              {phone && <div className="text-[10px] text-slate-600">ໂທ: {phone}</div>}
               {showTaxId && (
                 <div className="text-[10px] font-mono text-slate-700">
                   TIN: {settings?.taxSettings?.taxId}
@@ -129,26 +130,26 @@ export function ReceiptPrintModal({
             {/* Meta Info */}
             <div className="py-2 border-b border-dashed border-slate-300 space-y-0.5 text-[11px]">
               <div className="flex justify-between gap-2">
-                <span className="text-slate-500">เลขที่บิล:</span>
+                <span className="text-slate-500">ເລກທີບິນ:</span>
                 <span className="font-mono font-semibold">{sale.invoiceNumber}</span>
               </div>
               <div className="flex justify-between gap-2">
-                <span className="text-slate-500">วันที่:</span>
+                <span className="text-slate-500">ວັນທີ:</span>
                 <span className="tabular-nums">{formatDateTimeVientiane(sale.createdAt)}</span>
               </div>
               <div className="flex justify-between gap-2">
-                <span className="text-slate-500">แคชเชียร์:</span>
+                <span className="text-slate-500">ພະນັກງານຂາຍ:</span>
                 <span className="truncate">{sale.cashierName}</span>
               </div>
               <div className="flex justify-between gap-2">
-                <span className="text-slate-500">ลูกค้า:</span>
+                <span className="text-slate-500">ລູກຄ້າ:</span>
                 <span className="truncate">
                   {sale.customerName} ({PRICE_TIER_LABEL[sale.priceTier]})
                 </span>
               </div>
               {sale.status === 'voided' && (
                 <div className="text-center font-bold text-red-600 pt-1">
-                  *** บิลถูกยกเลิก (VOIDED) ***
+                  *** ບິນຖືກຍົກເລີກ (VOIDED) ***
                 </div>
               )}
             </div>
@@ -168,7 +169,7 @@ export function ReceiptPrintModal({
                   </div>
                   {item.discountLak > 0 && (
                     <div className="flex justify-between text-[10px] text-slate-500 tabular-nums">
-                      <span>ส่วนลดรายการ</span>
+                      <span>ສ່ວນຫຼຸດລາຍການ</span>
                       <span>-{formatLak(item.discountLak)}</span>
                     </div>
                   )}
@@ -179,29 +180,29 @@ export function ReceiptPrintModal({
             {/* Totals */}
             <div className="py-2 border-b border-dashed border-slate-300 space-y-1 text-[11px] tabular-nums">
               <div className="flex justify-between">
-                <span className="text-slate-600">รวมเป็นเงิน</span>
+                <span className="text-slate-600">ຍອດລວມ</span>
                 <span>{formatLak(sale.subtotalLak)}</span>
               </div>
               {totalDiscountLak > 0 && (
                 <div className="flex justify-between text-slate-600">
-                  <span>ส่วนลดรวม</span>
+                  <span>ສ່ວນຫຼຸດລວມ</span>
                   <span>-{formatLak(totalDiscountLak)}</span>
                 </div>
               )}
               {sale.taxRate > 0 && (
                 <>
                   <div className="flex justify-between text-slate-600">
-                    <span>มูลค่าก่อนภาษี</span>
+                    <span>ມູນຄ່າກ່ອນອາກອນ</span>
                     <span>{formatLak(sale.taxableAmountLak)}</span>
                   </div>
                   <div className="flex justify-between text-slate-600">
-                    <span>ภาษี ({sale.taxRate}%)</span>
+                    <span>ອາກອນ ({sale.taxRate}%)</span>
                     <span>{formatLak(sale.taxAmountLak)}</span>
                   </div>
                 </>
               )}
               <div className="flex justify-between text-sm font-bold text-slate-900 pt-1 border-t border-slate-200">
-                <span>ยอดสุทธิ</span>
+                <span>ຍອດສຸດທິ</span>
                 <span>{formatLak(sale.grandTotalLak)}</span>
               </div>
             </div>
@@ -210,19 +211,19 @@ export function ReceiptPrintModal({
             <div className="py-2 border-b border-dashed border-slate-300 space-y-0.5 text-[11px] tabular-nums">
               {sale.payments.map((p, idx) => (
                 <div key={idx} className="flex justify-between text-slate-700">
-                  <span>ชำระ ({PAYMENT_SPLIT_LABEL[p.method]})</span>
+                  <span>ຊຳລະ ({PAYMENT_SPLIT_LABEL[p.method]})</span>
                   <span>{formatLak(p.amountLak)}</span>
                 </div>
               ))}
               {sale.changeAmountLak > 0 && (
                 <div className="flex justify-between font-semibold text-slate-900">
-                  <span>เงินทอน</span>
+                  <span>ເງິນທອນ</span>
                   <span>{formatLak(sale.changeAmountLak)}</span>
                 </div>
               )}
               {sale.creditDueLak > 0 && (
                 <div className="flex justify-between font-semibold text-amber-700">
-                  <span>ยอดค้างชำระ</span>
+                  <span>ຍອດຄ້າງຊຳລະ</span>
                   <span>{formatLak(sale.creditDueLak)}</span>
                 </div>
               )}
@@ -260,7 +261,7 @@ export function ReceiptPrintModal({
         {/* Actions */}
         <div className="mt-4 space-y-2.5 print:hidden">
           <div className="text-xs text-slate-500 text-center">
-            กดปุ่ม &ldquo;พิมพ์ใบเสร็จ&rdquo; เพื่อพิมพ์ให้ลูกค้า หรือกด &ldquo;ปิดหน้าต่าง&rdquo; เพื่อเริ่มขายบิลถัดไป
+            ກົດປຸ່ມ &ldquo;ພິມໃບບິນ&rdquo; ເພື່ອພິມໃຫ້ລູກຄ້າ ຫຼື ກົດ &ldquo;ປິດໜ້າຕ່າງ&rdquo; ເພື່ອເລີ່ມຂາຍບິນຕໍ່ໄປ
           </div>
           <div className="flex justify-end gap-2">
             <button
@@ -268,7 +269,7 @@ export function ReceiptPrintModal({
               onClick={onClose}
               className="min-h-[44px] px-4 py-2 text-sm font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer"
             >
-              ปิดหน้าต่าง
+              ປິດໜ້າຕ່າງ
             </button>
             <button
               type="button"
@@ -276,7 +277,7 @@ export function ReceiptPrintModal({
               className="min-h-[44px] inline-flex items-center gap-1.5 px-5 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg cursor-pointer"
             >
               <Printer className="w-4 h-4" />
-              <span>พิมพ์ใบเสร็จ</span>
+              <span>ພິມໃບບິນ</span>
             </button>
           </div>
         </div>

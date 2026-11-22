@@ -148,7 +148,7 @@ export function ReportsPage() {
     if (activeTab === 'sales') {
       downloadCsv(
         `sales-report-${startDate}-to-${endDate}.csv`,
-        ['เลขที่บิล', 'วันที่', 'ลูกค้า', 'วิธีชำระ', 'ยอดสุทธิ (LAK)', 'ต้นทุน (LAK)', 'กำไรขั้นต้น (LAK)'],
+        ['ເລກທີບິນ', 'ວັນທີ', 'ລູກຄ້າ', 'ວິທີຊຳລະ', 'ຍອດສຸດທິ (LAK)', 'ຕົ້ນທຶນ (LAK)', 'ກຳໄລຂັ້ນຕົ້ນ (LAK)'],
         filteredSales.map((s) => [
           s.invoiceNumber,
           tsToYmd(s.createdAt),
@@ -162,7 +162,7 @@ export function ReportsPage() {
     } else if (activeTab === 'stock') {
       downloadCsv(
         `stock-valuation-${today}.csv`,
-        ['SKU', 'ชื่อสินค้า', 'หน่วยฐาน', 'คงเหลือ', 'ต้นทุนเฉลี่ย WAC (LAK)', 'มูลค่ารวม (LAK)', 'ตำแหน่งเก็บ'],
+        ['SKU', 'ຊື່ສິນຄ້າ', 'ໜ່ວຍພື້ນຖານ', 'ຄົງເຫຼືອ', 'ຕົ້ນທຶນສະເລ່ຍ WAC (LAK)', 'ມູນຄ່າລວມ (LAK)', 'ຕຳແໜ່ງເກັບ'],
         balances.map((b) => [
           b.skuSnapshot,
           b.productNameSnapshot,
@@ -176,23 +176,23 @@ export function ReportsPage() {
     } else if (activeTab === 'finance') {
       downloadCsv(
         `finance-report-${startDate}-to-${endDate}.csv`,
-        ['ประเภท', 'วันที่', 'รายการ', 'อ้างอิง', 'จำนวนเงิน (LAK)'],
+        ['ປະເພດ', 'ວັນທີ', 'ລາຍການ', 'ອ້າງອີງ', 'ຈຳນວນເງິນ (LAK)'],
         [
-          ...filteredIncomes.map((i) => ['รายรับ', i.entryDate, i.title, i.referenceNo, i.amountLak]),
-          ...filteredExpenses.map((e) => ['รายจ่าย', e.entryDate, e.title, e.referenceNo, e.amountLak]),
+          ...filteredIncomes.map((i) => ['ລາຍຮັບ', i.entryDate, i.title, i.referenceNo, i.amountLak]),
+          ...filteredExpenses.map((e) => ['ລາຍຈ່າຍ', e.entryDate, e.title, e.referenceNo, e.amountLak]),
         ],
       );
     } else {
       downloadCsv(
         `arap-report-${today}.csv`,
-        ['ประเภท', 'รหัส', 'ชื่อคู่ค้า/ลูกค้า', 'ยอดค้าง (LAK)'],
+        ['ປະເພດ', 'ລະຫັດ', 'ຊື່ຄູ່ຄ້າ/ລູກຄ້າ', 'ຍອດຄ້າງ (LAK)'],
         [
           ...customers
             .filter((c) => c.creditBalanceLak > 0)
-            .map((c) => ['ลูกหนี้ (AR)', c.code, c.name, c.creditBalanceLak]),
+            .map((c) => ['ລູກໜີ້ (AR)', c.code, c.name, c.creditBalanceLak]),
           ...suppliers
             .filter((s) => s.payableBalanceLak > 0)
-            .map((s) => ['เจ้าหนี้ (AP)', s.code, s.name, s.payableBalanceLak]),
+            .map((s) => ['ເຈົ້າໜີ້ (AP)', s.code, s.name, s.payableBalanceLak]),
         ],
       );
     }
@@ -215,10 +215,10 @@ export function ReportsPage() {
         <div className="inline-flex bg-slate-100 p-1 rounded-lg self-start flex-wrap">
           {(
             [
-              { key: 'sales', label: 'รายงานการขาย' },
-              { key: 'stock', label: 'มูลค่าสต็อกคงเหลือ' },
-              { key: 'finance', label: 'รายรับ-รายจ่าย' },
-              { key: 'arap', label: 'ลูกหนี้-เจ้าหนี้' },
+              { key: 'sales', label: 'ລາຍງານການຂາຍ' },
+              { key: 'stock', label: 'ມູນຄ່າສະຕ໋ອກຄົງເຫຼືອ' },
+              { key: 'finance', label: 'ລາຍຮັບ-ລາຍຈ່າຍ' },
+              { key: 'arap', label: 'ລູກໜີ້-ເຈົ້າໜີ້' },
             ] as const
           ).map((t) => (
             <button
@@ -241,7 +241,7 @@ export function ReportsPage() {
             onChange={(e) => setStartDate(e.target.value)}
             className="px-2.5 py-1.5 text-xs border border-slate-200 rounded-lg"
           />
-          <span className="text-xs text-slate-500">ถึง</span>
+          <span className="text-xs text-slate-500">ເຖິງ</span>
           <input
             type="date"
             value={endDate}
@@ -254,7 +254,7 @@ export function ReportsPage() {
             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg cursor-pointer"
           >
             <Download className="w-3.5 h-3.5" />
-            ส่งออก CSV / Excel
+            ສົ່ງອອກ CSV / Excel
           </button>
           <button
             type="button"
@@ -262,7 +262,7 @@ export function ReportsPage() {
             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-lg cursor-pointer"
           >
             <Printer className="w-3.5 h-3.5" />
-            พิมพ์ / PDF
+            ພິມ / PDF
           </button>
         </div>
       </div>
@@ -271,7 +271,7 @@ export function ReportsPage() {
       <div className="hidden print:block border-b border-slate-300 pb-3 mb-4">
         <div className="text-lg font-bold">{organization?.name ?? 'Grocery POS'}</div>
         <div className="text-xs text-slate-600">
-          รายงานประจำช่วงวันที่ {startDate} ถึง {endDate}
+          ລາຍງານປະຈຳຊ່ວງວັນທີ {startDate} ເຖິງ {endDate}
         </div>
       </div>
 
@@ -280,19 +280,19 @@ export function ReportsPage() {
         <div className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="bg-white border border-slate-200 rounded-xl p-4">
-              <div className="text-xs text-slate-500">ยอดขายรวม ({filteredSales.length} บิล)</div>
+              <div className="text-xs text-slate-500">ຍອດຂາຍລວມ ({filteredSales.length} ບິນ)</div>
               <div className="text-xl font-bold text-blue-700 tabular-nums mt-1">
                 {formatLak(totalSalesLak)}
               </div>
             </div>
             <div className="bg-white border border-slate-200 rounded-xl p-4">
-              <div className="text-xs text-slate-500">ต้นทุนขายรวม (COGS)</div>
+              <div className="text-xs text-slate-500">ຕົ້ນທຶນຂາຍລວມ (COGS)</div>
               <div className="text-xl font-bold text-slate-900 tabular-nums mt-1">
                 {formatLak(totalCogsLak)}
               </div>
             </div>
             <div className="bg-white border border-slate-200 rounded-xl p-4">
-              <div className="text-xs text-slate-500">กำไรขั้นต้นรวม</div>
+              <div className="text-xs text-slate-500">ກຳໄລຂັ້ນຕົ້ນລວມ</div>
               <div className="text-xl font-bold text-green-700 tabular-nums mt-1">
                 {formatLak(totalGrossProfitLak)}
               </div>
@@ -304,13 +304,13 @@ export function ReportsPage() {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-600">
-                    <th className="py-3 px-4">เลขที่บิล</th>
-                    <th className="py-3 px-4">วันที่</th>
-                    <th className="py-3 px-4">ลูกค้า</th>
-                    <th className="py-3 px-4">วิธีชำระ</th>
-                    <th className="py-3 px-4 text-right">ยอดสุทธิ</th>
-                    <th className="py-3 px-4 text-right">ต้นทุน</th>
-                    <th className="py-3 px-4 text-right">กำไรขั้นต้น</th>
+                    <th className="py-3 px-4">ເລກທີບິນ</th>
+                    <th className="py-3 px-4">ວັນທີ</th>
+                    <th className="py-3 px-4">ລູກຄ້າ</th>
+                    <th className="py-3 px-4">ວິທີຊຳລະ</th>
+                    <th className="py-3 px-4 text-right">ຍອດສຸດທິ</th>
+                    <th className="py-3 px-4 text-right">ຕົ້ນທຶນ</th>
+                    <th className="py-3 px-4 text-right">ກຳໄລຂັ້ນຕົ້ນ</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-sm">
@@ -338,7 +338,7 @@ export function ReportsPage() {
                   {filteredSales.length === 0 && (
                     <tr>
                       <td colSpan={7} className="py-10 text-center text-xs text-slate-500">
-                        ไม่พบข้อมูลการขายในช่วงเวลาที่เลือก
+                        ບໍ່ພົບຂໍ້ມູນການຂາຍໃນຊ່ວງເວລາທີ່ເລືອກ
                       </td>
                     </tr>
                   )}
@@ -355,7 +355,7 @@ export function ReportsPage() {
           <div className="bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
               <FileSpreadsheet className="w-4 h-4 text-blue-600" />
-              มูลค่าสินค้าคงคลังรวม (WAC)
+              ມູນຄ່າສິນຄ້າຄົງສາງລວມ (WAC)
             </div>
             <div className="text-xl font-bold text-blue-700 tabular-nums">
               {formatLak(totalStockValLak)}
@@ -366,10 +366,10 @@ export function ReportsPage() {
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-600">
                   <th className="py-3 px-4">SKU</th>
-                  <th className="py-3 px-4">ชื่อสินค้า</th>
-                  <th className="py-3 px-4 text-right">คงเหลือ</th>
-                  <th className="py-3 px-4 text-right">ต้นทุน WAC</th>
-                  <th className="py-3 px-4 text-right">มูลค่ารวม</th>
+                  <th className="py-3 px-4">ຊື່ສິນຄ້າ</th>
+                  <th className="py-3 px-4 text-right">ຄົງເຫຼືອ</th>
+                  <th className="py-3 px-4 text-right">ຕົ້ນທຶນ WAC</th>
+                  <th className="py-3 px-4 text-right">ມູນຄ່າລວມ</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-sm">
@@ -401,19 +401,19 @@ export function ReportsPage() {
         <div className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="bg-white border border-slate-200 rounded-xl p-4">
-              <div className="text-xs text-slate-500">รายรับรวมในช่วง</div>
+              <div className="text-xs text-slate-500">ລາຍຮັບລວມໃນຊ່ວງ</div>
               <div className="text-xl font-bold text-green-700 tabular-nums mt-1">
                 {formatLak(totalIncomeLak)}
               </div>
             </div>
             <div className="bg-white border border-slate-200 rounded-xl p-4">
-              <div className="text-xs text-slate-500">รายจ่ายรวมในช่วง</div>
+              <div className="text-xs text-slate-500">ລາຍຈ່າຍລວມໃນຊ່ວງ</div>
               <div className="text-xl font-bold text-red-700 tabular-nums mt-1">
                 {formatLak(totalExpenseLak)}
               </div>
             </div>
             <div className="bg-white border border-slate-200 rounded-xl p-4">
-              <div className="text-xs text-slate-500">กระแสเงินสดสุทธิ</div>
+              <div className="text-xs text-slate-500">ກະແສເງິນສົດສຸດທິ</div>
               <div className="text-xl font-bold text-blue-700 tabular-nums mt-1">
                 {formatLak(totalIncomeLak - totalExpenseLak)}
               </div>
@@ -423,7 +423,7 @@ export function ReportsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
               <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-700">
-                รายการรายรับ ({filteredIncomes.length})
+                ລາຍການລາຍຮັບ ({filteredIncomes.length})
               </div>
               <div className="divide-y divide-slate-100 max-h-80 overflow-y-auto text-xs">
                 {filteredIncomes.map((i) => (
@@ -442,7 +442,7 @@ export function ReportsPage() {
 
             <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
               <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-700">
-                รายการรายจ่าย ({filteredExpenses.length})
+                ລາຍການລາຍຈ່າຍ ({filteredExpenses.length})
               </div>
               <div className="divide-y divide-slate-100 max-h-80 overflow-y-auto text-xs">
                 {filteredExpenses.map((e) => (
@@ -467,7 +467,7 @@ export function ReportsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
             <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-700">
-              ลูกหนี้ค้างรับ (Accounts Receivable)
+              ລູກໜີ້ຄ້າງຮັບ (Accounts Receivable)
             </div>
             <div className="divide-y divide-slate-100 text-xs">
               {customers
@@ -481,14 +481,14 @@ export function ReportsPage() {
                   </div>
                 ))}
               {customers.filter((c) => c.creditBalanceLak > 0).length === 0 && (
-                <div className="p-8 text-center text-slate-400">ไม่มีลูกหนี้ค้างรับ</div>
+                <div className="p-8 text-center text-slate-400">ບໍ່ມີລູກໜີ້ຄ້າງຮັບ</div>
               )}
             </div>
           </div>
 
           <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
             <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-700">
-              เจ้าหนี้ค้างจ่าย (Accounts Payable)
+              ເຈົ້າໜີ້ຄ້າງຈ່າຍ (Accounts Payable)
             </div>
             <div className="divide-y divide-slate-100 text-xs">
               {suppliers
@@ -502,7 +502,7 @@ export function ReportsPage() {
                   </div>
                 ))}
               {suppliers.filter((s) => s.payableBalanceLak > 0).length === 0 && (
-                <div className="p-8 text-center text-slate-400">ไม่มีเจ้าหนี้ค้างจ่าย</div>
+                <div className="p-8 text-center text-slate-400">ບໍ່ມີເຈົ້າໜີ້ຄ້າງຈ່າຍ</div>
               )}
             </div>
           </div>

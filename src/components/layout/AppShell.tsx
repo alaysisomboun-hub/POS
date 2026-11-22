@@ -96,7 +96,7 @@ export function AppShell({ activeModule, onSelectModule, children }: AppShellPro
           type="button"
           onClick={() => setMobileMenuOpen(false)}
           className="lg:hidden p-1.5 rounded-lg text-slate-500 hover:bg-slate-100"
-          aria-label="ปิดเมนู"
+          aria-label="ປິດເມນູ"
         >
           <X className="w-5 h-5" />
         </button>
@@ -174,7 +174,7 @@ export function AppShell({ activeModule, onSelectModule, children }: AppShellPro
               type="button"
               onClick={() => setMobileMenuOpen(true)}
               className="lg:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-100 shrink-0"
-              aria-label="เปิดเมนู"
+              aria-label="ເປີດເມນູ"
             >
               <Menu className="w-5 h-5" />
             </button>
@@ -187,7 +187,7 @@ export function AppShell({ activeModule, onSelectModule, children }: AppShellPro
 
           <div className="flex items-center gap-3 shrink-0">
             <span className="hidden sm:inline text-xs font-medium text-slate-500">
-              {organization?.name || 'ร้านค้าหลัก'}
+              {organization?.name || 'ຮ້ານຄ້າຫຼັກ'}
             </span>
           </div>
         </header>

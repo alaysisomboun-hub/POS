@@ -1,6 +1,6 @@
 {
   "name": "Grocery POS Management System",
-  "description": "ระบบบริหารจัดการร้านขายของชำและ POS ครบวงจร รองรับหลายสาขา ขายปลีก-ขายส่ง สต็อกสินค้า บัญชีคู่ และ AI วิเคราะห์ธุรกิจ (สกุลเงิน LAK)",
+  "description": "ລະບົບບໍລິຫານຈັດການຮ້ານຂາຍເຄື່ອງຍ່ອຍ-ຂາຍສົ່ງ ແລະ POS ຄົບວົງຈອນ ຮອງຮັບຂາຍຍ່ອຍ-ຂາຍສົ່ງ ສະຕັອກສິນຄ້າ ບັນຊີຄູ່ ແລະ AI ວິເຄາະທຸລະກິດ (ສະກຸນເງິນ LAK)",
   "requestFramePermissions": ["camera"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

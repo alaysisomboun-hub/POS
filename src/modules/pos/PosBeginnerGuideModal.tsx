@@ -29,84 +29,84 @@ export const POS_GUIDE_STEPS: PosGuideStep[] = [
   {
     stepNumber: 1,
     sectionId: 'search',
-    title: 'วิธีค้นหาสินค้า',
-    shortLabel: 'ค้นหาสินค้า',
-    summary: 'พิมพ์ชื่อสินค้า รหัสสินค้า (SKU) หรือบาร์โค้ด ลงในช่องค้นหาขนาดใหญ่ด้านบนสุด',
+    title: 'ວິທີຄົ້ນຫາສິນຄ້າ',
+    shortLabel: 'ຄົ້ນຫາສິນຄ້າ',
+    summary: 'ພິມຊື່ສິນຄ້າ ລະຫັດສິນຄ້າ (SKU) ຫຼື ບາໂຄດ ລົງໃນຊ່ອງຄົ້ນຫາຂະໜາດໃຫຍ່ດ້ານເທິງ',
     tips: [
-      'พิมพ์คำค้นหาบางส่วนได้ทันที ระบบจะกรองสินค้าให้โดยไม่ต้องโหลดหน้าใหม่',
-      'หากค้นหาแล้วไม่พบสินค้า สามารถกดปุ่ม "เพิ่มสินค้าใหม่" ได้จากหน้าขายทันที',
+      'ພິມຄຳຄົ້ນຫາບາງສ່ວນໄດ້ທັນທີ ລະບົບຈະກັ່ນຕອງສິນຄ້າໃຫ້ໂດຍບໍ່ຕ້ອງໂຫຼດໜ້າໃໝ່',
+      'ຫາກຄົ້ນຫາແລ້ວບໍ່ພົບສິນຄ້າ ສາມາດກົດປຸ່ມ "ເພີ່ມສິນຄ້າໃໝ່" ໄດ້ຈາກໜ້າຂາຍທັນທີ',
     ],
     icon: Search,
   },
   {
     stepNumber: 2,
     sectionId: 'scanner',
-    title: 'วิธีสแกนบาร์โค้ด',
-    shortLabel: 'สแกนบาร์โค้ด',
-    summary: 'ใช้เครื่องยิงบาร์โค้ดที่ช่องค้นหาแล้วกด Enter หรือกดปุ่ม "สแกนด้วยกล้อง"',
+    title: 'ວິທີສະແກນບາໂຄດ',
+    shortLabel: 'ສະແກນບາໂຄດ',
+    summary: 'ໃຊ້ເຄື່ອງຍິງບາໂຄດທີ່ຊ່ອງຄົ້ນຫາແລ້ວກົດ Enter ຫຼື ກົດປຸ່ມ "ສະແກນດ້ວຍກ້ອງ"',
     tips: [
-      'ถ้าใช้เครื่องสแกนบาร์โค้ด ให้คลิกช่องค้นหาหรือกดปุ่ม "สแกนบาร์โค้ด" แล้วยิงรหัสได้เลย',
-      'ถ้าไม่มีเครื่องสแกน กดปุ่ม "สแกนด้วยกล้อง" เพื่อเปิดกล้องมือถือหรือกล้องคอมพิวเตอร์สแกน Barcode / QR Code',
+      'ຖ້າໃຊ້ເຄື່ອງສະແກນບາໂຄດ ໃຫ້ຄລິກຊ່ອງຄົ້ນຫາ ຫຼື ກົດປຸ່ມ "ສະແກນບາໂຄດ" ແລ້ວຍິງລະຫັດໄດ້ເລີຍ',
+      'ຖ້າບໍ່ມີເຄື່ອງສະແກນ ກົດປຸ່ມ "ສະແກນດ້ວຍກ້ອງ" ເພື່ອເປີດກ້ອງມືຖື ຫຼື ຄອມພິວເຕີສະແກນ Barcode / QR Code',
     ],
     icon: QrCode,
   },
   {
     stepNumber: 3,
     sectionId: 'categories',
-    title: 'วิธีเลือกหมวดหมู่',
-    shortLabel: 'เลือกหมวดหมู่',
-    summary: 'กดปุ่มหมวดหมู่เพื่อดูสินค้าแยกตามประเภท หรือกด "ทั้งหมด" เพื่อดูสินค้าทุกรายการ',
+    title: 'ວິທີເລືອກໝວດໝູ່',
+    shortLabel: 'ເລືອກໝວດໝູ່',
+    summary: 'ກົດປຸ່ມໝວດໝູ່ເພື່ອເບິ່ງສິນຄ້າແຍກຕາມປະເພດ ຫຼື ກົດ "ທັງໝົດ" ເພື່ອເບິ່ງສິນຄ້າທຸກລາຍການ',
     tips: [
-      'เลื่อนแถบหมวดหมู่ไปซ้าย–ขวาได้เมื่อร้านมีหลายหมวดหมู่',
-      'ใช้ช่อง "ค้นหาหมวดหมู่..." เพื่อหาชื่อหมวดหมู่ที่ต้องการอย่างรวดเร็ว',
+      'ເລື່ອນແຖບໝວດໝູ່ໄປຊ້າຍ–ຂວາໄດ້ເມື່ອຮ້ານມີຫຼາຍໝວດໝູ່',
+      'ໃຊ້ຊ່ອງ "ຄົ້ນຫາໝວດໝູ່..." ເພື່ອຫາຊື່ໝວດໝູ່ທີ່ຕ້ອງການຢ່າງວ່ອງໄວ',
     ],
     icon: FolderKanban,
   },
   {
     stepNumber: 4,
     sectionId: 'products',
-    title: 'วิธีเพิ่มสินค้าลงตะกร้า',
-    shortLabel: 'เพิ่มลงตะกร้า',
-    summary: 'กดปุ่ม "เพิ่มลงตะกร้า" บนการ์ดสินค้า หรือเลือกหน่วยขาย (เช่น ชิ้น / แพ็ค / ลัง) ที่ต้องการ',
+    title: 'ວິທີເພີ່ມສິນຄ້າລົງກະຕ່າ',
+    shortLabel: 'ເພີ່ມໃສ່ກະຕ່າ',
+    summary: 'ກົດປຸ່ມ "ເພີ່ມໃສ່ກະຕ່າ" ເທິງກາດສິນຄ້າ ຫຼື ເລືອກໜ່ວຍຂາຍ (ເຊັ່ນ ອັນ / ແພັກ / ລັງ) ທີ່ຕ້ອງການ',
     tips: [
-      'ราคาขายจะเปลี่ยนตามประเภทราคาที่เลือกด้านบน (ขายปลีก / ขายส่ง / สมาชิก)',
-      'จำนวนสินค้าคงเหลือจะแสดงบนการ์ดสินค้าเพื่อป้องกันสินค้าขาดสต็อก',
+      'ລາຄາຂາຍຈະປ່ຽນຕາມປະເພດລາຄາທີ່ເລືອກດ້ານເທິງ (ຂາຍຍ່ອຍ / ຂາຍສົ່ງ / ສະມາຊິກ)',
+      'ຈຳນວນສິນຄ້າຄົງເຫຼືອຈະສະແດງເທິງກາດສິນຄ້າເພື່ອປ້ອງກັນສິນຄ້າຂາດສະຕັອກ',
     ],
     icon: PlusCircle,
   },
   {
     stepNumber: 5,
     sectionId: 'cart',
-    title: 'วิธีแก้ไขจำนวนสินค้า',
-    shortLabel: 'แก้ไขจำนวน',
-    summary: 'ในส่วนตะกร้าสินค้า สามารถกดปุ่ม + / - พิมพ์จำนวน เปลี่ยนหน่วย หรือกด "ลบสินค้า" ได้',
+    title: 'ວິທີແກ້ໄຂຈຳນວນສິນຄ້າ',
+    shortLabel: 'ແກ້ໄຂຈຳນວນ',
+    summary: 'ໃນສ່ວນກະຕ່າສິນຄ້າ ສາມາດກົດປຸ່ມ + / - ພິມຈຳນວນ ປ່ຽນໜ່ວຍ ຫຼື ກົດ "ລຶບສິນຄ້າ" ໄດ້',
     tips: [
-      'กดปุ่ม + เพื่อเพิ่มจำนวน หรือกดปุ่ม - เพื่อลดจำนวนทีละ 1',
-      'สามารถกดปุ่ม "พักบิล" ไว้ชั่วคราวได้หากลูกค้าขอไปหยิบสินค้าเพิ่ม',
+      'ກົດປຸ່ມ + ເພື່ອເພີ່ມຈຳນວນ ຫຼື ກົດປຸ່ມ - ເພື່ອຫຼຸດຈຳນວນເທື່ອລະ 1',
+      'ສາມາດກົດປຸ່ມ "ພັກບິນ" ໄວ້ຊົ່ວຄາວໄດ້ຫາກລູກຄ້າຂໍໄປຈັບສິນຄ້າເພີ່ມ',
     ],
     icon: SlidersHorizontal,
   },
   {
     stepNumber: 6,
     sectionId: 'checkout',
-    title: 'วิธีชำระเงิน',
-    shortLabel: 'ชำระเงิน',
-    summary: 'ตรวจสอบยอดรวมสินค้าและส่วนลด จากนั้นกดปุ่ม "ชำระเงิน" ด้านล่างตะกร้า',
+    title: 'ວິທີຊຳລະເງິນ',
+    shortLabel: 'ຊຳລະເງິນ',
+    summary: 'ກວດສອບຍອດລວມສິນຄ້າ ແລະ ສ່ວນຫຼຸດ ຈາກນັ້ນກົດປຸ່ມ "ຊຳລະເງິນ" ດ້ານລຸ່ມກະຕ່າ',
     tips: [
-      'เลือกวิธีชำระเงินที่ลูกค้าใช้ (เงินสด, โอนเงิน, QR Pay, ขายเชื่อ หรือหลายช่องทาง)',
-      'หากรับเงินสด กรอกจำนวนเงินที่รับมา ระบบจะคำนวณ "เงินทอน" ให้อัตโนมัติ แล้วกด "ยืนยันการขาย"',
+      'ເລືອກວິທີຊຳລະເງິນທີ່ລູກຄ້າໃຊ້ (ເງິນສົດ, ໂອນເງິນ, QR Pay, ຂາຍເຊື່ອ ຫຼື ຫຼາຍຊ່ອງທາງ)',
+      'ຫາກຮັບເງິນສົດ ປ້ອນຈຳນວນເງິນທີ່ຮັບມາ ລະບົບຈະຄຳນວນ "ເງິນທອນ" ໃຫ້ອັດຕະໂນມັດ ແລ້ວກົດ "ຢືນຢັນການຂາຍ"',
     ],
     icon: CreditCard,
   },
   {
     stepNumber: 7,
     sectionId: 'receipt',
-    title: 'วิธีพิมพ์ใบเสร็จ',
-    shortLabel: 'พิมพ์ใบเสร็จ',
-    summary: 'เมื่อบันทึกการขายสำเร็จ หน้าต่างใบเสร็จรับเงินจะเปิดขึ้นทันที',
+    title: 'ວິທີພິມໃບບິນ',
+    shortLabel: 'ພິມໃບບິນ',
+    summary: 'ເມື່ອບັນທຶກການຂາຍສຳເລັດ ໜ້າຕ່າງໃບບິນຮັບເງິນຈະເປີດຂຶ້ນທັນທີ',
     tips: [
-      'เลือกขนาดกระดาษใบเสร็จ (80mm หรือ 58mm) แล้วกดปุ่ม "พิมพ์ใบเสร็จ"',
-      'กด "ปิดหน้าต่าง" เพื่อเริ่มขายให้ลูกค้าคนถัดไปได้ทันที',
+      'ເລືອກຂະໜາດເຈ້ຍໃບບິນ (80mm ຫຼື 58mm) ແລ້ວກົດປຸ່ມ "ພິມໃບບິນ"',
+      'ກົດ "ປິດໜ້າຕ່າງ" ເພື່ອເລີ່ມຂາຍໃຫ້ລູກຄ້າຄົນຕໍ່ໄປໄດ້ທັນທີ',
     ],
     icon: Printer,
   },
@@ -166,10 +166,10 @@ export function PosBeginnerGuideModal({
             </div>
             <div>
               <h2 id="pos-guide-title" className="text-base font-bold text-slate-900">
-                คำแนะนำการใช้งานหน้าขายสินค้า (POS)
+                ຄຳແນະນຳການໃຊ້ງານໜ້າຂາຍສິນຄ້າ (POS)
               </h2>
               <p className="text-xs text-slate-500">
-                เรียนรู้การใช้งานง่าย ๆ 7 ขั้นตอน สำหรับพนักงานใหม่ · ขั้นตอนที่ {currentStep.stepNumber} จาก{' '}
+                ຮຽນຮູ້ການໃຊ້ງານງ່າຍໆ 7 ຂັ້ນຕອນ ສຳລັບພະນັກງານໃໝ່ · ຂັ້ນຕອນທີ {currentStep.stepNumber} ຈາກ{' '}
                 {POS_GUIDE_STEPS.length}
               </p>
             </div>
@@ -180,7 +180,7 @@ export function PosBeginnerGuideModal({
             className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-200/70 rounded-lg cursor-pointer"
           >
             <X className="w-4 h-4" />
-            <span>ข้ามคำแนะนำ</span>
+            <span>ຂ້າມຄຳແນະນຳ</span>
           </button>
         </div>
 
@@ -219,7 +219,7 @@ export function PosBeginnerGuideModal({
             </div>
             <div className="space-y-1.5 min-w-0">
               <div className="text-xs font-semibold text-blue-600">
-                ขั้นตอนที่ {currentStep.stepNumber} จาก {POS_GUIDE_STEPS.length}
+                ຂັ້ນຕອນທີ {currentStep.stepNumber} ຈາກ {POS_GUIDE_STEPS.length}
               </div>
               <h3 className="text-lg font-bold text-slate-900">{currentStep.title}</h3>
               <p className="text-sm text-slate-700 leading-relaxed">{currentStep.summary}</p>
@@ -227,7 +227,7 @@ export function PosBeginnerGuideModal({
           </div>
 
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2.5">
-            <div className="text-xs font-semibold text-slate-700">วิธีทำทีละขั้น</div>
+            <div className="text-xs font-semibold text-slate-700">ວິທີປະຕິບັດເທື່ອລະຂັ້ນ</div>
             <ul className="space-y-2">
               {currentStep.tips.map((tip, idx) => (
                 <li key={idx} className="flex items-start gap-2.5 text-sm text-slate-700">
@@ -242,7 +242,7 @@ export function PosBeginnerGuideModal({
           <div className="flex items-center justify-between text-xs text-slate-500 pt-1">
             <div className="flex items-center gap-1.5">
               <ShoppingCart className="w-4 h-4 text-slate-400" />
-              <span>สามารถกดปุ่ม &ldquo;คู่มือใช้งาน POS&rdquo; ด้านบนเพื่อเปิดดูอีกครั้งได้ตลอดเวลา</span>
+              <span>ສາມາດກົດປຸ່ມ &ldquo;ຄູ່ມືໃຊ້ງານ POS&rdquo; ດ້ານເທິງເພື່ອເປີດເບິ່ງອີກຄັ້ງໄດ້ຕະຫຼອດເວລາ</span>
             </div>
           </div>
         </div>
@@ -254,7 +254,7 @@ export function PosBeginnerGuideModal({
             onClick={onSkip}
             className="px-4 py-2.5 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 rounded-lg cursor-pointer"
           >
-            ข้ามไปหน้าขายเลย
+            ຂ້າມໄປໜ້າຂາຍເລີຍ
           </button>
 
           <div className="flex items-center gap-2">
@@ -265,7 +265,7 @@ export function PosBeginnerGuideModal({
               className="inline-flex items-center gap-1 px-4 py-2.5 text-sm font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed rounded-lg cursor-pointer"
             >
               <ChevronLeft className="w-4 h-4" />
-              <span>ย้อนกลับ</span>
+              <span>ຍ້ອນກັບ</span>
             </button>
 
             {isLast ? (
@@ -275,7 +275,7 @@ export function PosBeginnerGuideModal({
                 className="inline-flex items-center gap-1.5 px-5 py-2.5 text-sm font-semibold text-white bg-green-600 hover:bg-green-700 rounded-lg cursor-pointer"
               >
                 <CheckCircle2 className="w-4 h-4" />
-                <span>เริ่มขายสินค้าเลย</span>
+                <span>ເລີ່ມຂາຍສິນຄ້າເລີຍ</span>
               </button>
             ) : (
               <button
@@ -285,7 +285,7 @@ export function PosBeginnerGuideModal({
                 }
                 className="inline-flex items-center gap-1 px-5 py-2.5 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg cursor-pointer"
               >
-                <span>ขั้นตอนถัดไป</span>
+                <span>ຂັ້ນຕອນຕໍ່ໄປ</span>
                 <ChevronRight className="w-4 h-4" />
               </button>
             )}

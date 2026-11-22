@@ -9,52 +9,52 @@ export interface MenuItemConfig {
 }
 
 export const MENU_ITEMS: MenuItemConfig[] = [
-  // ภาพรวมและวิเคราะห์
-  { key: 'dashboard', label: 'Dashboard', group: 'ภาพรวมและวิเคราะห์', phase: 9, description: 'สรุปยอดขาย ต้นทุน กำไร สต็อก และกราฟแบบ Real-time' },
-  { key: 'reports', label: 'รายงาน', group: 'ภาพรวมและวิเคราะห์', phase: 9, description: 'รายงานขาย สินค้า การเงิน บัญชี และส่งออก PDF/Excel/CSV' },
-  { key: 'ai_analyst', label: 'AI Business Analyst', group: 'ภาพรวมและวิเคราะห์', phase: 10, description: 'วิเคราะห์ยอดขาย กำไร คาดการณ์สต็อก และความเสี่ยงด้วย Gemini AI' },
-  { key: 'notifications', label: 'การแจ้งเตือน', group: 'ภาพรวมและวิเคราะห์', phase: 10, description: 'แจ้งเตือนสินค้าใกล้หมด หมดอายุ หนี้เกินกำหนด และความผิดปกติ' },
+  // ພາບລວມ ແລະ ການວິເຄາະ
+  { key: 'dashboard', label: 'ໜ້າຫຼັກ (Dashboard)', group: 'ພາບລວມ ແລະ ການວິເຄາະ', phase: 9, description: 'ສະຫຼຸບຍອດຂາຍ ຕົ້ນທຶນ ກຳໄລ ສະຕັອກ ແລະ ກຣາຟແບບ Real-time' },
+  { key: 'reports', label: 'ລາຍງານ', group: 'ພາບລວມ ແລະ ການວິເຄາະ', phase: 9, description: 'ລາຍງານຍອດຂາຍ ສິນຄ້າ ການເງິນ ບັນຊີ ແລະ ສົ່ງອອກ PDF/Excel/CSV' },
+  { key: 'ai_analyst', label: 'AI ວິເຄາະທຸລະກິດ', group: 'ພາບລວມ ແລະ ການວິເຄາະ', phase: 10, description: 'ວິເຄາະຍອດຂາຍ ກຳໄລ ຄາດການສະຕັອກ ແລະ ຄວາມສ່ຽງດ້ວຍ Gemini AI' },
+  { key: 'notifications', label: 'ການແຈ້ງເຕືອນ', group: 'ພາບລວມ ແລະ ການວິເຄາະ', phase: 10, description: 'ແຈ້ງເຕືອນສິນຄ້າໃກ້ໝົດ ໝົດອາຍຸ ໜີ້ກາຍກຳນົດ ແລະ ຄວາມຜິດປົກກະຕິ' },
 
-  // ขายหน้าร้าน
-  { key: 'pos', label: 'POS ขายสินค้า', group: 'ขายหน้าร้าน POS', phase: 4, description: 'ขายปลีก-ขายส่ง สแกนบาร์โค้ด ชำระหลายช่องทาง และพิมพ์ใบเสร็จ' },
-  { key: 'sales_history', label: 'ประวัติการขาย', group: 'ขายหน้าร้าน POS', phase: 4, description: 'ตรวจสอบบิลขาย คืนสินค้า และยกเลิกบิลตามสิทธิ์' },
+  // ໜ້າຂາຍສິນຄ້າ POS
+  { key: 'pos', label: 'ໜ້າຂາຍສິນຄ້າ (POS)', group: 'ຂາຍໜ້າຮ້ານ POS', phase: 4, description: 'ຂາຍຍ່ອຍ-ຂາຍສົ່ງ ສະແກນບາໂຄດ ຊຳລະຫຼາຍຊ່ອງທາງ ແລະ ພິມໃບບິນ' },
+  { key: 'sales_history', label: 'ປະຫວັດການຂາຍ', group: 'ຂາຍໜ້າຮ້ານ POS', phase: 4, description: 'ກວດສອບບິນຂາຍ ຄືນສິນຄ້າ ແລະ ຍົກເລີກບິນຕາມສິດ' },
 
-  // สินค้าและคลัง
-  { key: 'products', label: 'สินค้าทั้งหมด', group: 'สินค้าและคลังสินค้า', phase: 3, description: 'จัดการ SKU บาร์โค้ด หลายหน่วย ราคาหลายระดับ และพิมพ์ฉลาก' },
-  { key: 'categories', label: 'หมวดหมู่สินค้า', group: 'สินค้าและคลังสินค้า', phase: 3, description: 'จัดโครงสร้างหมวดหมู่สินค้าหลักและย่อย' },
-  { key: 'inventory', label: 'คลังสินค้า', group: 'สินค้าและคลังสินค้า', phase: 3, description: 'ยอดคงเหลือ ล็อต/วันหมดอายุ ตรวจนับ และ Stock Ledger' },
-  { key: 'stock_in', label: 'รับสินค้าเข้า', group: 'สินค้าและคลังสินค้า', phase: 3, description: 'รับสินค้าเข้าคลังและบันทึกล็อตพร้อมวันหมดอายุ' },
-  { key: 'stock_out', label: 'เบิกสินค้าออก', group: 'สินค้าและคลังสินค้า', phase: 3, description: 'เบิกสินค้า สินค้าเสียหาย หมดอายุ และสูญหาย' },
+  // ສິນຄ້າ ແລະ ສາງສິນຄ້າ
+  { key: 'products', label: 'ຈັດການສິນຄ້າ', group: 'ສິນຄ້າ ແລະ ສາງສິນຄ້າ', phase: 3, description: 'ຈັດການ SKU ບາໂຄດ ຫຼາຍໜ່ວຍ ລາຄາຫຼາຍລະດັບ ແລະ ພິມສະຫຼາກ' },
+  { key: 'categories', label: 'ໝວດໝູ່ສິນຄ້າ', group: 'ສິນຄ້າ ແລະ ສາງສິນຄ້າ', phase: 3, description: 'ຈັດໂຄງສ້າງໝວດໝູ່ສິນຄ້າຫຼັກ ແລະ ໝວດໝູ່ຍ່ອຍ' },
+  { key: 'inventory', label: 'ສາງສິນຄ້າ', group: 'ສິນຄ້າ ແລະ ສາງສິນຄ້າ', phase: 3, description: 'ຍອດຄົງເຫຼືອ ລັອດ/ວັນໝົດອາຍຸ ກວດນັບ ແລະ Stock Ledger' },
+  { key: 'stock_in', label: 'ຮັບສິນຄ້າເຂົ້າ', group: 'ສິນຄ້າ ແລະ ສາງສິນຄ້າ', phase: 3, description: 'ຮັບສິນຄ້າເຂົ້າສາງ ແລະ ບັນທຶກລັອດພ້ອມວັນໝົດອາຍຸ' },
+  { key: 'stock_out', label: 'ເບີກສິນຄ້າອອກ', group: 'ສິນຄ້າ ແລະ ສາງສິນຄ້າ', phase: 3, description: 'ເບີກສິນຄ້າ ສິນຄ້າເສຍຫາຍ ໝົດອາຍຸ ແລະ ສູນຫາຍ' },
 
-  // จัดซื้อและซัพพลายเออร์
-  { key: 'purchasing', label: 'จัดซื้อสินค้า', group: 'จัดซื้อและซัพพลายเออร์', phase: 6, description: 'ใบสั่งซื้อ (PO) คำนวณส่วนลด ค่าขนส่ง ภาษี และต้นทุน WAC' },
-  { key: 'suppliers', label: 'ซัพพลายเออร์', group: 'จัดซื้อและซัพพลายเออร์', phase: 6, description: 'ข้อมูลคู่ค้า เงื่อนไขชำระเงิน และยอดค้างจ่าย' },
+  // ຈັດຊື້ ແລະ ຜູ້ສະໜອງ
+  { key: 'purchasing', label: 'ຈັດຊື້ສິນຄ້າ', group: 'ຈັດຊື້ ແລະ ຜູ້ສະໜອງ', phase: 6, description: 'ໃບສັ່ງຊື້ (PO) ຄຳນວນສ່ວນຫຼຸດ ຄ່າຂົນສົ່ງ ພາສີ ແລະ ຕົ້ນທຶນ WAC' },
+  { key: 'suppliers', label: 'ຜູ້ສະໜອງ (Suppliers)', group: 'ຈັດຊື້ ແລະ ຜູ້ສະໜອງ', phase: 6, description: 'ຂໍ້ມູນຄູ່ຄ້າ ເງື່ອນໄຂຊຳລະເງິນ ແລະ ຍອດຄ້າງຈ່າຍ' },
 
-  // ลูกค้าและโปรโมชั่น
-  { key: 'customers', label: 'ลูกค้า', group: 'ลูกค้าและโปรโมชั่น', phase: 7, description: 'ฐานข้อมูลลูกค้า วงเงินเครดิต ประวัติการซื้อ และคะแนนสะสม' },
-  { key: 'memberships_promotions', label: 'สมาชิกและโปรโมชั่น', group: 'ลูกค้าและโปรโมชั่น', phase: 5, description: 'ระดับสมาชิก ราคาพิเศษ และโปรโมชั่นตามเงื่อนไข' },
+  // ລູກຄ້າ ແລະ ໂປຣໂມຊັ່ນ
+  { key: 'customers', label: 'ລູກຄ້າ', group: 'ລູກຄ້າ ແລະ ໂປຣໂມຊັ່ນ', phase: 7, description: 'ຖານຂໍ້ມູນລູກຄ້າ ວົງເງິນເຄຣດິດ ປະຫວັດການຊື້ ແລະ ຄະແນນສະສົມ' },
+  { key: 'memberships_promotions', label: 'ສະມາຊິກ ແລະ ໂປຣໂມຊັ່ນ', group: 'ລູກຄ້າ ແລະ ໂປຣໂມຊັ່ນ', phase: 5, description: 'ລະດັບສະມາຊິກ ລາຄາພິເສດ ແລະ ໂປຣໂມຊັ່ນຕາມເງື່ອນໄຂ' },
 
-  // การเงินและบัญชี
-  { key: 'accounts_receivable', label: 'ลูกหนี้', group: 'การเงินและบัญชี', phase: 7, description: 'ติดตามหนี้ลูกค้า รับชำระบางส่วน/เต็มจำนวน และแจ้งเตือนเกินกำหนด' },
-  { key: 'accounts_payable', label: 'เจ้าหนี้', group: 'การเงินและบัญชี', phase: 7, description: 'ติดตามยอดค้างจ่ายซัพพลายเออร์และบันทึกชำระหนี้' },
-  { key: 'income', label: 'รายรับ', group: 'การเงินและบัญชี', phase: 8, description: 'รายรับจากการขาย ชำระหนี้ และรายรับอื่น ๆ' },
-  { key: 'expenses', label: 'รายจ่าย', group: 'การเงินและบัญชี', phase: 8, description: 'บันทึกค่าใช้จ่ายดำเนินงาน 7 หมวดหมู่ของร้าน' },
-  { key: 'accounting', label: 'บัญชีและการเงิน', group: 'การเงินและบัญชี', phase: 8, description: 'ผังบัญชี สมุดรายวัน แยกประเภท งบทดลอง งบกำไรขาดทุน และงบดุล' },
+  // ການເງິນ ແລະ ບັນຊີ
+  { key: 'accounts_receivable', label: 'ລູກໜີ້', group: 'ການເງິນ ແລະ ບັນຊີ', phase: 7, description: 'ຕິດຕາມໜີ້ລູກຄ້າ ຮັບຊຳລະບາງສ່ວນ/ເຕັມຈຳນວນ ແລະ ແຈ້ງເຕືອນກາຍກຳນົດ' },
+  { key: 'accounts_payable', label: 'ເຈົ້າໜີ້', group: 'ການເງິນ ແລະ ບັນຊີ', phase: 7, description: 'ຕິດຕາມຍອດຄ້າງຈ່າຍຜູ້ສະໜອງ ແລະ ບັນທຶກຊຳລະໜີ້' },
+  { key: 'income', label: 'ລາຍຮັບ', group: 'ການເງິນ ແລະ ບັນຊີ', phase: 8, description: 'ລາຍຮັບຈາກການຂາຍ ຊຳລະໜີ້ ແລະ ລາຍຮັບອື່ນໆ' },
+  { key: 'expenses', label: 'ລາຍຈ່າຍ', group: 'ການເງິນ ແລະ ບັນຊີ', phase: 8, description: 'ບັນທຶກຄ່າໃຊ້ຈ່າຍດຳເນີນງານ 7 ໝວດໝູ່ຂອງຮ້ານ' },
+  { key: 'accounting', label: 'ບັນຊີ ແລະ ການເງິນ', group: 'ການເງິນ ແລະ ບັນຊີ', phase: 8, description: 'ຜັງບັນຊີ ປຶ້ມລາຍວັນ ແຍກປະເພດ ໃບດຸ່ນດ່ຽງ ແລະ ໃບສະຫຼຸບກຳໄລຂາດທຶນ' },
 
-  // องค์กรและระบบ
-  { key: 'staff', label: 'พนักงาน', group: 'องค์กรและระบบ', phase: 2, description: 'จัดการพนักงาน บทบาท 7 ระดับ กำหนดสิทธิ์ และประวัติการใช้งาน (Audit Log)' },
-  { key: 'backup', label: 'สำรองข้อมูล', group: 'องค์กรและระบบ', phase: 10, description: 'สำรอง ตรวจสอบความสมบูรณ์ กู้คืน และรีเซ็ตข้อมูลอย่างปลอดภัย' },
-  { key: 'settings', label: 'ตั้งค่าระบบ', group: 'องค์กรและระบบ', phase: 2, description: 'ตั้งค่าร้านค้า สกุลเงิน LAK ภาษี และรูปแบบใบเสร็จ' },
+  // ອົງກອນ ແລະ ລະບົບ
+  { key: 'staff', label: 'ພະນັກງານ', group: 'ອົງກອນ ແລະ ລະບົບ', phase: 2, description: 'ຈັດການພະນັກງານ ບົດບາດ 7 ລະດັບ ກຳນົດສິດ ແລະ ປະຫວັດການໃຊ້ງານ' },
+  { key: 'backup', label: 'ສຳຮອງຂໍ້ມູນ', group: 'ອົງກອນ ແລະ ລະບົບ', phase: 10, description: 'ສຳຮອງ ກວດສອບຄວາມສົມບູນ ກູ້ຄືນ ແລະ ຣີເຊັດຂໍ້ມູນຢ່າງປອດໄພ' },
+  { key: 'settings', label: 'ຕັ້ງຄ່າລະບົບ', group: 'ອົງກອນ ແລະ ລະບົບ', phase: 2, description: 'ຕັ້ງຄ່າຮ້ານຄ້າ ສະກຸນເງິນ LAK ພາສີ ແລະ ຮູບແບບໃບບິນ' },
 ];
 
 export const ROLE_LABELS: Record<UserRole, string> = {
-  super_admin: 'Super Admin (ผู้ดูแลระบบสูงสุด)',
-  owner: 'Owner (เจ้าของกิจการ)',
-  branch_manager: 'Store Manager (ผู้จัดการร้าน)',
-  cashier: 'Cashier (พนักงานขาย)',
-  warehouse_staff: 'Warehouse Staff (พนักงานคลังสินค้า)',
-  purchasing_staff: 'Purchasing Staff (พนักงานจัดซื้อ)',
-  accountant: 'Accountant (พนักงานบัญชี)',
+  super_admin: 'Super Admin (ຜູ້ດູແລລະບົບສູງສຸດ)',
+  owner: 'Owner (ເຈົ້າຂອງຮ້ານ)',
+  branch_manager: 'Store Manager (ຜູ້ຈັດການຮ້ານ)',
+  cashier: 'Cashier (ພະນັກງານຂາຍ)',
+  warehouse_staff: 'Warehouse Staff (ພະນັກງານສາງ)',
+  purchasing_staff: 'Purchasing Staff (ພະນັກງານຈັດຊື້)',
+  accountant: 'Accountant (ພະນັກງານບັນຊີ)',
 };
 
 export const ALL_ACTIONS: PermissionAction[] = [
@@ -68,13 +68,13 @@ export const ALL_ACTIONS: PermissionAction[] = [
 ];
 
 export const ACTION_LABELS: Record<PermissionAction, string> = {
-  view: 'ดูข้อมูล',
-  create: 'เพิ่มข้อมูล',
-  edit: 'แก้ไข',
-  delete: 'ลบ/ปิดใช้งาน',
-  approve: 'อนุมัติ',
-  export: 'ส่งออก',
-  manage: 'จัดการระบบ',
+  view: 'ເບິ່ງຂໍ້ມູນ',
+  create: 'ເພີ່ມຂໍ້ມູນ',
+  edit: 'ແກ້ໄຂ',
+  delete: 'ລຶບ/ປິດໃຊ້ງານ',
+  approve: 'ອະນຸມັດ',
+  export: 'ສົ່ງອອກ',
+  manage: 'ຈັດການລະບົບ',
 };
 
 const ALL_MODULES = MENU_ITEMS.map((m) => m.key);

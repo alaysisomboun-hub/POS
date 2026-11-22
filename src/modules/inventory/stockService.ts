@@ -93,7 +93,7 @@ export async function executeStockIn(params: StockInParams): Promise<void> {
   const addedBaseQty = Math.round(safeInputQty * safeFactor);
 
   if (addedBaseQty <= 0) {
-    throw new Error('จำนวนที่รับเข้าต้องมากกว่า 0');
+    throw new Error('ຈຳນວນທີ່ຮັບເຂົ້າຕ້ອງຫຼາຍກວ່າ 0');
   }
 
   const safeUnitCostInput = Math.max(0, Math.round(unitCostPerInputUnitLak));
@@ -195,7 +195,7 @@ export async function executeStockIn(params: StockInParams): Promise<void> {
       balanceAfterBase: nextQty,
       unitCostBaseLak,
       totalCostLak,
-      reason: reason.trim().slice(0, 300) || 'รับสินค้าเข้าคลัง',
+      reason: reason.trim().slice(0, 300) || 'ຮັບສິນຄ້າເຂົ້າສາງ',
       referenceNo: referenceNo.trim().slice(0, 60),
       performedByUid: user.uid,
       performedByName: user.name.slice(0, 120),
@@ -256,7 +256,7 @@ export async function executeStockOut(params: StockOutParams): Promise<void> {
   const deductBaseQty = Math.round(safeInputQty * safeFactor);
 
   if (deductBaseQty <= 0) {
-    throw new Error('จำนวนที่เบิกออกต้องมากกว่า 0');
+    throw new Error('ຈຳນວນທີ່ເບີກອອກຕ້ອງຫຼາຍກວ່າ 0');
   }
 
   // Query active lots for FEFO before entering transaction, then re-read inside transaction
@@ -297,7 +297,7 @@ export async function executeStockOut(params: StockOutParams): Promise<void> {
 
     if (!allowNegativeStock && prevQty < deductBaseQty) {
       throw new Error(
-        `สต็อกคงเหลือไม่เพียงพอ (คงเหลือ ${prevQty} ${product.baseUnitName} ต้องการตัด ${deductBaseQty} ${product.baseUnitName})`,
+        `ສະຕ໋ອກຄົງເຫຼືອບໍ່ພຽງພໍ (ຄົງເຫຼືອ ${prevQty} ${product.baseUnitName} ຕ້ອງການຕັດ ${deductBaseQty} ${product.baseUnitName})`,
       );
     }
 
@@ -313,7 +313,7 @@ export async function executeStockOut(params: StockOutParams): Promise<void> {
       const target = lotDocs[0];
       if (!target || target.remainingQtyBase < deductBaseQty) {
         throw new Error(
-          `ล็อตที่เลือกมียอดคงเหลือไม่พอ (คงเหลือ ${target?.remainingQtyBase ?? 0} ${product.baseUnitName})`,
+          `ລ໋ອດທີ່ເລືອກມີຍອດຄົງເຫຼືອບໍ່ພໍ (ຄົງເຫຼືອ ${target?.remainingQtyBase ?? 0} ${product.baseUnitName})`,
         );
       }
     }
@@ -396,7 +396,7 @@ export async function executeStockOut(params: StockOutParams): Promise<void> {
       balanceAfterBase: nextQty,
       unitCostBaseLak: avgCost,
       totalCostLak,
-      reason: reason.trim().slice(0, 300) || 'เบิกสินค้าออก',
+      reason: reason.trim().slice(0, 300) || 'ເບີກສິນຄ້າອອກ',
       referenceNo: referenceNo.trim().slice(0, 60),
       performedByUid: user.uid,
       performedByName: user.name.slice(0, 120),
@@ -429,7 +429,7 @@ export async function executeStockCountAdjustment(params: StockCountParams): Pro
   const { db, user, branchId, product, countedBaseQty, reason } = params;
   const safeCounted = Math.round(countedBaseQty);
   if (safeCounted < 0) {
-    throw new Error('ยอดตรวจนับจริงต้องไม่ติดลบ');
+    throw new Error('ຍອດກວດນັບຈິງຕ້ອງບໍ່ຕິດລົບ');
   }
 
   const inventoryId = getInventoryDocId(branchId, product.productId);
@@ -464,7 +464,7 @@ export async function executeStockCountAdjustment(params: StockCountParams): Pro
 
     const delta = safeCounted - prevQty;
     if (delta === 0) {
-      throw new Error('ยอดตรวจนับตรงกับยอดในระบบ ไม่มีการปรับปรุง');
+      throw new Error('ຍອດກວດນັບກົງກັບຍອດໃນລະບົບ ບໍ່ມີການປັບປຸງ');
     }
 
     const lotDocs: InventoryLot[] = [];
@@ -571,7 +571,7 @@ export async function executeStockCountAdjustment(params: StockCountParams): Pro
       balanceAfterBase: safeCounted,
       unitCostBaseLak: avgCost,
       totalCostLak: Math.round(absDelta * avgCost),
-      reason: reason.trim().slice(0, 300) || 'ปรับปรุงยอดจากการตรวจนับสต็อก',
+      reason: reason.trim().slice(0, 300) || 'ປັບປຸງຍອດຈາກການກວດນັບສະຕ໋ອກ',
       referenceNo: 'COUNT',
       performedByUid: user.uid,
       performedByName: user.name.slice(0, 120),

@@ -216,7 +216,7 @@ export function ProductsPage() {
     setUnits([
       {
         unitId: generateSafeId('unt'),
-        unitName: 'ชิ้น',
+        unitName: 'ອັນ',
         conversionFactor: 1,
         barcode: scannedBarcode ? scannedBarcode.trim().slice(0, 64) : generateEan13InternalBarcode(),
         retailPrice: 0,
@@ -286,28 +286,28 @@ export function ProductsPage() {
         setScanNotice({
           type: 'existing',
           code: cleanCode,
-          message: `พบสินค้า "${existing.name}" (รหัส ${cleanCode}) ในระบบ`,
+          message: `ພົບສິນຄ້າ "${existing.name}" (ລະຫັດ ${cleanCode}) ໃນລະບົບ`,
         });
         return;
       }
       setScanNotice({
         type: 'existing',
         code: cleanCode,
-        message: `พบรหัสสินค้า "${cleanCode}" ในระบบแล้ว (${existing.name}) — สามารถแก้ไขรายละเอียดหรือจำนวนสต็อกได้ทันที`,
+        message: `ພົບລະຫັດສິນຄ້າ "${cleanCode}" ໃນລະບົບແລ້ວ (${existing.name}) — ສາມາດແກ້ໄຂລາຍລະອຽດ ຫຼື ຈຳນວນສະຕັອກໄດ້ທັນທີ`,
       });
       openEditModal(existing, true);
       return;
     }
 
     if (!canCreate) {
-      setErrorMsg(`ไม่พบรหัส "${cleanCode}" ในระบบ และบัญชีนี้ไม่มีสิทธิ์เพิ่มสินค้าใหม่`);
+      setErrorMsg(`ບໍ່ພົບລະຫັດ "${cleanCode}" ໃນລະບົບ ແລະ ບັນຊີນີ້ບໍ່ມີສິດເພີ່ມສິນຄ້າໃໝ່`);
       return;
     }
 
     setScanNotice({
       type: 'new',
       code: cleanCode,
-      message: `สแกนรหัสสินค้าใหม่สำเร็จ: ${cleanCode} — กรุณากรอกข้อมูลสินค้าเพิ่มเติมแล้วกดบันทึก`,
+      message: `ສະແກນລະຫັດສິນຄ້າໃໝ່ສຳເລັດ: ${cleanCode} — ກະລຸນາປ້ອນຂໍ້ມູນສິນຄ້າເພີ່ມເຕີມແລ້ວກົດບັນທຶກ`,
     });
     openCreateModal(cleanCode);
   };
@@ -372,7 +372,7 @@ export function ProductsPage() {
       ...prev,
       {
         unitId: generateSafeId('unt'),
-        unitName: units.length === 1 ? 'แพ็ค' : 'ลัง',
+        unitName: units.length === 1 ? 'ແພັກ' : 'ລັງ',
         conversionFactor: defaultFactor,
         barcode: generateEan13InternalBarcode(),
         retailPrice: Math.round((base?.retailPrice ?? 0) * defaultFactor),
@@ -409,7 +409,7 @@ export function ProductsPage() {
     const cleanSku = sku.trim().toUpperCase().slice(0, 50);
     const cleanName = name.trim().slice(0, 160);
     if (!cleanSku || !cleanName) {
-      setErrorMsg('กรุณากรอกรหัส SKU และชื่อสินค้า');
+      setErrorMsg('ກະລຸນາປ້ອນລະຫັດ SKU ແລະ ຊື່ສິນຄ້າ');
       return;
     }
 
@@ -419,13 +419,13 @@ export function ProductsPage() {
         p.productId !== editingProduct?.productId,
     );
     if (duplicateSku) {
-      setErrorMsg(`รหัส SKU "${cleanSku}" ถูกใช้งานแล้วกับสินค้า "${duplicateSku.name}"`);
+      setErrorMsg(`ລະຫັດ SKU "${cleanSku}" ຖືກໃຊ້ງານແລ້ວກັບສິນຄ້າ "${duplicateSku.name}"`);
       return;
     }
 
     const normalizedUnits: ProductUnit[] = units.map((u, idx) => ({
       unitId: u.unitId,
-      unitName: u.unitName.trim().slice(0, 40) || (idx === 0 ? 'ชิ้น' : `หน่วย ${idx + 1}`),
+      unitName: u.unitName.trim().slice(0, 40) || (idx === 0 ? 'ອັນ' : `ໜ່ວຍ ${idx + 1}`),
       conversionFactor: idx === 0 ? 1 : Math.max(2, Math.round(Number(u.conversionFactor) || 2)),
       barcode: u.barcode.trim().slice(0, 64),
       retailPrice: Math.max(0, Math.round(Number(u.retailPrice) || 0)),
@@ -436,7 +436,7 @@ export function ProductsPage() {
 
     const baseUnit = normalizedUnits[0];
     if (!baseUnit || !baseUnit.unitName) {
-      setErrorMsg('กรุณากำหนดหน่วยฐานของสินค้า');
+      setErrorMsg('ກະລຸນາກຳນົດໜ່ວຍພື້ນຖານຂອງສິນຄ້າ');
       return;
     }
 
@@ -450,7 +450,7 @@ export function ProductsPage() {
       if (!code) continue;
       const lower = code.toLowerCase();
       if (seenLowerCodes.has(lower)) {
-        setErrorMsg(`บาร์โค้ด/QR "${code}" ซ้ำกันระหว่างหน่วยขายภายในสินค้าเดียวกัน`);
+        setErrorMsg(`ບາໂຄ້ດ/QR "${code}" ຊ້ຳກັນລະຫວ່າງໜ່ວຍຂາຍພາຍໃນສິນຄ້າດຽວກັນ`);
         return;
       }
       seenLowerCodes.add(lower);
@@ -463,14 +463,14 @@ export function ProductsPage() {
             p.units.some((pu) => pu.barcode.trim().toLowerCase() === lower)),
       );
       if (conflict) {
-        setErrorMsg(`รหัส Barcode / QR Code "${code}" ซ้ำกับสินค้า "${conflict.name}" ในระบบ`);
+        setErrorMsg(`ລະຫັດ Barcode / QR Code "${code}" ຊ້ຳກັບສິນຄ້າ "${conflict.name}" ໃນລະບົບ`);
         return;
       }
     }
 
     const cleanImageUrl = imageUrl.trim();
     if (cleanImageUrl.length > 45000) {
-      setErrorMsg('รูปภาพสินค้ามีขนาดใหญ่เกินกำหนด กรุณาอัปโหลดใหม่หรือใช้ URL รูปภาพ');
+      setErrorMsg('ຮູບພາບສິນຄ້າມີຂະໜາດໃຫຍ່ເກີນກຳນົດ ກະລຸນາອັບໂຫຼດໃໝ່ ຫຼື ໃຊ້ URL ຮູບພາບ');
       return;
     }
 
@@ -571,7 +571,7 @@ export function ProductsPage() {
             balanceAfterBase: parsedEditStock,
             unitCostBaseLak: parsedCost,
             totalCostLak: Math.round(absDelta * parsedCost),
-            reason: 'ปรับปรุงยอดสต็อกจากหน้าแก้ไขสินค้า',
+            reason: 'ປັບປຸງຍອດສະຕັອກຈາກໜ້າແກ້ໄຂສິນຄ້າ',
             referenceNo: 'EDIT-PRD',
             performedByUid: userProfile.uid,
             performedByName: userProfile.name.slice(0, 120),
@@ -695,7 +695,7 @@ export function ProductsPage() {
             balanceAfterBase: parsedOpening,
             unitCostBaseLak: parsedCost,
             totalCostLak: Math.round(parsedOpening * parsedCost),
-            reason: 'ยอดยกมาตั้งต้นสินค้าใหม่',
+            reason: 'ຍອດຍົກມາຕັ້ງຕົ້ນສິນຄ້າໃໝ່',
             referenceNo: 'INIT',
             performedByUid: userProfile.uid,
             performedByName: userProfile.name.slice(0, 120),
@@ -725,7 +725,7 @@ export function ProductsPage() {
       try {
         handleFirestoreError(err, OperationType.WRITE, 'products');
       } catch (wrapped) {
-        setErrorMsg(wrapped instanceof Error ? wrapped.message : 'ไม่สามารถบันทึกข้อมูลสินค้าได้');
+        setErrorMsg(wrapped instanceof Error ? wrapped.message : 'ບໍ່ສາມາດບັນທຶກຂໍ້ມູນສິນຄ້າໄດ້');
       }
     } finally {
       setSaving(false);
@@ -744,7 +744,7 @@ export function ProductsPage() {
               data-product-search="true"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="ค้นหาชื่อ SKU หรือสแกนบาร์โค้ด..."
+              placeholder="ຄົ້ນຫາຊື່ SKU ຫຼື ສະແກນບາໂຄ້ດ..."
               className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-blue-600"
             />
           </div>
@@ -754,7 +754,7 @@ export function ProductsPage() {
             onChange={(e) => setCategoryFilter(e.target.value)}
             className="px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg"
           >
-            <option value="all">ทุกหมวดหมู่</option>
+            <option value="all">ທຸກໝວດໝູ່</option>
             {categories
               .filter((c) => !c.parentId)
               .map((c) => (
@@ -776,7 +776,7 @@ export function ProductsPage() {
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                {s === 'active' ? 'ขายอยู่' : s === 'inactive' ? 'หยุดขาย' : 'ทั้งหมด'}
+                {s === 'active' ? 'ກຳລັງຂາຍ' : s === 'inactive' ? 'ຢຸດຂາຍ' : 'ທັງໝົດ'}
               </button>
             ))}
           </div>
@@ -790,7 +790,7 @@ export function ProductsPage() {
               className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap cursor-pointer"
             >
               <QrCode className="w-4 h-4" />
-              สแกนบาร์โค้ด / QR Code
+              ສະແກນບາໂຄ້ດ / QR Code
             </button>
           )}
 
@@ -801,7 +801,7 @@ export function ProductsPage() {
               className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap cursor-pointer"
             >
               <PackagePlus className="w-4 h-4" />
-              เพิ่มสินค้าใหม่
+              ເພີ່ມສິນຄ້າໃໝ່
             </button>
           )}
         </div>
@@ -812,27 +812,27 @@ export function ProductsPage() {
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-600">
-              <th className="py-3 px-4">สินค้า / SKU / บาร์โค้ด</th>
-              <th className="py-3 px-4">หมวดหมู่ / ตำแหน่ง</th>
-              <th className="py-3 px-4">หน่วยขาย</th>
-              <th className="py-3 px-4 text-right">ต้นทุน</th>
-              <th className="py-3 px-4 text-right">ปลีก / ส่ง / สมาชิก</th>
-              <th className="py-3 px-4 text-right">คงเหลือ</th>
-              <th className="py-3 px-4 text-right">จัดการ</th>
+              <th className="py-3 px-4">ສິນຄ້າ / SKU / ບາໂຄ້ດ</th>
+              <th className="py-3 px-4">ໝວດໝູ່ / ຕຳແໜ່ງ</th>
+              <th className="py-3 px-4">ໜ່ວຍຂາຍ</th>
+              <th className="py-3 px-4 text-right">ລາຄາທຶນ</th>
+              <th className="py-3 px-4 text-right">ຍ່ອຍ / ສົ່ງ / ສະມາຊິກ</th>
+              <th className="py-3 px-4 text-right">ຄົງເຫຼືອ</th>
+              <th className="py-3 px-4 text-right">ຈັດການ</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 text-sm">
             {loading && (
               <tr>
                 <td colSpan={7} className="py-8 text-center text-sm text-slate-500">
-                  กำลังโหลดรายการสินค้า...
+                  ກຳລັງໂຫຼດລາຍການສິນຄ້າ...
                 </td>
               </tr>
             )}
             {!loading && filteredProducts.length === 0 && (
               <tr>
                 <td colSpan={7} className="py-10 text-center text-sm text-slate-500">
-                  ไม่พบรายการสินค้าตามเงื่อนไขที่เลือก
+                  ບໍ່ພົບລາຍການສິນຄ້າຕາມເງື່ອນໄຂທີ່ເລືອກ
                 </td>
               </tr>
             )}
@@ -876,7 +876,7 @@ export function ProductsPage() {
                   <td className="py-3 px-4 text-right text-xs tabular-nums">
                     <div className="font-semibold text-slate-900">{formatLak(prod.retailPriceLak)}</div>
                     <div className="text-slate-500">
-                      ส่ง {formatLak(prod.wholesalePriceLak, false)} / สมาชิก{' '}
+                      ສົ່ງ {formatLak(prod.wholesalePriceLak, false)} / ສະມາຊິກ{' '}
                       {formatLak(prod.memberPriceLak, false)}
                     </div>
                   </td>
@@ -898,7 +898,7 @@ export function ProductsPage() {
                         type="button"
                         onClick={() => setLabelProduct(prod)}
                         className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-slate-100 rounded-md cursor-pointer"
-                        title="พิมพ์ฉลากบาร์โค้ด"
+                        title="ພິມສະຫຼາກບາໂຄ້ດ"
                       >
                         <Barcode className="w-4 h-4" />
                       </button>
@@ -907,7 +907,7 @@ export function ProductsPage() {
                           type="button"
                           onClick={() => openEditModal(prod)}
                           className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-slate-100 rounded-md cursor-pointer"
-                          title="แก้ไขสินค้า"
+                          title="ແກ້ໄຂສິນຄ້າ"
                         >
                           <Edit3 className="w-4 h-4" />
                         </button>
@@ -944,7 +944,7 @@ export function ProductsPage() {
                   <div className="min-w-0">
                     <div className="font-semibold text-slate-900 text-sm truncate">{prod.name}</div>
                     <div className="text-xs text-slate-500 font-mono truncate">
-                      {prod.sku} · {prod.barcode || 'ไม่มีบาร์โค้ด'}
+                      {prod.sku} · {prod.barcode || 'ບໍ່ມີບາໂຄ້ດ'}
                     </div>
                   </div>
                 </div>
@@ -954,7 +954,7 @@ export function ProductsPage() {
                 </div>
               </div>
               <div className="text-xs text-slate-600">
-                คงเหลือ: <strong>{formatMultiUnitBreakdown(qtyBase, prod.units, prod.baseUnitName)}</strong>
+                ຄົງເຫຼືອ: <strong>{formatMultiUnitBreakdown(qtyBase, prod.units, prod.baseUnitName)}</strong>
               </div>
               <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
                 <button
@@ -962,7 +962,7 @@ export function ProductsPage() {
                   onClick={() => setLabelProduct(prod)}
                   className="px-2.5 py-1 text-xs font-medium text-blue-600 border border-blue-200 rounded-md"
                 >
-                  พิมพ์ฉลาก
+                  ພິມສະຫຼາກ
                 </button>
                 {canEdit && (
                   <button
@@ -970,7 +970,7 @@ export function ProductsPage() {
                     onClick={() => openEditModal(prod)}
                     className="px-2.5 py-1 text-xs font-medium text-slate-700 border border-slate-200 rounded-md"
                   >
-                    แก้ไข
+                    ແກ້ໄຂ
                   </button>
                 )}
               </div>
@@ -985,7 +985,7 @@ export function ProductsPage() {
           <div className="w-full max-w-4xl bg-white border border-slate-200 rounded-xl p-6 my-8 max-h-[92vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
               <h3 className="text-base font-semibold text-slate-900">
-                {editingProduct ? 'แก้ไขข้อมูลสินค้า' : 'เพิ่มสินค้าใหม่'}
+                {editingProduct ? 'ແກ້ໄຂຂໍ້ມູນສິນຄ້າ' : 'ເພີ່ມສິນຄ້າໃໝ່'}
               </h3>
               <button
                 type="button"
@@ -1019,7 +1019,7 @@ export function ProductsPage() {
               {/* Basic Info */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">รหัสสินค้า (SKU) *</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">ລະຫັດສິນຄ້າ (SKU) *</label>
                   <div className="flex gap-1.5">
                     <input
                       type="text"
@@ -1033,7 +1033,7 @@ export function ProductsPage() {
                       type="button"
                       onClick={() => setSku(generateSkuCode('PRD'))}
                       className="px-2.5 py-2 text-xs text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50"
-                      title="สร้าง SKU อัตโนมัติ"
+                      title="ສ້າງ SKU ອັດຕະໂນມັດ"
                     >
                       <Wand2 className="w-4 h-4" />
                     </button>
@@ -1041,7 +1041,7 @@ export function ProductsPage() {
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label className="block text-xs font-medium text-slate-700 mb-1">ชื่อสินค้า *</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">ຊື່ສິນຄ້າ *</label>
                   <input
                     ref={nameInputRef}
                     type="text"
@@ -1049,13 +1049,13 @@ export function ProductsPage() {
                     maxLength={160}
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="เช่น น้ำดื่มบริสุทธิ์ 600 มล."
+                    placeholder="ເຊັ່ນ ນ້ຳດື່ມບໍລິສຸດ 600 ມລ."
                     className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">หมวดหมู่หลัก</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">ໝວດໝູ່ຫຼັກ</label>
                   <select
                     value={categoryId}
                     onChange={(e) => {
@@ -1064,7 +1064,7 @@ export function ProductsPage() {
                     }}
                     className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white"
                   >
-                    <option value="">— ไม่ระบุหมวดหมู่ —</option>
+                    <option value="">— ບໍ່ລະບຸໝວດໝູ່ —</option>
                     {mainCategories.map((c) => (
                       <option key={c.categoryId} value={c.categoryId}>
                         {c.name}
@@ -1074,14 +1074,14 @@ export function ProductsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">หมวดหมู่ย่อย</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">ໝວດໝູ່ຍ່ອຍ</label>
                   <select
                     value={subCategoryId}
                     onChange={(e) => setSubCategoryId(e.target.value)}
                     disabled={subCategories.length === 0}
                     className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white disabled:bg-slate-50"
                   >
-                    <option value="">— ไม่ระบุ —</option>
+                    <option value="">— ບໍ່ລະບຸ —</option>
                     {subCategories.map((c) => (
                       <option key={c.categoryId} value={c.categoryId}>
                         {c.name}
@@ -1092,7 +1092,7 @@ export function ProductsPage() {
 
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1">
-                    ตำแหน่งจัดเก็บ (ชั้นวาง / ตู้แช่)
+                    ຕຳແໜ່ງຈັດເກັບ (ຊັ້ນວາງ / ຕູ້ແຊ່)
                   </label>
                   <div className="flex gap-1.5">
                     <select
@@ -1100,7 +1100,7 @@ export function ProductsPage() {
                       onChange={(e) => handleLocationSelect(e.target.value)}
                       className="w-1/2 px-2 py-2 text-xs border border-slate-200 rounded-lg bg-white"
                     >
-                      <option value="">เลือกตำแหน่ง</option>
+                      <option value="">ເລືອກຕຳແໜ່ງ</option>
                       {locations
                         .filter((l) => l.status === 'active')
                         .map((l) => (
@@ -1114,7 +1114,7 @@ export function ProductsPage() {
                       maxLength={100}
                       value={storageLocationName}
                       onChange={(e) => setStorageLocationName(e.target.value)}
-                      placeholder="เช่น ชั้น A1"
+                      placeholder="ເຊັ່ນ ຊັ້ນ A1"
                       className="w-1/2 px-2.5 py-2 text-xs border border-slate-200 rounded-lg"
                     />
                   </div>
@@ -1126,10 +1126,10 @@ export function ProductsPage() {
                 <div className="bg-slate-50 px-4 py-2.5 border-b border-slate-200 flex items-center justify-between">
                   <div>
                     <div className="text-xs font-semibold text-slate-900">
-                      หน่วยขาย บาร์โค้ด และราคาหลายระดับ (LAK)
+                      ໜ່ວຍຂາຍ ບາໂຄ້ດ ແລະ ລາຄາຫຼາຍລະດັບ (LAK)
                     </div>
                     <div className="text-[11px] text-slate-500">
-                      แถวแรกคือ &ldquo;หน่วยฐาน&rdquo; (ตัวคูณ = 1) สามารถเพิ่ม แพ็ค/โหล/ลัง พร้อมบาร์โค้ดและราคาแยกได้
+                      ແຖວທຳອິດຄື &ldquo;ໜ່ວຍພື້ນຖານ&rdquo; (ຕົວຄູນ = 1) ສາມາດເພີ່ມ ແພັກ/ໂຫຼ/ລັງ ພ້ອມບາໂຄ້ດ ແລະ ລາຄາແຍກໄດ້
                     </div>
                   </div>
                   {units.length < 10 && (
@@ -1139,7 +1139,7 @@ export function ProductsPage() {
                       className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-blue-600 bg-white border border-blue-200 rounded-lg hover:bg-blue-50 cursor-pointer"
                     >
                       <Plus className="w-3.5 h-3.5" />
-                      เพิ่มหน่วยขาย
+                      ເພີ່ມໜ່ວຍຂາຍ
                     </button>
                   )}
                 </div>
@@ -1148,12 +1148,12 @@ export function ProductsPage() {
                   <table className="w-full text-left border-collapse text-xs">
                     <thead>
                       <tr className="border-b border-slate-200 text-slate-600 bg-white">
-                        <th className="py-2 px-3">ชื่อหน่วย *</th>
-                        <th className="py-2 px-3 w-24">ตัวคูณฐาน</th>
-                        <th className="py-2 px-3">บาร์โค้ด</th>
-                        <th className="py-2 px-3 w-28">ราคาปลีก (₭)</th>
-                        <th className="py-2 px-3 w-28">ราคาส่ง (₭)</th>
-                        <th className="py-2 px-3 w-28">สมาชิก (₭)</th>
+                        <th className="py-2 px-3">ຊື່ໜ່ວຍ *</th>
+                        <th className="py-2 px-3 w-24">ຕົວຄູນພື້ນຖານ</th>
+                        <th className="py-2 px-3">ບາໂຄ້ດ</th>
+                        <th className="py-2 px-3 w-28">ລາຄາຂາຍຍ່ອຍ (₭)</th>
+                        <th className="py-2 px-3 w-28">ລາຄາຂາຍສົ່ງ (₭)</th>
+                        <th className="py-2 px-3 w-28">ສະມາຊິກ (₭)</th>
                         <th className="py-2 px-2 w-10"></th>
                       </tr>
                     </thead>
@@ -1167,7 +1167,7 @@ export function ProductsPage() {
                               maxLength={40}
                               value={u.unitName}
                               onChange={(e) => updateUnitRow(idx, { unitName: e.target.value })}
-                              placeholder={idx === 0 ? 'ชิ้น / ขวด' : 'แพ็ค / ลัง'}
+                              placeholder={idx === 0 ? 'ອັນ / ຕຸກ' : 'ແພັກ / ລັງ'}
                               className="w-full px-2.5 py-1.5 border border-slate-200 rounded"
                             />
                           </td>
@@ -1190,14 +1190,14 @@ export function ProductsPage() {
                                 maxLength={64}
                                 value={u.barcode}
                                 onChange={(e) => updateUnitRow(idx, { barcode: e.target.value })}
-                                placeholder="สแกนหรือสร้าง"
+                                placeholder="ສະແກນ ຫຼື ສ້າງ"
                                 className="w-full min-w-[120px] px-2.5 py-1.5 font-mono border border-slate-200 rounded"
                               />
                               <button
                                 type="button"
                                 onClick={() => setUnitScanIndex(idx)}
                                 className="px-2 py-1 text-slate-600 border border-slate-200 rounded hover:bg-slate-50 cursor-pointer"
-                                title="สแกนบาร์โค้ด / QR ด้วยกล้อง"
+                                title="ສະແກນບາໂຄ້ດ / QR ດ້ວຍກ້ອງ"
                               >
                                 <QrCode className="w-3.5 h-3.5" />
                               </button>
@@ -1207,7 +1207,7 @@ export function ProductsPage() {
                                   updateUnitRow(idx, { barcode: generateEan13InternalBarcode() })
                                 }
                                 className="px-2 py-1 text-slate-500 border border-slate-200 rounded hover:bg-slate-50 cursor-pointer"
-                                title="สร้างบาร์โค้ด EAN-13 อัตโนมัติ"
+                                title="ສ້າງບາໂຄ້ດ EAN-13 ອັດຕະໂນມັດ"
                               >
                                 <Wand2 className="w-3.5 h-3.5" />
                               </button>
@@ -1252,7 +1252,7 @@ export function ProductsPage() {
                                 type="button"
                                 onClick={() => removeUnitRow(idx)}
                                 className="p-1 text-slate-400 hover:text-red-600"
-                                title="ลบหน่วย"
+                                title="ລຶບໜ່ວຍ"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
@@ -1269,7 +1269,7 @@ export function ProductsPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1">
-                    ต้นทุนมาตรฐาน / {units[0]?.unitName || 'หน่วยฐาน'} (₭)
+                    ລາຄາທຶນມາດຕະຖານ / {units[0]?.unitName || 'ໜ່ວຍພື້ນຖານ'} (₭)
                   </label>
                   <input
                     type="number"
@@ -1281,7 +1281,7 @@ export function ProductsPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1">
-                    จุดแจ้งเตือนสต็อกต่ำ ({units[0]?.unitName || 'หน่วยฐาน'})
+                    ຈຸດແຈ້ງເຕືອນສະຕັອກຕ່ຳ ({units[0]?.unitName || 'ໜ່ວຍພື້ນຖານ'})
                   </label>
                   <input
                     type="number"
@@ -1293,7 +1293,7 @@ export function ProductsPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1">
-                    จำนวนแนะนำสั่งซื้อ
+                    ຈຳນວນແນະນຳສັ່ງຊື້
                   </label>
                   <input
                     type="number"
@@ -1304,14 +1304,14 @@ export function ProductsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">สถานะสินค้า</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">ສະຖານະສິນຄ້າ</label>
                   <select
                     value={status}
                     onChange={(e) => setStatus(e.target.value as 'active' | 'inactive')}
                     className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white"
                   >
-                    <option value="active">เปิดขายปกติ</option>
-                    <option value="inactive">หยุดขายชั่วคราว</option>
+                    <option value="active">ເປີດຂາຍປົກກະຕິ</option>
+                    <option value="inactive">ຢຸດຂາຍຊົ່ວຄາວ</option>
                   </select>
                 </div>
               </div>
@@ -1320,7 +1320,7 @@ export function ProductsPage() {
                 <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
                   <div>
                     <label className="block text-xs font-medium text-slate-700 mb-1">
-                      จำนวนสินค้าในสต็อก ({units[0]?.unitName || 'หน่วยฐาน'})
+                      ຈຳນວນສິນຄ້າໃນສະຕັອກ ({units[0]?.unitName || 'ໜ່ວຍພື້ນຖານ'})
                     </label>
                     <input
                       type="number"
@@ -1331,14 +1331,14 @@ export function ProductsPage() {
                     />
                   </div>
                   <div className="text-xs text-slate-500 leading-relaxed">
-                    หากแก้ไขจำนวนสต็อก ระบบจะปรับยอดคงเหลือและบันทึกความเคลื่อนไหว (Stock Ledger) ให้อัตโนมัติเมื่อกดบันทึก
+                    ຫາກແກ້ໄຂຈຳນວນສະຕັອກ ລະບົບຈະປັບຍອດຄົງເຫຼືອ ແລະ ບັນທຶກຄວາມເຄື່ອນໄຫວ (Stock Ledger) ໃຫ້ອັດຕະໂນມັດເມື່ອກົດບັນທຶກ
                   </div>
                 </div>
               ) : (
                 <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-slate-700 mb-1">
-                      สต็อกยกมาตั้งต้น ({units[0]?.unitName || 'หน่วยฐาน'})
+                      ສະຕັອກຍົກມາຕັ້ງຕົ້ນ ({units[0]?.unitName || 'ໜ່ວຍພື້ນຖານ'})
                     </label>
                     <input
                       type="number"
@@ -1350,20 +1350,20 @@ export function ProductsPage() {
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-slate-700 mb-1">
-                      เลขล็อตเริ่มต้น (ถ้ามี)
+                      ເລກລັອດເລີ່ມຕົ້ນ (ຖ້າມີ)
                     </label>
                     <input
                       type="text"
                       maxLength={60}
                       value={openingLotNumber}
                       onChange={(e) => setOpeningLotNumber(e.target.value)}
-                      placeholder="สร้างอัตโนมัติหากเว้นว่าง"
+                      placeholder="ສ້າງອັດຕະໂນມັດຫາກເວັ້ນວ່າງ"
                       className="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg"
                     />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-slate-700 mb-1">
-                      วันหมดอายุ (ถ้ามี)
+                      ວັນໝົດອາຍຸ (ຖ້າມີ)
                     </label>
                     <input
                       type="date"
@@ -1378,19 +1378,19 @@ export function ProductsPage() {
               {/* Product Image URL or Camera/File Upload */}
               <div className="p-4 rounded-xl border border-slate-200 bg-white space-y-3">
                 <label className="block text-xs font-semibold text-slate-800">
-                  รูปภาพสินค้า (ถ่ายรูป / อัปโหลด หรือใส่ลิงก์ URL)
+                  ຮູບພາບສິນຄ້າ (ຖ່າຍຮູບ / ອັບໂຫຼດ ຫຼື ໃສ່ລິ້ງ URL)
                 </label>
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                   {imageUrl ? (
                     <img
                       src={imageUrl}
-                      alt={name || 'รูปสินค้า'}
+                      alt={name || 'ຮູບສິນຄ້າ'}
                       className="w-20 h-20 rounded-xl object-cover border border-slate-200 bg-slate-50 shrink-0"
                     />
                   ) : (
                     <div className="w-20 h-20 rounded-xl border border-dashed border-slate-300 bg-slate-50 flex flex-col items-center justify-center text-slate-400 shrink-0 text-[11px]">
                       <Package className="w-5 h-5 mb-1" />
-                      ไม่มีรูป
+                      ບໍ່ມີຮູບ
                     </div>
                   )}
 
@@ -1398,7 +1398,7 @@ export function ProductsPage() {
                     <div className="flex flex-wrap gap-2">
                       <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs font-medium text-slate-700 cursor-pointer">
                         <ImagePlus className="w-4 h-4 text-blue-600" />
-                        {imageUploading ? 'กำลังย่อรูปภาพ...' : 'เลือกรูป / ถ่ายภาพ'}
+                        {imageUploading ? 'ກຳລັງຫຍໍ້ຮູບພາບ...' : 'ເລືອກຮູບ / ຖ່າຍພາບ'}
                         <input
                           type="file"
                           accept="image/*"
@@ -1415,7 +1415,7 @@ export function ProductsPage() {
                               setImageUrl(compressed);
                             } catch (err) {
                               setErrorMsg(
-                                err instanceof Error ? err.message : 'ไม่สามารถอัปโหลดรูปภาพได้',
+                                err instanceof Error ? err.message : 'ບໍ່ສາມາດອັບໂຫຼດຮູບພາບໄດ້',
                               );
                             } finally {
                               setImageUploading(false);
@@ -1430,7 +1430,7 @@ export function ProductsPage() {
                           onClick={() => setImageUrl('')}
                           className="px-3 py-1.5 rounded-lg border border-rose-200 text-xs font-medium text-rose-700 hover:bg-rose-50 cursor-pointer"
                         >
-                          ลบรูป
+                          ລຶບຮູບ
                         </button>
                       )}
                     </div>
@@ -1440,8 +1440,8 @@ export function ProductsPage() {
                       onChange={(e) => setImageUrl(e.target.value.slice(0, 500))}
                       placeholder={
                         imageUrl.startsWith('data:image/')
-                          ? 'อัปโหลดรูปภาพเรียบร้อยแล้ว (หรือวางลิงก์ URL ทับได้)'
-                          : 'หรือวางลิงก์รูปภาพสินค้า https://...'
+                          ? 'ອັບໂຫຼດຮູບພາບສຳເລັດແລ້ວ (ຫຼື ວາງລິ້ງ URL ທັບໄດ້)'
+                          : 'ຫຼື ວາງລິ້ງຮູບພາບສິນຄ້າ https://...'
                       }
                       className="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg"
                     />
@@ -1457,7 +1457,7 @@ export function ProductsPage() {
                     onChange={(e) => setTrackExpiry(e.target.checked)}
                     className="rounded border-slate-300 text-blue-600"
                   />
-                  ติดตามล็อตและวันหมดอายุ (FEFO)
+                  ຕິດຕາມລັອດ ແລະ ວັນໝົດອາຍຸ (FEFO)
                 </label>
                 <label className="inline-flex items-center gap-2 text-xs font-medium text-slate-700 cursor-pointer">
                   <input
@@ -1466,12 +1466,12 @@ export function ProductsPage() {
                     onChange={(e) => setTaxable(e.target.checked)}
                     className="rounded border-slate-300 text-blue-600"
                   />
-                  สินค้าคำนวณภาษี (เมื่อเปิดใช้ภาษีร้านค้า)
+                  ສິນຄ້າຄຳນວນອາກອນ (ເມື່ອເປີດໃຊ້ອາກອນຮ້ານຄ້າ)
                 </label>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">หมายเหตุสินค้า</label>
+                <label className="block text-xs font-medium text-slate-700 mb-1">ໝາຍເຫດສິນຄ້າ</label>
                 <input
                   type="text"
                   maxLength={500}
@@ -1487,14 +1487,14 @@ export function ProductsPage() {
                   onClick={() => setModalOpen(false)}
                   className="px-4 py-2 text-sm font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer"
                 >
-                  ยกเลิก
+                  ຍົກເລີກ
                 </button>
                 <button
                   type="submit"
                   disabled={saving || imageUploading}
                   className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-60 rounded-lg cursor-pointer"
                 >
-                  {saving ? 'กำลังบันทึก...' : 'บันทึกสินค้า'}
+                  {saving ? 'ກຳລັງບັນທຶກ...' : 'ບັນທຶກສິນຄ້າ'}
                 </button>
               </div>
             </form>
@@ -1511,8 +1511,8 @@ export function ProductsPage() {
 
       {unitScanIndex !== null && (
         <BarcodeQrScannerModal
-          title="สแกนบาร์โค้ด / QR สำหรับหน่วยขาย"
-          subtitle={`กำหนดรหัสให้หน่วย "${units[unitScanIndex]?.unitName || 'หน่วยสินค้า'}"`}
+          title="ສະແກນບາໂຄ້ດ / QR ສຳລັບໜ່ວຍຂາຍ"
+          subtitle={`ກຳນົດລະຫັດໃຫ້ໜ່ວຍ "${units[unitScanIndex]?.unitName || 'ໜ່ວຍສິນຄ້າ'}"`}
           onDetected={(code) => {
             updateUnitRow(unitScanIndex, { barcode: code.trim().slice(0, 64) });
             setUnitScanIndex(null);
@@ -1524,7 +1524,7 @@ export function ProductsPage() {
       {labelProduct && (
         <BarcodeLabelModal
           product={labelProduct}
-          storeName={organization?.name || 'ร้านค้าหลัก'}
+          storeName={organization?.name || 'ຮ້ານຄ້າຫຼັກ'}
           onClose={() => setLabelProduct(null)}
         />
       )}

@@ -194,7 +194,7 @@ export function StaffManagementPage() {
     if (!isTopAdmin && (staff.role === 'super_admin' || staff.role === 'owner')) {
       setFeedback({
         type: 'err',
-        text: 'เฉพาะ Super Admin หรือเจ้าของร้านเท่านั้นที่สามารถแก้ไขบัญชีผู้ดูแลระบบสูงสุดได้',
+        text: 'ສະເພາະ Super Admin ຫຼື ເຈົ້າຂອງຮ້ານເທົ່ານັ້ນທີ່ສາມາດແກ້ໄຂບັນຊີຜູ້ດູແລລະບົບສູງສຸດໄດ້',
       });
       return;
     }
@@ -247,14 +247,14 @@ export function StaffManagementPage() {
     if (!isTopAdmin && (staff.role === 'super_admin' || staff.role === 'owner')) {
       setFeedback({
         type: 'err',
-        text: 'ไม่สามารถเปลี่ยนสถานะบัญชีผู้ดูแลระบบสูงสุดหรือเจ้าของร้านได้',
+        text: 'ບໍ່ສາມາດປ່ຽນສະຖານະບັນຊີຜູ້ດູແລລະບົບສູງສຸດ ຫຼື ເຈົ້າຂອງຮ້ານໄດ້',
       });
       return;
     }
     if (staff.uid === userProfile.uid && staff.status === 'active') {
       setFeedback({
         type: 'err',
-        text: 'ไม่สามารถระงับสิทธิ์บัญชีของท่านที่กำลังใช้งานอยู่ได้',
+        text: 'ບໍ່ສາມາດລະງັບສິດບັນຊີຂອງທ່ານທີ່ກຳລັງໃຊ້ງານຢູ່ໄດ້',
       });
       return;
     }
@@ -278,7 +278,7 @@ export function StaffManagementPage() {
       await batch.commit();
       setFeedback({
         type: 'ok',
-        text: `${nextStatus === 'active' ? 'เปิดใช้งาน' : 'ระงับสิทธิ์'}พนักงาน "${staff.name}" เรียบร้อยแล้ว`,
+        text: `${nextStatus === 'active' ? 'ເປີດໃຊ້ງານ' : 'ລະງັບສິດ'}ພະນັກງານ "${staff.name}" ຮຽບຮ້ອຍແລ້ວ`,
       });
     } catch (error) {
       try {
@@ -286,7 +286,7 @@ export function StaffManagementPage() {
       } catch (err) {
         setFeedback({
           type: 'err',
-          text: err instanceof Error ? err.message : 'ไม่สามารถเปลี่ยนสถานะพนักงานได้',
+          text: err instanceof Error ? err.message : 'ບໍ່ສາມາດປ່ຽນສະຖານະພະນັກງານໄດ້',
         });
       }
     }
@@ -302,25 +302,25 @@ export function StaffManagementPage() {
     const cleanEmployeeId = formEmployeeId.trim().slice(0, 30);
 
     if (!cleanName) {
-      setErrorMsg('กรุณากรอกชื่อพนักงาน');
+      setErrorMsg('ກະລຸນາປ້ອນຊື່ພະນັກງານ');
       return;
     }
 
     if (!isTopAdmin && (formRole === 'super_admin' || formRole === 'owner')) {
-      setErrorMsg('เฉพาะผู้ดูแลระบบสูงสุดหรือเจ้าของร้านเท่านั้นที่กำหนดบทบาทระดับ Admin ได้');
+      setErrorMsg('ສະເພາະຜູ້ດູແລລະບົບສູງສຸດ ຫຼື ເຈົ້າຂອງຮ້ານເທົ່ານັ້ນທີ່ກຳນົດບົດບາດລະດັບ Admin ໄດ້');
       return;
     }
 
     if (modalMode === 'create_staff' && cleanEmail) {
       if (!cleanEmail.includes('@')) {
-        setErrorMsg('รูปแบบอีเมลไม่ถูกต้อง');
+        setErrorMsg('ຮູບແບບອີເມວບໍ່ຖືກຕ້ອງ');
         return;
       }
       const duplicateEmail = staffList.find(
         (s) => s.email.trim().toLowerCase() === cleanEmail,
       );
       if (duplicateEmail) {
-        setErrorMsg(`อีเมล ${cleanEmail} ถูกใช้งานโดยพนักงาน "${duplicateEmail.name}" แล้ว`);
+        setErrorMsg(`ອີເມວ ${cleanEmail} ຖືກໃຊ້ງານໂດຍພະນັກງານ "${duplicateEmail.name}" ແລ້ວ`);
         return;
       }
     }
@@ -405,14 +405,14 @@ export function StaffManagementPage() {
         type: 'ok',
         text:
           modalMode === 'create_staff'
-            ? `เพิ่มพนักงาน "${cleanName}" เรียบร้อยแล้ว`
-            : `อัปเดตข้อมูลและสิทธิ์ของ "${cleanName}" เรียบร้อยแล้ว`,
+            ? `ເພີ່ມພະນັກງານ "${cleanName}" ຮຽບຮ້ອຍແລ້ວ`
+            : `ອັບເດດຂໍ້ມູນ ແລະ ສິດຂອງ "${cleanName}" ຮຽບຮ້ອຍແລ້ວ`,
       });
     } catch (error) {
       try {
         handleFirestoreError(error, OperationType.WRITE, 'users');
       } catch (err) {
-        setErrorMsg(err instanceof Error ? err.message : 'ไม่สามารถบันทึกข้อมูลพนักงานได้');
+        setErrorMsg(err instanceof Error ? err.message : 'ບໍ່ສາມາດບັນທຶກຂໍ້ມູນພະນັກງານໄດ້');
       }
     } finally {
       setSaving(false);
@@ -424,27 +424,27 @@ export function StaffManagementPage() {
       {/* KPI Summary Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white border border-slate-200 rounded-xl p-4">
-          <div className="text-xs font-medium text-slate-500">พนักงานทั้งหมด</div>
+          <div className="text-xs font-medium text-slate-500">ພະນັກງານທັງໝົດ</div>
           <div className="text-xl font-bold text-slate-900 mt-1 tabular-nums">
-            {kpiSummary.total.toLocaleString('en-US')} คน
+            {kpiSummary.total.toLocaleString('en-US')} ຄົນ
           </div>
         </div>
         <div className="bg-white border border-slate-200 rounded-xl p-4">
-          <div className="text-xs font-medium text-slate-500">ใช้งานปกติ</div>
+          <div className="text-xs font-medium text-slate-500">ໃຊ້ງານປົກກະຕິ</div>
           <div className="text-xl font-bold text-green-700 mt-1 tabular-nums">
-            {kpiSummary.active.toLocaleString('en-US')} คน
+            {kpiSummary.active.toLocaleString('en-US')} ຄົນ
           </div>
         </div>
         <div className="bg-white border border-slate-200 rounded-xl p-4">
-          <div className="text-xs font-medium text-slate-500">ถูกระงับสิทธิ์</div>
+          <div className="text-xs font-medium text-slate-500">ຖືກລະງັບສິດ</div>
           <div className="text-xl font-bold text-red-600 mt-1 tabular-nums">
-            {kpiSummary.suspended.toLocaleString('en-US')} คน
+            {kpiSummary.suspended.toLocaleString('en-US')} ຄົນ
           </div>
         </div>
         <div className="bg-white border border-slate-200 rounded-xl p-4">
-          <div className="text-xs font-medium text-slate-500">บทบาทที่มีผู้ใช้งาน</div>
+          <div className="text-xs font-medium text-slate-500">ບົດບາດທີ່ມີຜູ້ໃຊ້ງານ</div>
           <div className="text-xl font-bold text-blue-700 mt-1 tabular-nums">
-            {kpiSummary.activeRolesCount} / 7 บทบาท
+            {kpiSummary.activeRolesCount} / 7 ບົດບາດ
           </div>
         </div>
       </div>
@@ -483,7 +483,7 @@ export function StaffManagementPage() {
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            รายชื่อพนักงาน ({staffList.length})
+            ລາຍຊື່ພະນັກງານ ({staffList.length})
           </button>
           <button
             type="button"
@@ -495,7 +495,7 @@ export function StaffManagementPage() {
             }`}
           >
             <Shield className="w-3.5 h-3.5" />
-            สิทธิ์ 7 บทบาท (RBAC)
+            ສິດ 7 ບົດບາດ (RBAC)
           </button>
           <button
             type="button"
@@ -507,7 +507,7 @@ export function StaffManagementPage() {
             }`}
           >
             <History className="w-3.5 h-3.5" />
-            ประวัติการใช้งาน (Audit Log)
+            ປະຫວັດການໃຊ້ງານ (Audit Log)
           </button>
         </div>
 
@@ -520,7 +520,7 @@ export function StaffManagementPage() {
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="ค้นหาชื่อ เบอร์โทร อีเมล..."
+                  placeholder="ຄົ້ນຫາຊື່ ເບີໂທ ອີເມວ..."
                   className="w-full pl-9 pr-3 py-2 text-xs sm:text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-blue-600"
                 />
               </div>
@@ -529,7 +529,7 @@ export function StaffManagementPage() {
                 onChange={(e) => setRoleFilter(e.target.value as 'all' | UserRole)}
                 className="px-3 py-2 text-xs sm:text-sm bg-white border border-slate-200 rounded-lg"
               >
-                <option value="all">ทุกบทบาท</option>
+                <option value="all">ທຸກບົດບາດ</option>
                 {(Object.keys(ROLE_LABELS) as UserRole[]).map((role) => (
                   <option key={role} value={role}>
                     {ROLE_LABELS[role]}
@@ -541,9 +541,9 @@ export function StaffManagementPage() {
                 onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'suspended')}
                 className="px-3 py-2 text-xs sm:text-sm bg-white border border-slate-200 rounded-lg"
               >
-                <option value="all">ทุกสถานะ</option>
-                <option value="active">ใช้งานปกติ</option>
-                <option value="suspended">ระงับสิทธิ์</option>
+                <option value="all">ທຸກສະຖານະ</option>
+                <option value="active">ໃຊ້ງານປົກກະຕິ</option>
+                <option value="suspended">ລະງັບສິດ</option>
               </select>
             </>
           )}
@@ -554,7 +554,7 @@ export function StaffManagementPage() {
               className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-medium rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer"
             >
               <UserPlus className="w-4 h-4" />
-              เพิ่มพนักงาน
+              ເພີ່ມພະນັກງານ
             </button>
           )}
         </div>
@@ -567,19 +567,19 @@ export function StaffManagementPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-600">
-                  <th className="py-3 px-4">ชื่อพนักงาน</th>
-                  <th className="py-3 px-4">บทบาท (Role)</th>
-                  <th className="py-3 px-4">จำนวนสิทธิ์โมดูล</th>
-                  <th className="py-3 px-4">สถานะ</th>
-                  <th className="py-3 px-4">อัปเดตล่าสุด</th>
-                  <th className="py-3 px-4 text-right">จัดการ</th>
+                  <th className="py-3 px-4">ຊື່ພະນັກງານ</th>
+                  <th className="py-3 px-4">ບົດບາດ (Role)</th>
+                  <th className="py-3 px-4">ຈຳນວນສິດໂມດູນ</th>
+                  <th className="py-3 px-4">ສະຖານະ</th>
+                  <th className="py-3 px-4">ອັບເດດຫຼ້າສຸດ</th>
+                  <th className="py-3 px-4 text-right">ຈັດການ</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-sm">
                 {filteredStaff.length === 0 && (
                   <tr>
                     <td colSpan={6} className="py-10 text-center text-sm text-slate-500">
-                      ไม่พบข้อมูลพนักงานตามเงื่อนไขที่เลือก
+                      ບໍ່ພົບຂໍ້ມູນພະນັກງານຕາມເງື່ອນໄຂທີ່ເລືອກ
                     </td>
                   </tr>
                 )}
@@ -609,7 +609,7 @@ export function StaffManagementPage() {
                         {ROLE_LABELS[staff.role]}
                       </td>
                       <td className="py-3 px-4 text-xs text-slate-600 tabular-nums">
-                        {grantedModulesCount} / {MENU_ITEMS.length} โมดูล
+                        {grantedModulesCount} / {MENU_ITEMS.length} ໂມດູນ
                       </td>
                       <td className="py-3 px-4 text-xs">
                         <span
@@ -619,7 +619,7 @@ export function StaffManagementPage() {
                               : 'text-red-600 font-medium'
                           }
                         >
-                          {staff.status === 'active' ? 'ใช้งานปกติ' : 'ระงับสิทธิ์'}
+                          {staff.status === 'active' ? 'ໃຊ້ງານປົກກະຕິ' : 'ລະງັບສິດ'}
                         </span>
                       </td>
                       <td className="py-3 px-4 text-xs text-slate-500 tabular-nums">
@@ -632,7 +632,7 @@ export function StaffManagementPage() {
                               type="button"
                               onClick={() => openEditStaffModal(staff)}
                               className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-slate-100 rounded-md transition-colors cursor-pointer"
-                              title="แก้ไขบทบาทและสิทธิ์"
+                              title="ແກ້ໄຂບົດບາດ ແລະ ສິດ"
                             >
                               <Edit3 className="w-4 h-4" />
                             </button>
@@ -644,7 +644,7 @@ export function StaffManagementPage() {
                                   ? 'text-slate-500 hover:text-red-600 hover:bg-red-50'
                                   : 'text-slate-500 hover:text-green-700 hover:bg-green-50'
                               }`}
-                              title={staff.status === 'active' ? 'ระงับสิทธิ์' : 'เปิดใช้งาน'}
+                              title={staff.status === 'active' ? 'ລະງັບສິດ' : 'ເປີດໃຊ້ງານ'}
                             >
                               <Power className="w-4 h-4" />
                             </button>
@@ -680,7 +680,7 @@ export function StaffManagementPage() {
                         staff.status === 'active' ? 'text-green-700' : 'text-red-600'
                       }`}
                     >
-                      {staff.status === 'active' ? 'ใช้งานปกติ' : 'ระงับสิทธิ์'}
+                      {staff.status === 'active' ? 'ໃຊ້ງານປົກກະຕິ' : 'ລະງັບສິດ'}
                     </span>
                   </div>
                   <div className="text-xs font-medium text-blue-700">{ROLE_LABELS[staff.role]}</div>
@@ -693,14 +693,14 @@ export function StaffManagementPage() {
                           onClick={() => openEditStaffModal(staff)}
                           className="px-2.5 py-1 text-slate-700 border border-slate-200 rounded-md cursor-pointer"
                         >
-                          แก้ไขสิทธิ์
+                          ແກ້ໄຂສິດ
                         </button>
                         <button
                           type="button"
                           onClick={() => handleToggleStaffStatus(staff)}
                           className="px-2.5 py-1 text-slate-700 border border-slate-200 rounded-md cursor-pointer"
                         >
-                          {staff.status === 'active' ? 'ระงับ' : 'เปิดใช้'}
+                          {staff.status === 'active' ? 'ລະງັບ' : 'ເປີດໃຊ້'}
                         </button>
                       </div>
                     )}
@@ -718,7 +718,7 @@ export function StaffManagementPage() {
           <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50 text-slate-600 font-semibold">
-                <th className="py-3 px-4 sticky left-0 bg-slate-50 min-w-[180px]">โมดูลในระบบ</th>
+                <th className="py-3 px-4 sticky left-0 bg-slate-50 min-w-[180px]">ໂມດູນໃນລະບົບ</th>
                 {(Object.keys(ROLE_LABELS) as UserRole[]).map((role) => (
                   <th key={role} className="py-3 px-3 min-w-[130px]">
                     {ROLE_LABELS[role].split(' (')[0]}
@@ -739,7 +739,7 @@ export function StaffManagementPage() {
                         {acts.length === 0 ? (
                           <span className="text-slate-300">-</span>
                         ) : acts.length === ALL_ACTIONS.length ? (
-                          <span className="font-semibold text-blue-700">ทั้งหมด (7)</span>
+                          <span className="font-semibold text-blue-700">ທັງໝົດ (7)</span>
                         ) : (
                           <span>{acts.map((a) => ACTION_LABELS[a]).join(', ')}</span>
                         )}
@@ -763,7 +763,7 @@ export function StaffManagementPage() {
                 type="text"
                 value={auditSearch}
                 onChange={(e) => setAuditSearch(e.target.value)}
-                placeholder="ค้นหา Action ผู้ดำเนินการ หรือรหัสเอกสาร..."
+                placeholder="ຄົ້ນຫາ Action ຜູ້ດຳເນີນການ ຫຼື ລະຫັດເອກະສານ..."
                 className="w-full pl-9 pr-3 py-2 text-xs sm:text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-blue-600"
               />
             </div>
@@ -772,7 +772,7 @@ export function StaffManagementPage() {
               onChange={(e) => setAuditEntityFilter(e.target.value)}
               className="px-3 py-2 text-xs sm:text-sm bg-white border border-slate-200 rounded-lg"
             >
-              <option value="all">ทุกประเภทข้อมูล</option>
+              <option value="all">ທຸກປະເພດຂໍ້ມູນ</option>
               {auditEntities.map((ent) => (
                 <option key={ent} value={ent}>
                   {ent}
@@ -795,18 +795,18 @@ export function StaffManagementPage() {
                     </div>
                   </div>
                   <div className="text-slate-600">
-                    ผู้ดำเนินการ: {log.userNameSnapshot} ({log.userRoleSnapshot}) · {log.deviceInfo}
+                    ຜູ້ດຳເນີນການ: {log.userNameSnapshot} ({log.userRoleSnapshot}) · {log.deviceInfo}
                   </div>
                   {(log.before || log.after) && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 font-mono text-[11px]">
                       {log.before && (
                         <div className="p-2 bg-slate-50 border border-slate-200 rounded text-slate-600 overflow-x-auto">
-                          เดิม: {JSON.stringify(log.before)}
+                          ເດີມ: {JSON.stringify(log.before)}
                         </div>
                       )}
                       {log.after && (
                         <div className="p-2 bg-blue-50/50 border border-blue-100 rounded text-slate-800 overflow-x-auto">
-                          ใหม่: {JSON.stringify(log.after)}
+                          ໃໝ່: {JSON.stringify(log.after)}
                         </div>
                       )}
                     </div>
@@ -815,7 +815,7 @@ export function StaffManagementPage() {
               ))}
               {filteredAuditLogs.length === 0 && (
                 <div className="p-8 text-center text-sm text-slate-500">
-                  ไม่พบประวัติการใช้งานตามเงื่อนไขที่ค้นหา
+                  ບໍ່ພົບປະຫວັດການໃຊ້ງານຕາມເງື່ອນໄຂທີ່ຄົ້ນຫາ
                 </div>
               )}
             </div>
@@ -828,7 +828,7 @@ export function StaffManagementPage() {
                 onClick={() => setAuditLimit((prev) => prev + 50)}
                 className="px-4 py-2 text-xs font-medium text-blue-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer"
               >
-                โหลดประวัติเพิ่มเติม
+                ໂຫຼດປະຫວັດເພີ່ມເຕີມ
               </button>
             </div>
           )}
@@ -844,8 +844,8 @@ export function StaffManagementPage() {
                 <UserPlus className="w-5 h-5 text-blue-600" />
                 <h3 className="text-base font-semibold text-slate-900">
                   {modalMode === 'create_staff'
-                    ? 'เพิ่มพนักงานใหม่'
-                    : 'แก้ไขข้อมูลและสิทธิ์พนักงาน'}
+                    ? 'ເພີ່ມພະນັກງານໃໝ່'
+                    : 'ແກ້ໄຂຂໍ້ມູນ ແລະ ສິດພະນັກງານ'}
                 </h3>
               </div>
               <button
@@ -867,7 +867,7 @@ export function StaffManagementPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1">
-                    ชื่อ-นามสกุล *
+                    ຊື່-ນາມສະກຸນ *
                   </label>
                   <input
                     type="text"
@@ -880,20 +880,20 @@ export function StaffManagementPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1">
-                    รหัสพนักงาน (Employee ID)
+                    ລະຫັດພະນັກງານ (Employee ID)
                   </label>
                   <input
                     type="text"
                     maxLength={30}
                     value={formEmployeeId}
                     onChange={(e) => setFormEmployeeId(e.target.value)}
-                    placeholder="เช่น EMP-001"
+                    placeholder="ເຊັ່ນ EMP-001"
                     className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg font-mono"
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1">
-                    เบอร์โทรศัพท์
+                    ເບີໂທລະສັບ
                   </label>
                   <input
                     type="text"
@@ -905,7 +905,7 @@ export function StaffManagementPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1">
-                    อีเมล (ถ้ามี)
+                    ອີເມວ (ຖ້າມີ)
                   </label>
                   <input
                     type="email"
@@ -918,7 +918,7 @@ export function StaffManagementPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1">
-                    บทบาท (Role) *
+                    ບົດບາດ (Role) *
                   </label>
                   <select
                     value={formRole}
@@ -933,14 +933,14 @@ export function StaffManagementPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">สถานะบัญชี</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">ສະຖານະບັນຊີ</label>
                   <select
                     value={formStatus}
                     onChange={(e) => setFormStatus(e.target.value as 'active' | 'suspended')}
                     className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white"
                   >
-                    <option value="active">ใช้งานปกติ</option>
-                    <option value="suspended">ระงับสิทธิ์</option>
+                    <option value="active">ໃຊ້ງານປົກກະຕິ</option>
+                    <option value="suspended">ລະງັບສິດ</option>
                   </select>
                 </div>
               </div>
@@ -954,8 +954,8 @@ export function StaffManagementPage() {
                   >
                     <Shield className="w-3.5 h-3.5" />
                     {showPermissionMatrix
-                      ? 'ซ่อนตารางกำหนดสิทธิ์รายโมดูล'
-                      : 'ปรับแต่งสิทธิ์รายโมดูล (7 ระดับ)'}
+                      ? 'ເຊື່ອງຕາຕະລາງກຳນົດສິດລາຍໂມດູນ'
+                      : 'ປັບແຕ່ງສິດລາຍໂມດູນ (7 ລະດັບ)'}
                   </button>
                   {showPermissionMatrix && (
                     <button
@@ -966,7 +966,7 @@ export function StaffManagementPage() {
                       className="inline-flex items-center gap-1 text-xs font-medium text-slate-600 hover:text-blue-600 cursor-pointer"
                     >
                       <RotateCcw className="w-3.5 h-3.5" />
-                      รีเซ็ตสิทธิ์ตามค่าเริ่มต้นของบทบาท
+                      ຣີເຊັດສິດຕາມຄ່າເລີ່ມຕົ້ນຂອງບົດບາດ
                     </button>
                   )}
                 </div>
@@ -976,13 +976,13 @@ export function StaffManagementPage() {
                     <table className="w-full text-left text-xs border-collapse">
                       <thead className="bg-slate-50 sticky top-0 border-b border-slate-200">
                         <tr>
-                          <th className="py-2 px-3 font-semibold text-slate-600">โมดูล</th>
+                          <th className="py-2 px-3 font-semibold text-slate-600">ໂມດູນ</th>
                           {ALL_ACTIONS.map((act) => (
                             <th key={act} className="py-2 px-1.5 text-center font-medium text-slate-600">
                               {ACTION_LABELS[act]}
                             </th>
                           ))}
-                          <th className="py-2 px-2 text-center font-medium text-slate-500">ทั้งหมด</th>
+                          <th className="py-2 px-2 text-center font-medium text-slate-500">ທັງໝົດ</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
@@ -1011,7 +1011,7 @@ export function StaffManagementPage() {
                                   onClick={() => toggleModuleAllActions(item.key)}
                                   className="text-[11px] font-medium text-blue-600 hover:underline cursor-pointer"
                                 >
-                                  {hasAll ? 'ล้าง' : 'เลือก'}
+                                  {hasAll ? 'ລ້າງ' : 'ເລືອກ'}
                                 </button>
                               </td>
                             </tr>
@@ -1029,14 +1029,14 @@ export function StaffManagementPage() {
                   onClick={() => setModalMode(null)}
                   className="px-4 py-2 text-sm font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer"
                 >
-                  ยกเลิก
+                  ຍົກເລີກ
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
                   className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-60 rounded-lg cursor-pointer"
                 >
-                  {saving ? 'กำลังบันทึก...' : 'บันทึก'}
+                  {saving ? 'ກຳລັງບັນທຶກ...' : 'ບັນທຶກ'}
                 </button>
               </div>
             </form>

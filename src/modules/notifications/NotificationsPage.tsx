@@ -80,12 +80,12 @@ function tsToYmd(val: unknown): string {
 }
 
 const CATEGORY_LABELS: Record<AlertCategory, string> = {
-  all: 'ทั้งหมด',
-  stock: 'สต็อกใกล้หมด/หมด',
-  expiry: 'ใกล้หมดอายุ/หมดอายุ',
-  payable: 'เจ้าหนี้ PO',
-  receivable: 'ลูกหนี้ค้างรับ',
-  expense: 'ค่าใช้จ่ายสูง',
+  all: 'ທັງໝົດ',
+  stock: 'ສະຕ໋ອກໃກ້ໝົດ/ໝົດ',
+  expiry: 'ໃກ້ໝົດອາຍຸ/ໝົດອາຍຸ',
+  payable: 'ເຈົ້າໜີ້ PO',
+  receivable: 'ລູກໜີ້ຄ້າງຮັບ',
+  expense: 'ຄ່າໃຊ້ຈ່າຍສູງ',
 };
 
 export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
@@ -192,22 +192,22 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
           id: `stock_out_${bal.inventoryId}`,
           category: 'stock',
           severity: 'critical',
-          title: `สินค้าหมดสต็อก: ${bal.productNameSnapshot}`,
-          description: `SKU ${bal.skuSnapshot} คงเหลือ ${bal.qtyOnHandBase} ${bal.baseUnitNameSnapshot} (ขั้นต่ำ ${bal.minStockBaseQty} ${bal.baseUnitNameSnapshot})`,
+          title: `ສິນຄ້າໝົດສະຕ໋ອກ: ${bal.productNameSnapshot}`,
+          description: `SKU ${bal.skuSnapshot} ຄົງເຫຼືອ ${bal.qtyOnHandBase} ${bal.baseUnitNameSnapshot} (ຂັ້ນຕ່ຳ ${bal.minStockBaseQty} ${bal.baseUnitNameSnapshot})`,
           metricLabel: `${bal.qtyOnHandBase} ${bal.baseUnitNameSnapshot}`,
           targetModule: 'purchasing',
-          actionLabel: 'สั่งซื้อเพิ่ม',
+          actionLabel: 'ສັ່ງຊື້ເພີ່ມ',
         });
       } else if (bal.qtyOnHandBase <= bal.minStockBaseQty) {
         list.push({
           id: `stock_low_${bal.inventoryId}`,
           category: 'stock',
           severity: 'warning',
-          title: `สินค้าใกล้หมด: ${bal.productNameSnapshot}`,
-          description: `SKU ${bal.skuSnapshot} คงเหลือ ${bal.qtyOnHandBase} ${bal.baseUnitNameSnapshot} (จุดสั่งซื้อขั้นต่ำ ${bal.minStockBaseQty})`,
-          metricLabel: `เหลือ ${bal.qtyOnHandBase} ${bal.baseUnitNameSnapshot}`,
+          title: `ສິນຄ້າໃກ້ໝົດ: ${bal.productNameSnapshot}`,
+          description: `SKU ${bal.skuSnapshot} ຄົງເຫຼືອ ${bal.qtyOnHandBase} ${bal.baseUnitNameSnapshot} (ຈຸດສັ່ງຊື້ຂັ້ນຕ່ຳ ${bal.minStockBaseQty})`,
+          metricLabel: `ເຫຼືອ ${bal.qtyOnHandBase} ${bal.baseUnitNameSnapshot}`,
           targetModule: 'inventory',
-          actionLabel: 'ดูคลังสินค้า',
+          actionLabel: 'ເບິ່ງສາງສິນຄ້າ',
         });
       }
     }
@@ -221,22 +221,22 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
           id: `exp_expired_${lot.lotId}`,
           category: 'expiry',
           severity: 'critical',
-          title: `ล็อตสินค้าหมดอายุแล้ว: ${lot.productNameSnapshot}`,
-          description: `ล็อต ${lot.lotNumber} หมดอายุเมื่อ ${formatDateVientiane(lot.expiryDate)} คงเหลือค้างคลัง ${lot.remainingQtyBase} หน่วยฐาน`,
-          metricLabel: `เกินกำหนด ${Math.abs(daysLeft)} วัน`,
+          title: `ລ໋ອດສິນຄ້າໝົດອາຍຸແລ້ວ: ${lot.productNameSnapshot}`,
+          description: `ລ໋ອດ ${lot.lotNumber} ໝົດອາຍຸເມື່ອ ${formatDateVientiane(lot.expiryDate)} ຄົງເຫຼືອຄ້າງສາງ ${lot.remainingQtyBase} ໜ່ວຍພື້ນຖານ`,
+          metricLabel: `ກາຍກຳນົດ ${Math.abs(daysLeft)} ວັນ`,
           targetModule: 'stock_out',
-          actionLabel: 'เบิกออก/ตัดหมดอายุ',
+          actionLabel: 'ເບີກອອກ/ຕັດໝົດອາຍຸ',
         });
       } else if (daysLeft <= expiryWarningDays) {
         list.push({
           id: `exp_soon_${lot.lotId}`,
           category: 'expiry',
           severity: daysLeft <= 7 ? 'critical' : 'warning',
-          title: `สินค้าใกล้หมดอายุ: ${lot.productNameSnapshot}`,
-          description: `ล็อต ${lot.lotNumber} จะหมดอายุวันที่ ${formatDateVientiane(lot.expiryDate)} (คงเหลือ ${lot.remainingQtyBase} หน่วยฐาน)`,
-          metricLabel: daysLeft === 0 ? 'หมดอายุวันนี้' : `อีก ${daysLeft} วัน`,
+          title: `ສິນຄ້າໃກ້ໝົດອາຍຸ: ${lot.productNameSnapshot}`,
+          description: `ລ໋ອດ ${lot.lotNumber} ຈະໝົດອາຍຸວັນທີ ${formatDateVientiane(lot.expiryDate)} (ຄົງເຫຼືອ ${lot.remainingQtyBase} ໜ່ວຍພື້ນຖານ)`,
+          metricLabel: daysLeft === 0 ? 'ໝົດອາຍຸມື້ນີ້' : `ອີກ ${daysLeft} ວັນ`,
           targetModule: 'inventory',
-          actionLabel: 'ตรวจสอบล็อต',
+          actionLabel: 'ກວດສອບລ໋ອດ',
         });
       }
     }
@@ -250,22 +250,22 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
           id: `ap_overdue_${po.poId}`,
           category: 'payable',
           severity: 'critical',
-          title: `เจ้าหนี้ PO เกินกำหนดชำระ: ${po.poNumber}`,
-          description: `ซัพพลายเออร์ ${po.supplierName} ครบกำหนดวันที่ ${formatDateVientiane(po.dueDate)}`,
+          title: `ເຈົ້າໜີ້ PO ກາຍກຳນົດຊຳລະ: ${po.poNumber}`,
+          description: `ຜູ້ສະໜອງ ${po.supplierName} ຄົບກຳນົດວັນທີ ${formatDateVientiane(po.dueDate)}`,
           metricLabel: formatLak(po.creditDueLak),
           targetModule: 'accounts_payable',
-          actionLabel: 'ชำระเจ้าหนี้',
+          actionLabel: 'ຊຳລະເຈົ້າໜີ້',
         });
       } else if (po.dueDate && daysUntilDue <= 7) {
         list.push({
           id: `ap_soon_${po.poId}`,
           category: 'payable',
           severity: 'warning',
-          title: `เจ้าหนี้ PO ใกล้ครบกำหนด: ${po.poNumber}`,
-          description: `ซัพพลายเออร์ ${po.supplierName} ครบกำหนดวันที่ ${formatDateVientiane(po.dueDate)}`,
+          title: `ເຈົ້າໜີ້ PO ໃກ້ຄົບກຳນົດ: ${po.poNumber}`,
+          description: `ຜູ້ສະໜອງ ${po.supplierName} ຄົບກຳນົດວັນທີ ${formatDateVientiane(po.dueDate)}`,
           metricLabel: formatLak(po.creditDueLak),
           targetModule: 'accounts_payable',
-          actionLabel: 'ดูรายการเจ้าหนี้',
+          actionLabel: 'ເບິ່ງລາຍການເຈົ້າໜີ້',
         });
       }
     }
@@ -279,11 +279,11 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
         id: `ar_due_${sale.saleId}`,
         category: 'receivable',
         severity: ageDays >= 14 ? 'critical' : 'warning',
-        title: `บิลขายเชื่อค้างรับ: ${sale.invoiceNumber}`,
-        description: `ลูกค้า ${sale.customerName} | เปิดบิลวันที่ ${formatDateVientiane(sale.createdAt)} (ค้าง ${ageDays} วัน)`,
+        title: `ບິນຂາຍຕິດໜີ້ຄ້າງຮັບ: ${sale.invoiceNumber}`,
+        description: `ລູກຄ້າ ${sale.customerName} | ເປີດບິນວັນທີ ${formatDateVientiane(sale.createdAt)} (ຄ້າງ ${ageDays} ວັນ)`,
         metricLabel: formatLak(sale.creditDueLak),
         targetModule: 'accounts_receivable',
-        actionLabel: 'รับชำระหนี้',
+        actionLabel: 'ຮັບຊຳລະໜີ້',
       });
     }
 
@@ -306,11 +306,11 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
           id: `exp_ratio_${monthPrefix}`,
           category: 'expense',
           severity: ratio >= highExpenseThresholdPercent + 15 ? 'critical' : 'warning',
-          title: `สัดส่วนรายจ่ายเดือนนี้สูงกว่าเกณฑ์ (${ratio}%)`,
-          description: `รายจ่ายเดือนนี้ ${formatLak(monthExpensesLak)} เทียบกับยอดขาย ${formatLak(monthSalesLak)} (เกณฑ์แจ้งเตือน ${highExpenseThresholdPercent}%)`,
-          metricLabel: `${ratio}% ของยอดขาย`,
+          title: `ສັດສ່ວນລາຍຈ່າຍເດືອນນີ້ສູງກວ່າເກນ (${ratio}%)`,
+          description: `ລາຍຈ່າຍເດືອນນີ້ ${formatLak(monthExpensesLak)} ທຽບກັບຍອດຂາຍ ${formatLak(monthSalesLak)} (ເກນແຈ້ງເຕືອນ ${highExpenseThresholdPercent}%)`,
+          metricLabel: `${ratio}% ຂອງຍອດຂາຍ`,
           targetModule: 'expenses',
-          actionLabel: 'ตรวจสอบรายจ่าย',
+          actionLabel: 'ກວດສອບລາຍຈ່າຍ',
         });
       }
     }
@@ -361,10 +361,10 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
         <div>
           <h1 className="text-xl font-bold text-slate-900 flex items-center gap-2">
             <Bell className="w-6 h-6 text-amber-600" />
-            ศูนย์การแจ้งเตือน (Notifications Center)
+            ສູນການແຈ້ງເຕືອນ (Notifications Center)
           </h1>
           <p className="text-sm text-slate-500 mt-0.5">
-            ติดตามสต็อกใกล้หมด สินค้าหมดอายุ เจ้าหนี้/ลูกหนี้ค้างชำระ และค่าใช้จ่ายเกินเกณฑ์แบบเรียลไทม์
+            ຕິດຕາມສະຕ໋ອກໃກ້ໝົດ ສິນຄ້າໝົດອາຍຸ ເຈົ້າໜີ້/ລູກໜີ້ຄ້າງຊຳລະ ແລະ ຄ່າໃຊ້ຈ່າຍເກີນເກນແບບສົດ
           </p>
         </div>
       </div>
@@ -373,7 +373,7 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white rounded-xl border border-slate-200 p-4 flex items-center justify-between">
           <div>
-            <div className="text-xs text-slate-500">การแจ้งเตือนทั้งหมด</div>
+            <div className="text-xs text-slate-500">ການແຈ້ງເຕືອນທັງໝົດ</div>
             <div className="text-2xl font-bold text-slate-900 mt-1 tabular-nums">
               {alerts.length}
             </div>
@@ -383,7 +383,7 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
 
         <div className="bg-rose-50/70 rounded-xl border border-rose-200 p-4 flex items-center justify-between">
           <div>
-            <div className="text-xs text-rose-700 font-medium">ระดับวิกฤต (ต้องจัดการด่วน)</div>
+            <div className="text-xs text-rose-700 font-medium">ລະດັບວິກິດ (ຕ້ອງຈັດການດ່ວນ)</div>
             <div className="text-2xl font-bold text-rose-700 mt-1 tabular-nums">
               {criticalCount}
             </div>
@@ -393,7 +393,7 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
 
         <div className="bg-amber-50/70 rounded-xl border border-amber-200 p-4 flex items-center justify-between">
           <div>
-            <div className="text-xs text-amber-800 font-medium">ระดับเฝ้าระวัง</div>
+            <div className="text-xs text-amber-800 font-medium">ລະດັບເຝົ້າລະວັງ</div>
             <div className="text-2xl font-bold text-amber-800 mt-1 tabular-nums">
               {warningCount}
             </div>
@@ -433,7 +433,7 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="ค้นหาชื่อสินค้า เลขที่บิล PO หรือรายละเอียด..."
+              placeholder="ຄົ້ນຫາຊື່ສິນຄ້າ ເລກທີບິນ PO ຫຼື ລາຍລະອຽດ..."
               className="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500"
             />
           </div>
@@ -443,9 +443,9 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
             onChange={(e) => setSeverityFilter(e.target.value as AlertSeverity)}
             className="rounded-lg border border-slate-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-slate-500"
           >
-            <option value="all">ทุกระดับความสำคัญ</option>
-            <option value="critical">เฉพาะวิกฤต</option>
-            <option value="warning">เฉพาะเฝ้าระวัง</option>
+            <option value="all">ທຸກລະດັບຄວາມສຳຄັນ</option>
+            <option value="critical">ສະເພາະວິກິດ</option>
+            <option value="warning">ສະເພາະເຝົ້າລະວັງ</option>
           </select>
         </div>
       </div>
@@ -455,10 +455,10 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
         <div className="bg-white rounded-xl border border-slate-200 p-10 text-center space-y-2">
           <CheckCircle2 className="w-10 h-10 text-emerald-500 mx-auto" />
           <div className="text-base font-semibold text-slate-900">
-            ไม่พบการแจ้งเตือนในหมวดที่เลือก
+            ບໍ່ພົບການແຈ້ງເຕືອນໃນໝວດທີ່ເລືອກ
           </div>
           <p className="text-sm text-slate-500">
-            สต็อกสินค้า วันหมดอายุ หนี้ค้างรับ/ค้างจ่าย และค่าใช้จ่ายอยู่ในเกณฑ์ปกติ
+            ສະຕ໋ອກສິນຄ້າ ວັນໝົດອາຍຸ ໜີ້ຄ້າງຮັບ/ຄ້າງຈ່າຍ ແລະ ຄ່າໃຊ້ຈ່າຍຢູ່ໃນເກນປົກກະຕິ
           </p>
         </div>
       ) : (
@@ -491,7 +491,7 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
                             : 'bg-amber-100 text-amber-800'
                         }`}
                       >
-                        {isCrit ? 'วิกฤต' : 'เฝ้าระวัง'}
+                        {isCrit ? 'ວິກິດ' : 'ເຝົ້າລະວັງ'}
                       </span>
                       <span className="text-xs text-slate-500">
                         {CATEGORY_LABELS[item.category]}
@@ -504,7 +504,7 @@ export function NotificationsPage({ onNavigate }: NotificationsPageProps) {
 
                 <div className="flex items-center justify-between sm:justify-end gap-4 shrink-0">
                   <div className="text-right">
-                    <div className="text-[11px] text-slate-400">สถานะตัวเลข</div>
+                    <div className="text-[11px] text-slate-400">ສະຖານະຕົວເລກ</div>
                     <div
                       className={`text-sm font-bold tabular-nums ${
                         isCrit ? 'text-rose-700' : 'text-amber-800'

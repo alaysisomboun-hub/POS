@@ -32,24 +32,24 @@ import type {
 } from '../../core/firebase/types';
 
 const STATUS_LABELS: Record<SaleOrder['status'], string> = {
-  completed: 'สำเร็จ',
-  partial_return: 'คืนบางส่วน',
-  returned: 'คืนทั้งบิล',
-  voided: 'ยกเลิกบิล',
+  completed: 'ສຳເລັດ',
+  partial_return: 'ຄືນບາງສ່ວນ',
+  returned: 'ຄືນທັງບິນ',
+  voided: 'ຍົກເລີກບິນ',
 };
 
 const PAYMENT_METHOD_LABELS: Record<PaymentMethodType, string> = {
-  cash: 'เงินสด',
-  transfer: 'โอนเงิน',
+  cash: 'ເງິນສົດ',
+  transfer: 'ໂອນເງິນ',
   qr: 'QR Pay',
-  credit: 'ขายเชื่อ',
-  split: 'หลายช่องทาง',
+  credit: 'ຂາຍເຊື່ອ',
+  split: 'ຫຼາຍຊ່ອງທາງ',
 };
 
 const REFUND_METHOD_LABELS: Record<SaleReturn['refundMethod'], string> = {
-  cash: 'คืนเงินสด',
-  transfer: 'โอนเงินคืน',
-  credit_adjust: 'ปรับลดยอดหนี้',
+  cash: 'ຄືນເງິນສົດ',
+  transfer: 'ໂອນເງິນຄືນ',
+  credit_adjust: 'ປັບຫຼຸດຍອດໜີ້',
 };
 
 export function SalesHistoryPage() {
@@ -241,14 +241,14 @@ export function SalesHistoryPage() {
       });
       setFeedback({
         type: 'ok',
-        text: `ยกเลิกบิล ${voidTarget.invoiceNumber} และคืนสต็อกสินค้าเรียบร้อยแล้ว`,
+        text: `ຍົກເລີກບິນ ${voidTarget.invoiceNumber} ແລະ ຄືນສະຕັອກສິນຄ້າສຳເລັດແລ້ວ`,
       });
       setVoidTarget(null);
       setVoidReason('');
     } catch (err) {
       setFeedback({
         type: 'err',
-        text: err instanceof Error ? err.message : 'ไม่สามารถยกเลิกบิลขายได้',
+        text: err instanceof Error ? err.message : 'ບໍ່ສາມາດຍົກເລີກບິນຂາຍໄດ້',
       });
     } finally {
       setVoidSaving(false);
@@ -280,13 +280,13 @@ export function SalesHistoryPage() {
       });
       setFeedback({
         type: 'ok',
-        text: `บันทึกใบรับคืนสินค้า ${createdRet.returnNumber} ยอดคืน ${formatLak(createdRet.totalRefundLak)} เรียบร้อยแล้ว`,
+        text: `ບັນທຶກໃບຮັບຄືນສິນຄ້າ ${createdRet.returnNumber} ຍອດຄືນ ${formatLak(createdRet.totalRefundLak)} ສຳເລັດແລ້ວ`,
       });
       setReturnTarget(null);
     } catch (err) {
       setFeedback({
         type: 'err',
-        text: err instanceof Error ? err.message : 'ไม่สามารถบันทึกการคืนสินค้าได้',
+        text: err instanceof Error ? err.message : 'ບໍ່ສາມາດບັນທຶກການຄືນສິນຄ້າໄດ້',
       });
     } finally {
       setReturnSaving(false);
@@ -298,25 +298,25 @@ export function SalesHistoryPage() {
       {/* KPI Strip */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white border border-slate-200 rounded-xl p-4">
-          <div className="text-xs font-medium text-slate-500">ยอดขายสุทธิ (หักคืน/ยกเลิก)</div>
+          <div className="text-xs font-medium text-slate-500">ຍອດຂາຍສຸດທິ (ຫັກຄືນ/ຍົກເລີກ)</div>
           <div className="text-xl font-bold text-blue-700 mt-1 tabular-nums">
             {formatLak(kpiSummary.netSalesLak)}
           </div>
         </div>
         <div className="bg-white border border-slate-200 rounded-xl p-4">
-          <div className="text-xs font-medium text-slate-500">จำนวนบิลสำเร็จ</div>
+          <div className="text-xs font-medium text-slate-500">ຈຳນວນບິນສຳເລັດ</div>
           <div className="text-xl font-bold text-slate-900 mt-1 tabular-nums">
-            {kpiSummary.activeBillCount.toLocaleString('en-US')} บิล
+            {kpiSummary.activeBillCount.toLocaleString('en-US')} ບິນ
           </div>
         </div>
         <div className="bg-white border border-slate-200 rounded-xl p-4">
-          <div className="text-xs font-medium text-slate-500">กำไรขั้นต้นจากบิลขาย</div>
+          <div className="text-xs font-medium text-slate-500">ກຳໄລຂັ້ນຕົ້ນຈາກບິນຂາຍ</div>
           <div className="text-xl font-bold text-green-700 mt-1 tabular-nums">
             {formatLak(kpiSummary.grossProfitLak)}
           </div>
         </div>
         <div className="bg-white border border-slate-200 rounded-xl p-4">
-          <div className="text-xs font-medium text-slate-500">ยอดคืนสินค้า / ยกเลิกบิล</div>
+          <div className="text-xs font-medium text-slate-500">ຍອດຄືນສິນຄ້າ / ຍົກເລີກບິນ</div>
           <div className="text-xl font-bold text-red-600 mt-1 tabular-nums">
             {formatLak(kpiSummary.refundAndVoidLak)}
           </div>
@@ -357,7 +357,7 @@ export function SalesHistoryPage() {
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            รายการบิลขาย ({sales.length})
+            ລາຍການບິນຂາຍ ({sales.length})
           </button>
           <button
             type="button"
@@ -368,7 +368,7 @@ export function SalesHistoryPage() {
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            ประวัติคืนสินค้า ({saleReturns.length})
+            ປະຫວັດຄືນສິນຄ້າ ({saleReturns.length})
           </button>
         </div>
 
@@ -379,7 +379,7 @@ export function SalesHistoryPage() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="ค้นหาเลขบิล ลูกค้า แคชเชียร์..."
+              placeholder="ຄົ້ນຫາເລກບິນ ລູກຄ້າ ພະນັກງານຂາຍ..."
               className="w-full pl-9 pr-3 py-2 text-xs sm:text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:border-blue-600"
             />
           </div>
@@ -391,11 +391,11 @@ export function SalesHistoryPage() {
                 onChange={(e) => setStatusFilter(e.target.value as 'all' | SaleOrder['status'])}
                 className="px-3 py-2 text-xs sm:text-sm bg-white border border-slate-200 rounded-lg"
               >
-                <option value="all">สถานะทั้งหมด</option>
-                <option value="completed">สำเร็จ</option>
-                <option value="partial_return">คืนบางส่วน</option>
-                <option value="returned">คืนทั้งบิล</option>
-                <option value="voided">ยกเลิกบิล</option>
+                <option value="all">ສະຖານະທັງໝົດ</option>
+                <option value="completed">ສຳເລັດ</option>
+                <option value="partial_return">ຄືນບາງສ່ວນ</option>
+                <option value="returned">ຄືນທັງບິນ</option>
+                <option value="voided">ຍົກເລີກບິນ</option>
               </select>
 
               <select
@@ -403,12 +403,12 @@ export function SalesHistoryPage() {
                 onChange={(e) => setPaymentFilter(e.target.value as 'all' | PaymentMethodType)}
                 className="px-3 py-2 text-xs sm:text-sm bg-white border border-slate-200 rounded-lg"
               >
-                <option value="all">ทุกช่องทางชำระ</option>
-                <option value="cash">เงินสด</option>
-                <option value="transfer">โอนเงิน</option>
+                <option value="all">ທຸກຊ່ອງທາງຊຳລະ</option>
+                <option value="cash">ເງິນສົດ</option>
+                <option value="transfer">ໂອນເງິນ</option>
                 <option value="qr">QR Pay</option>
-                <option value="credit">ขายเชื่อ</option>
-                <option value="split">หลายช่องทาง</option>
+                <option value="credit">ຂາຍເຊື່ອ</option>
+                <option value="split">ຫຼາຍຊ່ອງທາງ</option>
               </select>
             </>
           )}
@@ -421,20 +421,20 @@ export function SalesHistoryPage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-600">
-                <th className="py-3 px-4">เลขที่บิล / วันเวลา</th>
-                <th className="py-3 px-4">ลูกค้า / ระดับราคา</th>
-                <th className="py-3 px-4">ช่องทางชำระ</th>
-                <th className="py-3 px-4 text-right">ยอดสุทธิ</th>
-                <th className="py-3 px-4 text-right">กำไรขั้นต้น</th>
-                <th className="py-3 px-4">สถานะ</th>
-                <th className="py-3 px-4 text-right">จัดการ</th>
+                <th className="py-3 px-4">ເລກທີບິນ / ວັນເວລາ</th>
+                <th className="py-3 px-4">ລູກຄ້າ / ລະດັບລາຄາ</th>
+                <th className="py-3 px-4">ຊ່ອງທາງຊຳລະ</th>
+                <th className="py-3 px-4 text-right">ຍອດສຸດທິ</th>
+                <th className="py-3 px-4 text-right">ກຳໄລຂັ້ນຕົ້ນ</th>
+                <th className="py-3 px-4">ສະຖານະ</th>
+                <th className="py-3 px-4 text-right">ຈັດການ</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-sm">
               {filteredSales.length === 0 && (
                 <tr>
                   <td colSpan={7} className="py-10 text-center text-sm text-slate-500">
-                    ยังไม่มีประวัติบิลขายในระบบ
+                    ຍັງບໍ່ມີປະຫວັດບິນຂາຍໃນລະບົບ
                   </td>
                 </tr>
               )}
@@ -454,19 +454,19 @@ export function SalesHistoryPage() {
                       {sale.customerName}
                     </div>
                     <div className="text-xs text-slate-500">
-                      {sale.items.length} รายการ ·{' '}
+                      {sale.items.length} ລາຍການ ·{' '}
                       {sale.priceTier === 'wholesale'
-                        ? 'ขายส่ง'
+                        ? 'ຂາຍສົ່ງ'
                         : sale.priceTier === 'member'
-                          ? 'สมาชิก'
-                          : 'ขายปลีก'}
+                          ? 'ສະມາຊິກ'
+                          : 'ຂາຍຍ່ອຍ'}
                     </div>
                   </td>
                   <td className="py-3 px-4 text-xs text-slate-700">
                     <div>{PAYMENT_METHOD_LABELS[sale.paymentMethod]}</div>
                     {sale.creditDueLak > 0 && (
                       <div className="text-amber-700 font-medium tabular-nums">
-                        ค้าง {formatLak(sale.creditDueLak)}
+                        ຄ້າງ {formatLak(sale.creditDueLak)}
                       </div>
                     )}
                   </td>
@@ -494,7 +494,7 @@ export function SalesHistoryPage() {
                       <button
                         type="button"
                         onClick={() => setDetailSale(sale)}
-                        title="ดูรายละเอียดบิล"
+                        title="ເບິ່ງລາຍລະອຽດບິນ"
                         className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-slate-100 rounded-md cursor-pointer"
                       >
                         <Eye className="w-4 h-4" />
@@ -502,7 +502,7 @@ export function SalesHistoryPage() {
                       <button
                         type="button"
                         onClick={() => setReceiptSale(sale)}
-                        title="พิมพ์ใบเสร็จซ้ำ"
+                        title="ພິມໃບບິນຄືນ"
                         className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-slate-100 rounded-md cursor-pointer"
                       >
                         <Printer className="w-4 h-4" />
@@ -512,7 +512,7 @@ export function SalesHistoryPage() {
                           <button
                             type="button"
                             onClick={() => openReturnModal(sale)}
-                            title="รับคืนสินค้า"
+                            title="ຮັບຄືນສິນຄ້າ"
                             className="p-1.5 text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded-md cursor-pointer"
                           >
                             <RotateCcw className="w-4 h-4" />
@@ -525,7 +525,7 @@ export function SalesHistoryPage() {
                             setVoidTarget(sale);
                             setVoidReason('');
                           }}
-                          title="ยกเลิกบิล (Void)"
+                          title="ຍົກເລີກບິນ (Void)"
                           className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-md cursor-pointer"
                         >
                           <Ban className="w-4 h-4" />
@@ -546,19 +546,19 @@ export function SalesHistoryPage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-600">
-                <th className="py-3 px-4">เลขที่ใบรับคืน / อ้างอิงบิล</th>
-                <th className="py-3 px-4">วันเวลา</th>
-                <th className="py-3 px-4">รายการสินค้าที่คืน</th>
-                <th className="py-3 px-4">วิธีคืนเงิน</th>
-                <th className="py-3 px-4 text-right">ยอดเงินคืนรวม</th>
-                <th className="py-3 px-4">ผู้ดำเนินการ / เหตุผล</th>
+                <th className="py-3 px-4">ເລກທີໃບຮັບຄືນ / ອ້າງອີງບິນ</th>
+                <th className="py-3 px-4">ວັນເວລາ</th>
+                <th className="py-3 px-4">ລາຍການສິນຄ້າທີ່ຄືນ</th>
+                <th className="py-3 px-4">ວິທີຄືນເງິນ</th>
+                <th className="py-3 px-4 text-right">ຍອດເງິນຄືນລວມ</th>
+                <th className="py-3 px-4">ຜູ້ດຳເນີນການ / ເຫດຜົນ</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-xs">
               {filteredReturns.length === 0 && (
                 <tr>
                   <td colSpan={6} className="py-10 text-center text-sm text-slate-500">
-                    ยังไม่มีรายการรับคืนสินค้า
+                    ຍັງບໍ່ມີລາຍການຮັບຄືນສິນຄ້າ
                   </td>
                 </tr>
               )}
@@ -566,7 +566,7 @@ export function SalesHistoryPage() {
                 <tr key={ret.returnId} className="hover:bg-slate-50/70">
                   <td className="py-3 px-4">
                     <div className="font-mono font-semibold text-amber-700">{ret.returnNumber}</div>
-                    <div className="font-mono text-slate-500">อ้างอิง: {ret.invoiceNumber}</div>
+                    <div className="font-mono text-slate-500">ອ້າງອີງ: {ret.invoiceNumber}</div>
                   </td>
                   <td className="py-3 px-4 text-slate-500 tabular-nums whitespace-nowrap">
                     {formatDateTimeVientiane(ret.createdAt)}
@@ -574,7 +574,7 @@ export function SalesHistoryPage() {
                   <td className="py-3 px-4 text-slate-800 space-y-0.5">
                     {ret.items.map((ri, i) => (
                       <div key={i}>
-                        {ri.name} ({ri.qty} {ri.unitName}){ri.restock ? ' · คืนสต็อก' : ''}
+                        {ri.name} ({ri.qty} {ri.unitName}){ri.restock ? ' · ຄືນສະຕັອກ' : ''}
                       </div>
                     ))}
                   </td>
@@ -602,10 +602,10 @@ export function SalesHistoryPage() {
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div>
                 <h3 className="text-base font-semibold text-slate-900">
-                  รายละเอียดบิล {detailSale.invoiceNumber}
+                  ລາຍລະອຽດບິນ {detailSale.invoiceNumber}
                 </h3>
                 <p className="text-xs text-slate-500 tabular-nums">
-                  {formatDateTimeVientiane(detailSale.createdAt)} · แคชเชียร์: {detailSale.cashierName}
+                  {formatDateTimeVientiane(detailSale.createdAt)} · ພະນັກງານຂາຍ: {detailSale.cashierName}
                 </p>
               </div>
               <button
@@ -619,7 +619,7 @@ export function SalesHistoryPage() {
 
             {detailSale.status === 'voided' && (
               <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700">
-                บิลนี้ถูกยกเลิกโดย {detailSale.voidedByName} · เหตุผล: {detailSale.voidedReason}
+                ບິນນີ້ຖືກຍົກເລີກໂດຍ {detailSale.voidedByName} · ເຫດຜົນ: {detailSale.voidedReason}
               </div>
             )}
 
@@ -627,11 +627,11 @@ export function SalesHistoryPage() {
               <table className="w-full text-left text-xs">
                 <thead className="bg-slate-50 border-b border-slate-200 text-slate-600">
                   <tr>
-                    <th className="py-2 px-3">สินค้า</th>
-                    <th className="py-2 px-3 text-right">จำนวน</th>
-                    <th className="py-2 px-3 text-right">ราคา/หน่วย</th>
-                    <th className="py-2 px-3 text-right">ส่วนลด</th>
-                    <th className="py-2 px-3 text-right">รวม</th>
+                    <th className="py-2 px-3">ສິນຄ້າ</th>
+                    <th className="py-2 px-3 text-right">ຈຳນວນ</th>
+                    <th className="py-2 px-3 text-right">ລາຄາ/ໜ່ວຍ</th>
+                    <th className="py-2 px-3 text-right">ສ່ວນຫຼຸດ</th>
+                    <th className="py-2 px-3 text-right">ລວມ</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 tabular-nums">
@@ -655,19 +655,19 @@ export function SalesHistoryPage() {
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3.5 bg-slate-50 border border-slate-200 rounded-lg text-xs tabular-nums">
               <div>
-                <div className="text-slate-500">ยอดสุทธิ</div>
+                <div className="text-slate-500">ຍອດສຸດທິ</div>
                 <div className="font-bold text-slate-900">{formatLak(detailSale.grandTotalLak)}</div>
               </div>
               <div>
-                <div className="text-slate-500">ต้นทุนรวม (COGS)</div>
+                <div className="text-slate-500">ຕົ້ນທຶນລວມ (COGS)</div>
                 <div className="font-semibold text-slate-700">{formatLak(detailSale.cogsTotalLak)}</div>
               </div>
               <div>
-                <div className="text-slate-500">กำไรขั้นต้น</div>
+                <div className="text-slate-500">ກຳໄລຂັ້ນຕົ້ນ</div>
                 <div className="font-bold text-green-700">{formatLak(detailSale.grossProfitLak)}</div>
               </div>
               <div>
-                <div className="text-slate-500">สถานะ</div>
+                <div className="text-slate-500">ສະຖານະ</div>
                 <div className="font-semibold text-slate-900">{STATUS_LABELS[detailSale.status]}</div>
               </div>
             </div>
@@ -682,14 +682,14 @@ export function SalesHistoryPage() {
                 className="inline-flex items-center gap-1.5 px-4 py-2 text-xs sm:text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg cursor-pointer"
               >
                 <Printer className="w-4 h-4" />
-                พิมพ์ใบเสร็จ
+                ພິມໃບບິນ
               </button>
               <button
                 type="button"
                 onClick={() => setDetailSale(null)}
                 className="px-4 py-2 text-xs sm:text-sm font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer"
               >
-                ปิด
+                ປິດ
               </button>
             </div>
           </div>
@@ -702,7 +702,7 @@ export function SalesHistoryPage() {
           <div className="w-full max-w-md bg-white border border-slate-200 rounded-xl p-6">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
               <h3 className="text-base font-semibold text-red-700">
-                ยืนยันยกเลิกบิล {voidTarget.invoiceNumber}
+                ຢືນຢັນຍົກເລີກບິນ {voidTarget.invoiceNumber}
               </h3>
               <button
                 type="button"
@@ -714,12 +714,12 @@ export function SalesHistoryPage() {
             </div>
             <form onSubmit={handleConfirmVoid} className="space-y-4">
               <p className="text-xs text-slate-600 leading-relaxed">
-                การยกเลิกบิลจะคืนสินค้าทั้งหมด ({voidTarget.items.length} รายการ) กลับเข้าสู่คลังสินค้า
-                และบันทึกประวัติลงใน Stock Ledger และ Audit Log
+                ການຍົກເລີກບິນຈະຄືນສິນຄ້າທັງໝົດ ({voidTarget.items.length} ລາຍການ) ກັບເຂົ້າສູ່ສາງສິນຄ້າ
+                ແລະ ບັນທຶກປະຫວັດລົງໃນ Stock Ledger ແລະ Audit Log
               </p>
               <div>
                 <label className="block text-xs font-medium text-slate-700 mb-1">
-                  สาเหตุการยกเลิกบิล *
+                  ສາເຫດການຍົກເລີກບິນ *
                 </label>
                 <input
                   type="text"
@@ -727,7 +727,7 @@ export function SalesHistoryPage() {
                   maxLength={300}
                   value={voidReason}
                   onChange={(e) => setVoidReason(e.target.value)}
-                  placeholder="เช่น คีย์สินค้าผิด / ลูกค้ายกเลิกรายการ"
+                  placeholder="ເຊັ່ນ ຄີສິນຄ້າຜິດ / ລູກຄ້າຍົກເລີກລາຍການ"
                   className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg"
                 />
               </div>
@@ -737,14 +737,14 @@ export function SalesHistoryPage() {
                   onClick={() => setVoidTarget(null)}
                   className="px-4 py-2 text-sm font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer"
                 >
-                  ปิด
+                  ປິດ
                 </button>
                 <button
                   type="submit"
                   disabled={voidSaving}
                   className="px-4 py-2 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 rounded-lg cursor-pointer"
                 >
-                  {voidSaving ? 'กำลังยกเลิกบิล...' : 'ยืนยันยกเลิกบิล'}
+                  {voidSaving ? 'ກຳລັງຍົກເລີກບິນ...' : 'ຢືນຢັນຍົກເລີກບິນ'}
                 </button>
               </div>
             </form>
@@ -759,10 +759,10 @@ export function SalesHistoryPage() {
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div>
                 <h3 className="text-base font-semibold text-slate-900">
-                  รับคืนสินค้า · บิล {returnTarget.invoiceNumber}
+                  ຮັບຄືນສິນຄ້າ · ບິນ {returnTarget.invoiceNumber}
                 </h3>
                 <p className="text-xs text-slate-500">
-                  ระบุจำนวนที่ลูกค้าต้องการคืน ระบบจะคำนวณยอดคืนเงินและปรับสต็อกอัตโนมัติ
+                  ລະບຸຈຳນວນທີ່ລູກຄ້າຕ້ອງການຄືນ ລະບົບຈະຄຳນວນຍອດຄືນເງິນ ແລະ ປັບສະຕັອກອັດຕະໂນມັດ
                 </p>
               </div>
               <button
@@ -782,10 +782,10 @@ export function SalesHistoryPage() {
                     <table className="w-full text-left text-xs">
                       <thead className="bg-slate-50 border-b border-slate-200 text-slate-600">
                         <tr>
-                          <th className="py-2 px-3">สินค้า</th>
-                          <th className="py-2 px-3 text-right">คืนได้สูงสุด</th>
-                          <th className="py-2 px-3 text-right">จำนวนที่คืน</th>
-                          <th className="py-2 px-3 text-center">คืนเข้าสต็อก</th>
+                          <th className="py-2 px-3">ສິນຄ້າ</th>
+                          <th className="py-2 px-3 text-right">ຄືນໄດ້ສູງສຸດ</th>
+                          <th className="py-2 px-3 text-right">ຈຳນວນທີ່ຄືນ</th>
+                          <th className="py-2 px-3 text-center">ຄືນເຂົ້າສະຕັອກ</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 tabular-nums">
@@ -801,7 +801,7 @@ export function SalesHistoryPage() {
                               <td className="py-2 px-3">
                                 <div className="font-medium text-slate-900">{it.name}</div>
                                 <div className="text-[11px] text-slate-500">
-                                  ขาย {it.qty} {it.unitName} · {formatLak(it.unitPriceLak)}
+                                  ຂາຍ {it.qty} {it.unitName} · {formatLak(it.unitPriceLak)}
                                 </div>
                               </td>
                               <td className="py-2 px-3 text-right text-slate-700">
@@ -850,7 +850,7 @@ export function SalesHistoryPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1">
-                    วิธีคืนเงิน
+                    ວິທີຄືນເງິນ
                   </label>
                   <select
                     value={refundMethod}
@@ -859,14 +859,14 @@ export function SalesHistoryPage() {
                     }
                     className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white"
                   >
-                    <option value="cash">คืนเงินสด</option>
-                    <option value="transfer">โอนเงินคืน</option>
-                    <option value="credit_adjust">ปรับลดยอดหนี้ (ขายเชื่อ)</option>
+                    <option value="cash">ຄືນເງິນສົດ</option>
+                    <option value="transfer">ໂອນເງິນຄືນ</option>
+                    <option value="credit_adjust">ປັບຫຼຸດຍອດໜີ້ (ຂາຍເຊື່ອ)</option>
                   </select>
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-700 mb-1">
-                    ยอดคืนเงินโดยประมาณ
+                    ຍອດຄືນເງິນໂດຍປະມານ
                   </label>
                   <div className="px-3 py-2 text-sm font-bold text-red-600 bg-red-50 border border-red-200 rounded-lg tabular-nums">
                     {formatLak(returnPreviewTotalLak)}
@@ -876,7 +876,7 @@ export function SalesHistoryPage() {
 
               <div>
                 <label className="block text-xs font-medium text-slate-700 mb-1">
-                  สาเหตุการรับคืนสินค้า *
+                  ສາເຫດການຮັບຄືນສິນຄ້າ *
                 </label>
                 <input
                   type="text"
@@ -884,7 +884,7 @@ export function SalesHistoryPage() {
                   maxLength={300}
                   value={returnReason}
                   onChange={(e) => setReturnReason(e.target.value)}
-                  placeholder="เช่น สินค้าชำรุด / ลูกค้าเปลี่ยนใจ"
+                  placeholder="ເຊັ່ນ ສິນຄ້າຊຳລຸດ / ລູກຄ້າປ່ຽນໃຈ"
                   className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg"
                 />
               </div>
@@ -895,14 +895,14 @@ export function SalesHistoryPage() {
                   onClick={() => setReturnTarget(null)}
                   className="px-4 py-2 text-sm font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer"
                 >
-                  ยกเลิก
+                  ຍົກເລີກ
                 </button>
                 <button
                   type="submit"
                   disabled={returnSaving}
                   className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg cursor-pointer"
                 >
-                  {returnSaving ? 'กำลังบันทึก...' : 'ยืนยันรับคืนสินค้า'}
+                  {returnSaving ? 'ກຳລັງບັນທຶກ...' : 'ຢືນຢັນຮັບຄືນສິນຄ້າ'}
                 </button>
               </div>
             </form>

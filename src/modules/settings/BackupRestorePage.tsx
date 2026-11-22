@@ -76,29 +76,29 @@ interface BackupPayload {
 }
 
 const COLLECTION_LABELS: Record<CollectionKey, string> = {
-  organizations: 'ข้อมูลร้านค้าหลัก (Organizations)',
-  branches: 'ข้อมูลสาขาหลัก (Branches)',
-  settings: 'ตั้งค่าระบบ (Settings)',
-  users: 'พนักงานและสิทธิ์ (Users)',
-  categories: 'หมวดหมู่สินค้า (Categories)',
-  storageLocations: 'ตำแหน่งจัดเก็บ (Storage Locations)',
-  products: 'สินค้า (Products)',
-  inventory: 'ยอดคงเหลือสต็อก (Inventory)',
-  inventoryLots: 'ล็อตสินค้า (Inventory Lots)',
-  stockMovements: 'ความเคลื่อนไหวสต็อก (Stock Movements)',
-  membershipTiers: 'ระดับสมาชิก (Membership Tiers)',
-  promotions: 'โปรโมชั่น (Promotions)',
-  customers: 'ลูกค้า (Customers)',
-  suppliers: 'ซัพพลายเออร์ (Suppliers)',
-  purchaseOrders: 'ใบสั่งซื้อ (Purchase Orders)',
-  sales: 'บิลขาย POS (Sales)',
-  saleReturns: 'ใบคืนสินค้า (Sale Returns)',
-  posHeldBills: 'บิลพักชั่วคราว (Held Bills)',
-  arPayments: 'รับชำระลูกหนี้ (AR Payments)',
-  apPayments: 'ชำระเจ้าหนี้ (AP Payments)',
-  incomeEntries: 'รายรับ (Income Entries)',
-  expenseEntries: 'รายจ่าย (Expense Entries)',
-  journalEntries: 'สมุดรายวันบัญชี (Journal Entries)',
+  organizations: 'ຂໍ້ມູນຮ້ານຄ້າຫຼັກ (Organizations)',
+  branches: 'ຂໍ້ມູນສາຂາຫຼັກ (Branches)',
+  settings: 'ຕັ້ງຄ່າລະບົບ (Settings)',
+  users: 'ພະນັກງານ ແລະ ສິດ (Users)',
+  categories: 'ໝວດໝູ່ສິນຄ້າ (Categories)',
+  storageLocations: 'ຕຳແໜ່ງຈັດເກັບ (Storage Locations)',
+  products: 'ສິນຄ້າ (Products)',
+  inventory: 'ຍອດຄົງເຫຼືອສະຕັອກ (Inventory)',
+  inventoryLots: 'ລ໋ອດສິນຄ້າ (Inventory Lots)',
+  stockMovements: 'ຄວາມເຄື່ອນໄຫວສະຕັອກ (Stock Movements)',
+  membershipTiers: 'ລະດັບສະມາຊິກ (Membership Tiers)',
+  promotions: 'ໂປຣໂມຊັນ (Promotions)',
+  customers: 'ລູກຄ້າ (Customers)',
+  suppliers: 'ຜູ້ສະໜອງ (Suppliers)',
+  purchaseOrders: 'ໃບສັ່ງຊື້ (Purchase Orders)',
+  sales: 'ບິນຂາຍ POS (Sales)',
+  saleReturns: 'ໃບຄືນສິນຄ້າ (Sale Returns)',
+  posHeldBills: 'ບິນພັກຊົ່ວຄາວ (Held Bills)',
+  arPayments: 'ຮັບຊຳລະລູກໜີ້ (AR Payments)',
+  apPayments: 'ຊຳລະເຈົ້າໜີ້ (AP Payments)',
+  incomeEntries: 'ລາຍຮັບ (Income Entries)',
+  expenseEntries: 'ລາຍຈ່າຍ (Expense Entries)',
+  journalEntries: 'ປຶ້ມລາຍວັນບັນຊີ (Journal Entries)',
 };
 
 function serializeValue(val: unknown): unknown {
@@ -297,12 +297,12 @@ export function BackupRestorePage() {
 
       setStatusMessage({
         type: 'success',
-        text: `สำรองข้อมูลเรียบร้อยแล้ว จำนวนทั้งหมด ${totalDocuments.toLocaleString()} รายการ`,
+        text: `ສຳຮອງຂໍ້ມູນຮຽບຮ້ອຍແລ້ວ ຈຳນວນທັງໝົດ ${totalDocuments.toLocaleString()} ລາຍການ`,
       });
     } catch (error) {
       setStatusMessage({
         type: 'error',
-        text: error instanceof Error ? error.message : 'ไม่สามารถสำรองข้อมูลได้',
+        text: error instanceof Error ? error.message : 'ບໍ່ສາມາດສຳຮອງຂໍ້ມູນໄດ້',
       });
     } finally {
       setExporting(false);
@@ -320,27 +320,27 @@ export function BackupRestorePage() {
       const text = await file.text();
       const json = JSON.parse(text) as BackupPayload;
       if (!json?.metadata || !json?.collections) {
-        throw new Error('โครงสร้างไฟล์สำรองข้อมูลไม่ถูกต้อง');
+        throw new Error('ໂຄງສ້າງໄຟລ໌ສຳຮອງຂໍ້ມູນບໍ່ຖືກຕ້ອງ');
       }
       if (
         json.metadata.organizationId !== DEFAULT_ORG_ID ||
         json.metadata.branchId !== DEFAULT_MAIN_BRANCH_ID
       ) {
-        throw new Error('ไฟล์สำรองข้อมูลไม่ตรงกับองค์กรหรือสาขาหลักของระบบ (br_hq_01)');
+        throw new Error('ໄຟລ໌ສຳຮອງຂໍ້ມູນບໍ່ກົງກັບອົງກອນ ຫຼື ສາຂາຫຼັກຂອງລະບົບ (br_hq_01)');
       }
       const expected = computeChecksum(json.collections);
       if (json.metadata.checksum && json.metadata.checksum !== expected) {
-        throw new Error('ผลการตรวจสอบความสมบูรณ์ (Checksum) ไม่ตรงกัน ไฟล์อาจถูกแก้ไขหรือไม่สมบูรณ์');
+        throw new Error('ຜົນການກວດສອບຄວາມສົມບູນ (Checksum) ບໍ່ກົງກັນ ໄຟລ໌ອາດຖືກແກ້ໄຂ ຫຼື ບໍ່ສົມບູນ');
       }
       setParsedBackup(json);
       setStatusMessage({
         type: 'success',
-        text: `ตรวจสอบไฟล์ "${file.name}" ผ่านความสมบูรณ์ (${json.metadata.totalDocuments.toLocaleString()} รายการ) พร้อมกู้คืน`,
+        text: `ກວດສອບໄຟລ໌ "${file.name}" ຜ່ານຄວາມສົມບູນ (${json.metadata.totalDocuments.toLocaleString()} ລາຍການ) ພ້ອມກູ້ຄືນ`,
       });
     } catch (error) {
       setStatusMessage({
         type: 'error',
-        text: error instanceof Error ? error.message : 'ไม่สามารถอ่านไฟล์สำรองข้อมูลได้',
+        text: error instanceof Error ? error.message : 'ບໍ່ສາມາດອ່ານໄຟລ໌ສຳຮອງຂໍ້ມູນໄດ້',
       });
     }
   };
@@ -373,7 +373,7 @@ export function BackupRestorePage() {
       if (brDoc) {
         ops.push((b) =>
           b.update(doc(db, 'branches', DEFAULT_MAIN_BRANCH_ID), {
-            branchName: String(brDoc.data.branchName ?? organization?.name ?? 'ร้านค้าหลัก').slice(
+            branchName: String(brDoc.data.branchName ?? organization?.name ?? 'ຮ້ານຄ້າຫຼັກ').slice(
               0,
               120,
             ),
@@ -691,12 +691,12 @@ export function BackupRestorePage() {
 
       setStatusMessage({
         type: 'success',
-        text: `กู้คืนข้อมูลสำเร็จ: เพิ่มใหม่ ${createdCount} รายการ, อัปเดต ${updatedCount} รายการ, ข้ามรายการซ้ำ ${skippedCount} รายการ`,
+        text: `ກູ້ຄືນຂໍ້ມູນສຳເລັດ: ເພີ່ມໃໝ່ ${createdCount} ລາຍການ, ອັບເດດ ${updatedCount} ລາຍການ, ຂ້າມລາຍການຊ້ຳ ${skippedCount} ລາຍການ`,
       });
     } catch (error) {
       setStatusMessage({
         type: 'error',
-        text: error instanceof Error ? error.message : 'เกิดข้อผิดพลาดระหว่างกู้คืนข้อมูล',
+        text: error instanceof Error ? error.message : 'ເກີດຂໍ້ຜິດພາດລະຫວ່າງກູ້ຄືນຂໍ້ມູນ',
       });
     } finally {
       setRestoring(false);
@@ -716,8 +716,8 @@ export function BackupRestorePage() {
           receiptSettings: {
             prefix: 'INV',
             paperSize: '80mm',
-            headerText: organization?.name ?? 'ร้านค้าหลัก (Grocery POS)',
-            footerText: 'ขอบคุณที่ใช้บริการ',
+            headerText: organization?.name ?? 'ຮ້ານຄ້າຫຼັກ (Grocery POS)',
+            footerText: 'ຂອບໃຈທີ່ໃຊ້ບໍລິການ',
             showQr: true,
             showTaxId: false,
           },
@@ -796,12 +796,12 @@ export function BackupRestorePage() {
       setResetConfirmText('');
       setStatusMessage({
         type: 'success',
-        text: `รีเซ็ตระบบอย่างปลอดภัยเรียบร้อยแล้ว (รีเซ็ตการตั้งค่าและปิดใช้งานข้อมูลหลัก ${deactivatedCount} รายการ โดยคงประวัติบัญชีและ Audit Log ไว้ครบถ้วน)`,
+        text: `ຣີເຊັດລະບົບຢ່າງປອດໄພຮຽບຮ້ອຍແລ້ວ (ຣີເຊັດການຕັ້ງຄ່າ ແລະ ປິດໃຊ້ງານຂໍ້ມູນຫຼັກ ${deactivatedCount} ລາຍການ ໂດຍຍັງຮັກສາປະຫວັດບັນຊີ ແລະ Audit Log ໄວ້ຄົບຖ້ວນ)`,
       });
     } catch (error) {
       setStatusMessage({
         type: 'error',
-        text: error instanceof Error ? error.message : 'ไม่สามารถรีเซ็ตข้อมูลได้',
+        text: error instanceof Error ? error.message : 'ບໍ່ສາມາດຣີເຊັດຂໍ້ມູນໄດ້',
       });
     } finally {
       setResetting(false);
@@ -816,10 +816,10 @@ export function BackupRestorePage() {
         <div>
           <h1 className="text-xl font-bold text-slate-900 flex items-center gap-2">
             <Database className="w-6 h-6 text-slate-800" />
-            สำรองและกู้คืนข้อมูล (Backup &amp; Safe Restore)
+            ສຳຮອງ ແລະ ກູ້ຄືນຂໍ້ມູນ (Backup &amp; Safe Restore)
           </h1>
           <p className="text-sm text-slate-500 mt-0.5">
-            ส่งออกข้อมูลร้านค้าทั้งระบบเป็นไฟล์ JSON ตรวจสอบความสมบูรณ์ และกู้คืนหรือรีเซ็ตอย่างปลอดภัย
+            ສົ່ງອອກຂໍ້ມູນຮ້ານຄ້າທັງລະບົບເປັນໄຟລ໌ JSON ກວດສອບຄວາມສົມບູນ ແລະ ກູ້ຄືນ ຫຼື ຣີເຊັດຢ່າງປອດໄພ
           </p>
         </div>
 
@@ -832,12 +832,12 @@ export function BackupRestorePage() {
           {exporting ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
-              กำลังสร้างไฟล์สำรอง...
+              ກຳລັງສ້າງໄຟລ໌ສຳຮອງ...
             </>
           ) : (
             <>
               <Download className="w-4 h-4" />
-              ดาวน์โหลดไฟล์สำรองข้อมูล (.json)
+              ດາວໂຫຼດໄຟລ໌ສຳຮອງຂໍ້ມູນ (.json)
             </>
           )}
         </button>
@@ -865,11 +865,11 @@ export function BackupRestorePage() {
         <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
           <div className="flex items-center gap-2 text-base font-bold text-slate-900">
             <Upload className="w-5 h-5 text-indigo-600" />
-            ตรวจสอบความสมบูรณ์และกู้คืนข้อมูล (Safe Restore)
+            ກວດສອບຄວາມສົມບູນ ແລະ ກູ້ຄືນຂໍ້ມູນ (Safe Restore)
           </div>
           <p className="text-xs text-slate-500 leading-relaxed">
-            เลือกไฟล์ JSON ที่สำรองไว้จากระบบ เพื่อตรวจสอบ Checksum และกู้คืนข้อมูลหลักหรือรายการที่ขาดหาย
-            โดยไม่ทำลายบันทึกบัญชีและประวัติการขายเดิมที่มีอยู่
+            ເລືອກໄຟລ໌ JSON ທີ່ສຳຮອງໄວ້ຈາກລະບົບ ເພື່ອກວດສອບ Checksum ແລະ ກູ້ຄືນຂໍ້ມູນຫຼັກ ຫຼື ລາຍການທີ່ຂາດຫາຍ
+            ໂດຍບໍ່ທຳລາຍບັນທຶກບັນຊີ ແລະ ປະຫວັດການຂາຍເດີມທີ່ມີຢູ່
           </p>
 
           <label className="block border-2 border-dashed border-slate-300 rounded-xl p-5 text-center cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/30 transition">
@@ -882,19 +882,19 @@ export function BackupRestorePage() {
             />
             <FileJson className="w-8 h-8 text-indigo-500 mx-auto mb-2" />
             <div className="text-sm font-medium text-slate-800">
-              {selectedFileName || 'คลิกเพื่อเลือกไฟล์สำรองข้อมูล (.json)'}
+              {selectedFileName || 'ກົດເພື່ອເລືອກໄຟລ໌ສຳຮອງຂໍ້ມູນ (.json)'}
             </div>
             <div className="text-xs text-slate-400 mt-1">
-              รองรับเฉพาะไฟล์สำรองขององค์กรหลัก (org_main) และสาขา br_hq_01
+              ຮອງຮັບສະເພາະໄຟລ໌ສຳຮອງຂອງອົງກອນຫຼັກ (org_main) ແລະ ສາຂາ br_hq_01
             </div>
           </label>
 
           {parsedBackup && (
             <div className="rounded-lg bg-slate-50 border border-slate-200 p-4 space-y-3">
               <div className="text-xs text-slate-600 space-y-1">
-                <div>วันที่สำรอง: {new Date(parsedBackup.metadata.exportedAt).toLocaleString('th-TH')}</div>
-                <div>จำนวนเอกสารในไฟล์: {parsedBackup.metadata.totalDocuments.toLocaleString()} รายการ</div>
-                <div>สถานะ Checksum: ผ่านการตรวจสอบแล้ว</div>
+                <div>ວັນທີສຳຮອງ: {new Date(parsedBackup.metadata.exportedAt).toLocaleString('en-GB')}</div>
+                <div>ຈຳນວນເອກະສານໃນໄຟລ໌: {parsedBackup.metadata.totalDocuments.toLocaleString()} ລາຍການ</div>
+                <div>ສະຖານະ Checksum: ຜ່ານການກວດສອບແລ້ວ</div>
               </div>
               <button
                 type="button"
@@ -905,12 +905,12 @@ export function BackupRestorePage() {
                 {restoring ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    กำลังกู้คืนข้อมูลลง Cloud Firestore...
+                    ກຳລັງກູ້ຄືນຂໍ້ມູນລົງ Cloud Firestore...
                   </>
                 ) : (
                   <>
                     <Upload className="w-4 h-4" />
-                    ยืนยันกู้คืนข้อมูล (Safe Restore)
+                    ຢືນຢັນກູ້ຄືນຂໍ້ມູນ (Safe Restore)
                   </>
                 )}
               </button>
@@ -922,16 +922,16 @@ export function BackupRestorePage() {
         <div className="bg-white rounded-xl border border-rose-200 p-5 space-y-4">
           <div className="flex items-center gap-2 text-base font-bold text-rose-800">
             <ShieldAlert className="w-5 h-5 text-rose-600" />
-            รีเซ็ตการตั้งค่าและปิดใช้งานข้อมูลหลัก (Safe Reset)
+            ຣີເຊັດການຕັ້ງຄ່າ ແລະ ປິດໃຊ້ງານຂໍ້ມູນຫຼັກ (Safe Reset)
           </div>
           <p className="text-xs text-slate-600 leading-relaxed">
-            ใช้เมื่อต้องการเริ่มต้นจัดหมวดหมู่สินค้า สินค้า ลูกค้า ซัพพลายเออร์ และโปรโมชั่นใหม่
-            ระบบจะรีเซ็ตการตั้งค่าใบเสร็จ/ภาษีกลับสู่ค่าเริ่มต้นและปิดใช้งานรายการข้อมูลหลักทั้งหมด
-            โดยยังคงรักษาเอกสารบัญชี สมุดรายวัน และ Audit Log ตามมาตรฐานความปลอดภัยของฐานข้อมูล
+            ໃຊ້ເມື່ອຕ້ອງການເລີ່ມຕົ້ນຈັດໝວດໝູ່ສິນຄ້າ, ສິນຄ້າ, ລູກຄ້າ, ຜູ້ສະໜອງ ແລະ ໂປຣໂມຊັນໃໝ່
+            ລະບົບຈະຣີເຊັດການຕັ້ງຄ່າໃບບິນ/ພາສີກັບສູ່ຄ່າເລີ່ມຕົ້ນ ແລະ ປິດໃຊ້ງານລາຍການຂໍ້ມູນຫຼັກທັງໝົດ
+            ໂດຍຍັງຄົງຮັກສາເອກະສານບັນຊີ, ປຶ້ມລາຍວັນ ແລະ Audit Log ຕາມມາດຕະຖານຄວາມປອດໄພຂອງຖານຂໍ້ມູນ
           </p>
 
           <div className="rounded-lg bg-rose-50 border border-rose-100 p-3.5 text-xs text-rose-800">
-            คำแนะนำ: ควรดาวน์โหลดไฟล์สำรองข้อมูลเก็บไว้ก่อนดำเนินการรีเซ็ตทุกครั้ง
+            ຄຳແນະນຳ: ຄວນດາວໂຫຼດໄຟລ໌ສຳຮອງຂໍ້ມູນເກັບໄວ້ກ່ອນດຳເນີນການຣີເຊັດທຸກຄັ້ງ
           </div>
 
           <button
@@ -941,7 +941,7 @@ export function BackupRestorePage() {
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-rose-300 bg-rose-50 text-rose-700 text-sm font-medium hover:bg-rose-100 disabled:opacity-50 transition"
           >
             <RotateCcw className="w-4 h-4" />
-            เปิดหน้าต่างรีเซ็ตอย่างปลอดภัย
+            ເປີດໜ້າຕ່າງຣີເຊັດຢ່າງປອດໄພ
           </button>
         </div>
       </div>
@@ -951,10 +951,10 @@ export function BackupRestorePage() {
         <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
           <div>
             <h2 className="text-sm font-bold text-slate-900">
-              สถานะข้อมูลปัจจุบันใน Cloud Firestore
+              ສະຖານະຂໍ້ມູນປັດຈຸບັນໃນ Cloud Firestore
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              จำนวนเอกสารรวมทั้งหมด {totalLiveDocs.toLocaleString()} รายการ ใน 23 คอลเลกชัน
+              ຈຳນວນເອກະສານລວມທັງໝົດ {totalLiveDocs.toLocaleString()} ລາຍການ ໃນ 23 ຄໍເລັກຊັນ
             </p>
           </div>
           <button
@@ -963,7 +963,7 @@ export function BackupRestorePage() {
             disabled={loadingCounts}
             className="text-xs font-medium text-slate-600 hover:text-slate-900 px-3 py-1.5 rounded-lg border border-slate-200"
           >
-            {loadingCounts ? 'กำลังนับ...' : 'รีเฟรชจำนวน'}
+            {loadingCounts ? 'ກຳລັງນັບ...' : 'ຣີເຟຣຊຈຳນວນ'}
           </button>
         </div>
 
@@ -971,10 +971,10 @@ export function BackupRestorePage() {
           <table className="w-full text-sm text-left">
             <thead className="bg-slate-50 text-xs text-slate-500 border-b border-slate-200">
               <tr>
-                <th className="px-5 py-3 font-medium">หมวดข้อมูล (Collection)</th>
-                <th className="px-5 py-3 font-medium text-right">จำนวนในระบบปัจจุบัน</th>
+                <th className="px-5 py-3 font-medium">ໝວດຂໍ້ມູນ (Collection)</th>
+                <th className="px-5 py-3 font-medium text-right">ຈຳນວນໃນລະບົບປັດຈຸບັນ</th>
                 {parsedBackup && (
-                  <th className="px-5 py-3 font-medium text-right">จำนวนในไฟล์สำรอง</th>
+                  <th className="px-5 py-3 font-medium text-right">ຈຳນວນໃນໄຟລ໌ສຳຮອງ</th>
                 )}
               </tr>
             </thead>
@@ -1003,18 +1003,18 @@ export function BackupRestorePage() {
           <div className="bg-white rounded-xl max-w-md w-full p-6 space-y-4 shadow-xl">
             <div className="flex items-center gap-2 text-rose-700 font-bold text-base">
               <ShieldAlert className="w-5 h-5" />
-              ยืนยันการรีเซ็ตระบบอย่างปลอดภัย
+              ຢືນຢັນການຣີເຊັດລະບົບຢ່າງປອດໄພ
             </div>
             <p className="text-sm text-slate-600">
-              การดำเนินการนี้จะปิดใช้งานข้อมูลสินค้า หมวดหมู่ ลูกค้า ซัพพลายเออร์ และโปรโมชั่นทั้งหมด
-              รวมถึงคืนค่าการตั้งค่าระบบเป็นค่าเริ่มต้น กรุณาพิมพ์คำว่า{' '}
-              <span className="font-mono font-bold text-rose-700">RESET</span> เพื่อยืนยัน
+              ການດຳເນີນການນີ້ຈະປິດໃຊ້ງານຂໍ້ມູນສິນຄ້າ, ໝວດໝູ່, ລູກຄ້າ, ຜູ້ສະໜອງ ແລະ ໂປຣໂມຊັນທັງໝົດ
+              ລວມທັງຄືນຄ່າການຕັ້ງຄ່າລະບົບເປັນຄ່າເລີ່ມຕົ້ນ ກະລຸນາພິມຄຳວ່າ{' '}
+              <span className="font-mono font-bold text-rose-700">RESET</span> ເພື່ອຢືນຢັນ
             </p>
             <input
               type="text"
               value={resetConfirmText}
               onChange={(e) => setResetConfirmText(e.target.value)}
-              placeholder="พิมพ์ RESET เพื่อยืนยัน"
+              placeholder="ພິມ RESET ເພື່ອຢືນຢັນ"
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500"
             />
             <div className="flex justify-end gap-2 pt-2">
@@ -1027,7 +1027,7 @@ export function BackupRestorePage() {
                 disabled={resetting}
                 className="px-4 py-2 rounded-lg border border-slate-200 text-sm text-slate-700 hover:bg-slate-50"
               >
-                ยกเลิก
+                ຍົກເລີກ
               </button>
               <button
                 type="button"
@@ -1038,10 +1038,10 @@ export function BackupRestorePage() {
                 {resetting ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    กำลังรีเซ็ต...
+                    ກຳລັງຣີເຊັດ...
                   </>
                 ) : (
-                  'ยืนยันรีเซ็ตระบบ'
+                  'ຢືນຢັນຣີເຊັດລະບົບ'
                 )}
               </button>
             </div>
