@@ -7,9 +7,11 @@ import {
   where,
 } from 'firebase/firestore';
 import {
+  AlertCircle,
   Banknote,
   CheckCircle2,
   CreditCard,
+  PackagePlus,
   PauseCircle,
   PlayCircle,
   Plus,
@@ -29,6 +31,7 @@ import { hasPermission } from '../../core/rbac/permissions';
 import { formatDateTimeVientiane } from '../../core/utils/date';
 import { formatLak } from '../../core/utils/money';
 import { BarcodeQrScannerModal } from '../../components/scanner/BarcodeQrScannerModal';
+import { QuickAddProductModal } from '../products/QuickAddProductModal';
 import { ReceiptPrintModal } from './ReceiptPrintModal';
 import {
   computeBillTotals,
@@ -74,7 +77,7 @@ export function PosTerminalPage() {
   const { userProfile, organization, activeBranchId, settings } = useFirebase();
   const searchInputRef = useRef<HTMLInputElement | null>(null);
 
-  const [products, setProducts] = useState<Product[]>([]);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [balances, setBalances] = useState<InventoryBalance[]>([]);
   const [heldBills, setHeldBills] = useState<PosHeldBill[]>([]);
@@ -95,6 +98,11 @@ export function PosTerminalPage() {
   const [activeHeldBillId, setActiveHeldBillId] = useState<string | null>(null);
 
   const [feedback, setFeedback] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
+
+  // Quick Add Product from POS Modals
+  const [notFoundPrompt, setNotFoundPrompt] = useState<{ query: string } | null>(null);
+  const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const [quickAddInitialQuery, setQuickAddInitialQuery] = useState('');
 
   // Hold Bill Modals
   const [holdModalOpen, setHoldModalOpen] = useState(false);
@@ -119,6 +127,7 @@ export function PosTerminalPage() {
 
   const canCreateSale = hasPermission(userProfile, 'pos', 'create');
   const canEditPrice = hasPermission(userProfile, 'pos', 'edit');
+  const canCreateProduct = hasPermission(userProfile, 'products', 'create');
   const allowNegativeStock = settings?.inventorySettings?.allowNegativeStock ?? false;
 
   useEffect(() => {
@@ -128,10 +137,9 @@ export function PosTerminalPage() {
     const unsubProds = onSnapshot(
       query(collection(db, 'products'), where('organizationId', '==', orgId)),
       (snap) => {
-        setProducts(
+        setAllProducts(
           snap.docs
             .map((d) => d.data() as Product)
-            .filter((p) => p.status === 'active')
             .sort((a, b) => a.name.localeCompare(b.name)),
         );
       },
@@ -229,6 +237,11 @@ export function PosTerminalPage() {
       unsubPromos();
     };
   }, [userProfile, activeBranchId]);
+
+  const products = useMemo(
+    () => allProducts.filter((p) => p.status === 'active'),
+    [allProducts],
+  );
 
   const productMap = useMemo(() => {
     const map = new Map<string, Product>();
@@ -383,6 +396,81 @@ export function PosTerminalPage() {
     });
   };
 
+  const openQuickAddProduct = (initialQueryStr: string) => {
+    setNotFoundPrompt(null);
+    if (!canCreateProduct) {
+      setFeedback({
+        type: 'err',
+        text: 'บัญชีของคุณไม่มีสิทธิ์เพิ่มสินค้าใหม่ กรุณาติดต่อเจ้าของร้านหรือผู้จัดการร้าน',
+      });
+      return;
+    }
+    setQuickAddInitialQuery(initialQueryStr);
+    setQuickAddOpen(true);
+  };
+
+  const handleQuickProductCreated = ({
+    product,
+    balance,
+  }: {
+    product: Product;
+    balance: InventoryBalance;
+  }) => {
+    setQuickAddOpen(false);
+    setNotFoundPrompt(null);
+    setSearchText('');
+    if (selectedCategoryId !== 'all' && product.categoryId !== selectedCategoryId) {
+      setSelectedCategoryId('all');
+    }
+
+    setAllProducts((prev) =>
+      prev.some((p) => p.productId === product.productId)
+        ? prev
+        : [...prev, product].sort((a, b) => a.name.localeCompare(b.name)),
+    );
+    setBalances((prev) =>
+      prev.some((b) => b.inventoryId === balance.inventoryId)
+        ? prev
+        : [...prev, balance],
+    );
+
+    const baseUnit = product.units.find((u) => u.isBaseUnit) ?? product.units[0];
+    if (baseUnit) {
+      const neededBase = Math.max(1, baseUnit.conversionFactor);
+      if (!allowNegativeStock && balance.qtyOnHandBase < neededBase) {
+        setFeedback({
+          type: 'ok',
+          text: `เพิ่มสินค้าสำเร็จ: "${product.name}" (สต็อกเริ่มต้น ${balance.qtyOnHandBase} ${product.baseUnitName} — กรุณารับสินค้าเข้าคลังก่อนเพิ่มลงรายการขาย)`,
+        });
+      } else {
+        setCartLines((prev) => [
+          ...prev,
+          {
+            lineKey: `${product.productId}_${baseUnit.unitId}_${Date.now()}`,
+            productId: product.productId,
+            unitId: baseUnit.unitId,
+            qty: 1,
+            customUnitPriceLak: null,
+            discountLak: 0,
+          },
+        ]);
+        setFeedback({
+          type: 'ok',
+          text: `เพิ่มสินค้าสำเร็จ: เพิ่ม "${product.name}" ลงในรายการขายเรียบร้อยแล้ว`,
+        });
+      }
+    } else {
+      setFeedback({
+        type: 'ok',
+        text: 'เพิ่มสินค้าสำเร็จ',
+      });
+    }
+
+    window.setTimeout(() => {
+      searchInputRef.current?.focus();
+    }, 80);
+  };
+
   const tryAddScannedCodeToCart = (rawCode: string, allowSingleFilteredFallback = false): boolean => {
     const raw = rawCode.trim();
     if (!raw) return false;
@@ -419,10 +507,24 @@ export function PosTerminalPage() {
       }
     }
 
-    setFeedback({
-      type: 'err',
-      text: `ไม่พบสินค้าที่ตรงกับรหัส/บาร์โค้ด "${raw}"`,
-    });
+    const inactiveMatch = allProducts.find(
+      (p) =>
+        p.status === 'inactive' &&
+        (p.barcode.trim().toLowerCase() === lower ||
+          p.sku.trim().toLowerCase() === lower ||
+          p.barcodes.some((b) => b.trim().toLowerCase() === lower) ||
+          p.units.some((u) => u.barcode.trim().toLowerCase() === lower)),
+    );
+    if (inactiveMatch) {
+      setFeedback({
+        type: 'err',
+        text: `พบสินค้า "${inactiveMatch.name}" (${raw}) แต่อยู่ในสถานะหยุดขายชั่วคราว กรุณาเปิดขายในหน้าจัดการสินค้า`,
+      });
+      return false;
+    }
+
+    setFeedback(null);
+    setNotFoundPrompt({ query: raw });
     return false;
   };
 
@@ -793,8 +895,50 @@ export function PosTerminalPage() {
           {/* Product Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {filteredProducts.length === 0 && (
-              <div className="sm:col-span-2 lg:col-span-3 bg-white border border-slate-200 rounded-xl p-10 text-center text-sm text-slate-500">
-                ไม่พบสินค้าที่เปิดขายตามเงื่อนไขที่ค้นหา
+              <div className="sm:col-span-2 lg:col-span-3 bg-white border border-slate-200 rounded-xl p-8 text-center">
+                {searchText.trim() ? (
+                  <div className="max-w-md mx-auto space-y-3">
+                    <div className="w-11 h-11 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center mx-auto">
+                      <AlertCircle className="w-6 h-6" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-sm font-semibold text-slate-900">
+                        ไม่พบสินค้านี้ในระบบ ต้องการเพิ่มสินค้าใหม่หรือไม่?
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        คำค้นหา / บาร์โค้ด:{' '}
+                        <span className="font-mono font-semibold text-slate-800">
+                          &ldquo;{searchText.trim()}&rdquo;
+                        </span>
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => openQuickAddProduct(searchText.trim())}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold rounded-lg transition-colors cursor-pointer"
+                      >
+                        <PackagePlus className="w-4 h-4" />
+                        เพิ่มสินค้าใหม่
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSearchText('');
+                          setNotFoundPrompt(null);
+                          searchInputRef.current?.focus();
+                        }}
+                        className="px-4 py-2 text-xs sm:text-sm font-medium text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg transition-colors cursor-pointer"
+                      >
+                        ยกเลิก
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-sm text-slate-500">
+                    ไม่พบสินค้าที่เปิดขายตามเงื่อนไขที่ค้นหา
+                  </div>
+                )}
               </div>
             )}
 
@@ -1548,6 +1692,69 @@ export function PosTerminalPage() {
           onClose={() => setPosScannerOpen(false)}
         />
       )}
+
+      {/* Product Not Found Confirmation Modal */}
+      {notFoundPrompt && (
+        <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white border border-slate-200 rounded-xl p-6 shadow-xl space-y-4">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                <AlertCircle className="w-5 h-5" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-base font-semibold text-slate-900">
+                  ไม่พบสินค้านี้ในระบบ ต้องการเพิ่มสินค้าใหม่หรือไม่?
+                </h3>
+                <p className="text-xs text-slate-600">
+                  รหัส / คำค้นหา:{' '}
+                  <span className="font-mono font-semibold text-slate-900">
+                    &ldquo;{notFoundPrompt.query}&rdquo;
+                  </span>
+                </p>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => {
+                  setNotFoundPrompt(null);
+                  searchInputRef.current?.focus();
+                }}
+                className="px-4 py-2 text-sm font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer"
+              >
+                ยกเลิก
+              </button>
+              <button
+                type="button"
+                onClick={() => openQuickAddProduct(notFoundPrompt.query)}
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg cursor-pointer"
+              >
+                <PackagePlus className="w-4 h-4" />
+                เพิ่มสินค้าใหม่
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Quick Add Product Modal from POS */}
+      <QuickAddProductModal
+        open={quickAddOpen}
+        initialQuery={quickAddInitialQuery}
+        initialCategoryId={selectedCategoryId}
+        categories={categories}
+        existingProducts={allProducts}
+        userProfile={userProfile}
+        activeBranchId={activeBranchId}
+        canCreateProduct={canCreateProduct}
+        allowNegativeStock={allowNegativeStock}
+        onCreated={handleQuickProductCreated}
+        onClose={() => {
+          setQuickAddOpen(false);
+          searchInputRef.current?.focus();
+        }}
+      />
     </div>
   );
 }
