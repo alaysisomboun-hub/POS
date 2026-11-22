@@ -9,10 +9,15 @@ import {
 import {
   AlertCircle,
   Banknote,
+  BookOpen,
   CheckCircle2,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
   CreditCard,
+  Minus,
+  Package,
   PackagePlus,
   PauseCircle,
   PlayCircle,
@@ -36,6 +41,7 @@ import { formatDateTimeVientiane } from '../../core/utils/date';
 import { formatLak } from '../../core/utils/money';
 import { BarcodeQrScannerModal } from '../../components/scanner/BarcodeQrScannerModal';
 import { QuickAddProductModal } from '../products/QuickAddProductModal';
+import { PosBeginnerGuideModal, type PosGuideStep } from './PosBeginnerGuideModal';
 import { ReceiptPrintModal } from './ReceiptPrintModal';
 import {
   computeBillTotals,
@@ -75,12 +81,54 @@ const PRICE_TIER_LABELS: Record<PriceTier, string> = {
   member: 'สมาชิก',
 };
 
+const PAYMENT_METHOD_OPTIONS: Array<{
+  key: PaymentMethodType;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+}> = [
+  { key: 'cash', label: 'เงินสด', icon: Banknote },
+  { key: 'transfer', label: 'โอนเงิน', icon: Wallet },
+  { key: 'qr', label: 'QR Pay', icon: QrCode },
+  { key: 'credit', label: 'ขายเชื่อ', icon: CreditCard },
+  { key: 'split', label: 'หลายช่องทาง', icon: Split },
+];
+
 const QUICK_LAK_AMOUNTS = [10000, 20000, 50000, 100000, 200000, 500000];
+
+function ProductImageThumb({ src, name }: { src?: string; name: string }) {
+  const [imgError, setImgError] = useState(false);
+
+  useEffect(() => {
+    setImgError(false);
+  }, [src]);
+
+  if (!src || imgError) {
+    return (
+      <div className="w-full h-28 rounded-lg bg-slate-50 border border-slate-100 flex flex-col items-center justify-center text-slate-400 gap-1">
+        <Package className="w-7 h-7 stroke-[1.5]" />
+        <span className="text-[11px] text-slate-400">ไม่มีรูปสินค้า</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full h-28 rounded-lg bg-slate-50 border border-slate-100 overflow-hidden flex items-center justify-center">
+      <img
+        src={src}
+        alt={name}
+        referrerPolicy="no-referrer"
+        onError={() => setImgError(true)}
+        className="w-full h-full object-cover"
+      />
+    </div>
+  );
+}
 
 export function PosTerminalPage() {
   const { userProfile, organization, activeBranchId, settings } = useFirebase();
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const categoryScrollRef = useRef<HTMLDivElement | null>(null);
+  const cartSectionRef = useRef<HTMLDivElement | null>(null);
 
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -102,6 +150,7 @@ export function PosTerminalPage() {
   const [billDiscountLak, setBillDiscountLak] = useState<number>(0);
   const [billNotes, setBillNotes] = useState('');
   const [activeHeldBillId, setActiveHeldBillId] = useState<string | null>(null);
+  const [showDiscountOptions, setShowDiscountOptions] = useState(false);
 
   const [feedback, setFeedback] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
 
@@ -116,7 +165,7 @@ export function PosTerminalPage() {
   const [holdSaving, setHoldSaving] = useState(false);
   const [heldListModalOpen, setHeldListModalOpen] = useState(false);
 
-  // Payment Checkout Modal
+  // Payment Checkout Modal & Inline Payment Choice
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [payMode, setPayMode] = useState<PaymentMethodType>('cash');
   const [cashTendered, setCashTendered] = useState<string>('0');
@@ -127,14 +176,50 @@ export function PosTerminalPage() {
   const [checkoutSaving, setCheckoutSaving] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
-  // Completed Receipt Modal
+  // Completed Receipt & Camera Scanner Modals
   const [completedSale, setCompletedSale] = useState<SaleOrder | null>(null);
   const [posScannerOpen, setPosScannerOpen] = useState(false);
+
+  // First-time POS Beginner Guide
+  const [guideOpen, setGuideOpen] = useState(false);
+  const [activeGuideSection, setActiveGuideSection] = useState<
+    PosGuideStep['sectionId'] | null
+  >(null);
 
   const canCreateSale = hasPermission(userProfile, 'pos', 'create');
   const canEditPrice = hasPermission(userProfile, 'pos', 'edit');
   const canCreateProduct = hasPermission(userProfile, 'products', 'create');
   const allowNegativeStock = settings?.inventorySettings?.allowNegativeStock ?? false;
+
+  const guideStorageKey = useMemo(
+    () => `grocery_pos_beginner_guide_seen_v1_${userProfile?.uid ?? 'default'}`,
+    [userProfile?.uid],
+  );
+
+  useEffect(() => {
+    if (!userProfile) return;
+    try {
+      const seen = window.localStorage.getItem(guideStorageKey);
+      if (seen !== 'true') {
+        setGuideOpen(true);
+      }
+    } catch {
+      // Ignore storage access restriction
+    }
+  }, [userProfile, guideStorageKey]);
+
+  const dismissBeginnerGuide = () => {
+    try {
+      window.localStorage.setItem(guideStorageKey, 'true');
+    } catch {
+      // Ignore storage access restriction
+    }
+    setGuideOpen(false);
+    setActiveGuideSection(null);
+    window.setTimeout(() => {
+      searchInputRef.current?.focus();
+    }, 80);
+  };
 
   useEffect(() => {
     if (!userProfile) return;
@@ -285,14 +370,12 @@ export function PosTerminalPage() {
 
   const filteredCategories = useMemo(() => {
     const q = categorySearch.trim().toLowerCase();
-    const list = !q
-      ? categories
-      : categories.filter(
-          (c) =>
-            c.name.toLowerCase().includes(q) ||
-            (c.description && c.description.toLowerCase().includes(q)),
-        );
-    return list;
+    if (!q) return categories;
+    return categories.filter(
+      (c) =>
+        c.name.toLowerCase().includes(q) ||
+        (c.description && c.description.toLowerCase().includes(q)),
+    );
   }, [categories, categorySearch]);
 
   const scrollCategories = (direction: 'left' | 'right') => {
@@ -353,6 +436,11 @@ export function PosTerminalPage() {
     return list;
   }, [cartLines, productMap, priceTier]);
 
+  const totalCartUnits = useMemo(
+    () => cartLines.reduce((sum, l) => sum + l.qty, 0),
+    [cartLines],
+  );
+
   const selectedCustomer = useMemo(
     () => customers.find((c) => c.customerId === selectedCustomerId) ?? null,
     [customers, selectedCustomerId],
@@ -376,7 +464,9 @@ export function PosTerminalPage() {
   const rawCartNetAfterItemDiscount = useMemo(
     () =>
       resolvedCartInputs.reduce((sum, entry) => {
-        const gross = Math.round(Math.max(1, Math.round(entry.qty)) * Math.max(0, Math.round(entry.unitPriceLak)));
+        const gross = Math.round(
+          Math.max(1, Math.round(entry.qty)) * Math.max(0, Math.round(entry.unitPriceLak)),
+        );
         const disc = Math.min(gross, Math.max(0, Math.round(entry.discountLak)));
         return sum + Math.max(0, gross - disc);
       }, 0),
@@ -385,7 +475,9 @@ export function PosTerminalPage() {
 
   const tierDiscountLak = useMemo(() => {
     if (!selectedMembershipTier || selectedMembershipTier.discountPercent <= 0) return 0;
-    return Math.round((rawCartNetAfterItemDiscount * selectedMembershipTier.discountPercent) / 100);
+    return Math.round(
+      (rawCartNetAfterItemDiscount * selectedMembershipTier.discountPercent) / 100,
+    );
   }, [selectedMembershipTier, rawCartNetAfterItemDiscount]);
 
   const promoDiscountLak = useMemo(() => {
@@ -409,6 +501,9 @@ export function PosTerminalPage() {
       }),
     [resolvedCartInputs, totalEffectiveBillDiscountLak, settings],
   );
+
+  const totalCombinedDiscountLak =
+    billTotals.itemDiscountTotalLak + billTotals.billDiscountLak;
 
   const getCartBaseQtyForProduct = (productId: string, overrideLines?: CartLineState[]): number => {
     const source = overrideLines ?? cartLines;
@@ -593,6 +688,14 @@ export function PosTerminalPage() {
 
   const handleBarcodeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!searchText.trim()) {
+      searchInputRef.current?.focus();
+      setFeedback({
+        type: 'ok',
+        text: 'พร้อมรับบาร์โค้ดแล้ว — ยิงบาร์โค้ดจากเครื่องสแกน หรือพิมพ์ชื่อสินค้าแล้วกด Enter ได้เลย',
+      });
+      return;
+    }
     tryAddScannedCodeToCart(searchText, true);
   };
 
@@ -663,10 +766,6 @@ export function PosTerminalPage() {
     );
   };
 
-  const removeCartLine = (lineKey: string) => {
-    setCartLines((prev) => prev.filter((l) => l.lineKey !== lineKey));
-  };
-
   const clearCart = () => {
     setCartLines([]);
     setSelectedCustomerId('');
@@ -675,7 +774,13 @@ export function PosTerminalPage() {
     setBillDiscountLak(0);
     setBillNotes('');
     setActiveHeldBillId(null);
+    setShowDiscountOptions(false);
+    setCashTendered('0');
     setFeedback(null);
+  };
+
+  const removeCartLine = (lineKey: string) => {
+    setCartLines((prev) => prev.filter((l) => l.lineKey !== lineKey));
   };
 
   const handleConfirmHoldBill = async (e: React.FormEvent) => {
@@ -749,10 +854,24 @@ export function PosTerminalPage() {
     }
   };
 
+  useEffect(() => {
+    if (payMode === 'cash') {
+      setCashTendered((prev) => {
+        if (cartLines.length === 0) return '0';
+        const numeric = Number(prev) || 0;
+        return numeric === 0 ? String(billTotals.grandTotalLak) : prev;
+      });
+    }
+  }, [billTotals.grandTotalLak, cartLines.length, payMode]);
+
   const openCheckoutModal = () => {
     if (cartLines.length === 0) return;
-    setPayMode('cash');
-    setCashTendered(String(billTotals.grandTotalLak));
+    if (payMode === 'cash') {
+      const currentCash = Math.max(0, Math.round(Number(cashTendered) || 0));
+      if (currentCash < billTotals.grandTotalLak) {
+        setCashTendered(String(billTotals.grandTotalLak));
+      }
+    }
     setSplitRows([
       { method: 'cash', amountLak: billTotals.grandTotalLak },
       { method: 'transfer', amountLak: 0 },
@@ -845,24 +964,78 @@ export function PosTerminalPage() {
     }
   };
 
+  const selectedCategoryName = useMemo(() => {
+    if (selectedCategoryId === 'all') return 'ทั้งหมด';
+    return categories.find((c) => c.categoryId === selectedCategoryId)?.name ?? 'ทั้งหมด';
+  }, [categories, selectedCategoryId]);
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-20 lg:pb-0">
+      {/* Top Helper Toolbar: Price Tier, Held Bills & First-time Guide */}
+      <div className="bg-white border border-slate-200 rounded-xl px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="text-xs font-semibold text-slate-600">ประเภทราคาขาย</div>
+          <div className="inline-flex items-center bg-slate-100 p-1 rounded-lg">
+            {(['retail', 'wholesale', 'member'] as const).map((tier) => (
+              <button
+                key={tier}
+                type="button"
+                onClick={() => setPriceTier(tier)}
+                className={`min-h-[36px] px-3.5 py-1.5 text-xs sm:text-sm font-semibold rounded-md transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
+                  priceTier === tier
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                {PRICE_TIER_LABELS[tier]}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setHeldListModalOpen(true)}
+            className="min-h-[40px] inline-flex items-center gap-1.5 px-3.5 py-2 text-xs sm:text-sm font-medium bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg cursor-pointer tabular-nums whitespace-nowrap shrink-0"
+          >
+            <PlayCircle className="w-4 h-4 text-blue-600" />
+            <span>บิลพัก ({heldBills.length})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setGuideOpen(true)}
+            className="min-h-[40px] inline-flex items-center gap-1.5 px-3.5 py-2 text-xs sm:text-sm font-medium bg-blue-50 border border-blue-200 hover:bg-blue-100 text-blue-700 rounded-lg cursor-pointer whitespace-nowrap shrink-0"
+          >
+            <BookOpen className="w-4 h-4" />
+            <span>คู่มือใช้งาน POS</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Feedback Banner */}
       {feedback && (
         <div
-          className={`p-3 rounded-lg border text-xs flex items-center justify-between gap-2 ${
+          className={`p-3.5 rounded-xl border text-xs sm:text-sm flex items-center justify-between gap-2 ${
             feedback.type === 'ok'
               ? 'bg-green-50 border-green-200 text-green-800'
               : 'bg-red-50 border-red-200 text-red-700'
           }`}
         >
           <div className="flex items-center gap-2">
-            {feedback.type === 'ok' && <CheckCircle2 className="w-4 h-4 shrink-0" />}
+            {feedback.type === 'ok' ? (
+              <CheckCircle2 className="w-4 h-4 shrink-0 text-green-600" />
+            ) : (
+              <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
+            )}
             <span>{feedback.text}</span>
           </div>
           <button
             type="button"
             onClick={() => setFeedback(null)}
-            className="text-current opacity-70 hover:opacity-100 cursor-pointer"
+            className="p-1 text-current opacity-70 hover:opacity-100 cursor-pointer"
+            aria-label="ปิดข้อความแจ้งเตือน"
           >
             <X className="w-4 h-4" />
           </button>
@@ -870,196 +1043,232 @@ export function PosTerminalPage() {
       )}
 
       {/* Main 2-Column POS Workspace */}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
-        {/* LEFT COLUMN: Scanner, Price Tier, Categories & Catalog */}
-        <div className="xl:col-span-7 space-y-4">
-          {/* Scanner & Price Tier Bar */}
-          <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-3">
-            <div className="flex flex-col md:flex-row gap-3">
-              <form onSubmit={handleBarcodeSubmit} className="flex-1 flex gap-2">
-                <div className="relative flex-1">
-                  <ScanBarcode className="w-4 h-4 text-blue-600 absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    ref={searchInputRef}
-                    type="text"
-                    autoFocus
-                    value={searchText}
-                    onChange={(e) => setSearchText(e.target.value)}
-                    placeholder="สแกนบาร์โค้ด หรือพิมพ์ชื่อสินค้า / SKU แล้วกด Enter..."
-                    className="w-full pl-9 pr-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:outline-none focus:border-blue-600"
-                  />
-                </div>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+        {/* LEFT COLUMN: Section 1 (Search & Scan), Section 2 (Categories), Section 3 (Products) */}
+        <div className="lg:col-span-7 space-y-4">
+          {/* SECTION 1: Search & Barcode Scanner */}
+          <section
+            className={`bg-white border rounded-xl p-4 sm:p-5 space-y-3 transition-shadow ${
+              activeGuideSection === 'search' || activeGuideSection === 'scanner'
+                ? 'border-blue-600 ring-2 ring-blue-200'
+                : 'border-slate-200'
+            }`}
+          >
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <h2 className="text-sm sm:text-base font-bold text-slate-900">1. ค้นหาสินค้า</h2>
+              <span className="text-xs text-slate-500">
+                พิมพ์ชื่อสินค้า รหัส SKU หรือยิงบาร์โค้ดแล้วกด Enter
+              </span>
+            </div>
+
+            <form onSubmit={handleBarcodeSubmit} className="space-y-2.5">
+              <div className="relative">
+                <Search className="w-5 h-5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  autoFocus
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                  placeholder="ค้นหาชื่อสินค้า หรือสแกนบาร์โค้ด"
+                  className="w-full min-h-[48px] pl-11 pr-10 py-2.5 text-base bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                />
+                {searchText && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchText('');
+                      searchInputRef.current?.focus();
+                    }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-700 cursor-pointer"
+                    aria-label="ล้างคำค้นหา"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <button
+                  type="submit"
+                  className="min-h-[46px] px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl flex items-center justify-center gap-2 cursor-pointer transition-colors"
+                >
+                  <ScanBarcode className="w-5 h-5 shrink-0" />
+                  <div className="text-left leading-tight">
+                    <div className="text-sm font-semibold whitespace-nowrap">สแกนบาร์โค้ด</div>
+                    <div className="text-[11px] text-blue-100">ค้นหาหรือยิงรหัสสินค้า</div>
+                  </div>
+                </button>
+
                 <button
                   type="button"
                   onClick={() => setPosScannerOpen(true)}
-                  className="px-3 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg whitespace-nowrap inline-flex items-center gap-1.5 cursor-pointer"
-                  title="สแกนบาร์โค้ด / QR ด้วยกล้อง"
+                  className="min-h-[46px] px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl flex items-center justify-center gap-2 cursor-pointer transition-colors"
                 >
-                  <QrCode className="w-4 h-4" />
-                  สแกนกล้อง
-                </button>
-                <button
-                  type="submit"
-                  className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg whitespace-nowrap cursor-pointer"
-                >
-                  เพิ่มลงตะกร้า
-                </button>
-              </form>
-
-              {/* Price Tier Switcher */}
-              <div className="inline-flex items-center bg-slate-100 p-1 rounded-lg self-start shrink-0">
-                {(['retail', 'wholesale', 'member'] as const).map((tier) => (
-                  <button
-                    key={tier}
-                    type="button"
-                    onClick={() => setPriceTier(tier)}
-                    className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer whitespace-nowrap ${
-                      priceTier === tier
-                        ? 'bg-white text-blue-700 shadow-xs'
-                        : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    {PRICE_TIER_LABELS[tier]}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Category Filter Section (Search + Horizontal Scroll Tabs) */}
-            <div className="pt-2.5 border-t border-slate-100 space-y-2.5">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
-                  <Tag className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                  <span>หมวดหมู่สินค้า</span>
-                  <span className="text-[11px] font-normal text-slate-400 tabular-nums">
-                    ({categories.length} หมวดหมู่)
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-1.5">
-                  <div className="relative flex-1 sm:w-52">
-                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="text"
-                      value={categorySearch}
-                      onChange={(e) => setCategorySearch(e.target.value)}
-                      placeholder="ค้นหาหมวดหมู่..."
-                      className="w-full pl-8 pr-7 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:outline-none focus:border-blue-600"
-                    />
-                    {categorySearch && (
-                      <button
-                        type="button"
-                        onClick={() => setCategorySearch('')}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
-                        title="ล้างคำค้นหาหมวดหมู่"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    )}
+                  <QrCode className="w-5 h-5 shrink-0" />
+                  <div className="text-left leading-tight">
+                    <div className="text-sm font-semibold whitespace-nowrap">สแกนด้วยกล้อง</div>
+                    <div className="text-[11px] text-slate-300">เปิดกล้องสแกน Barcode / QR</div>
                   </div>
+                </button>
+              </div>
+            </form>
+          </section>
 
-                  {categories.length > 0 && (
-                    <div className="hidden sm:inline-flex items-center gap-1">
-                      <button
-                        type="button"
-                        onClick={() => scrollCategories('left')}
-                        className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 border border-slate-200 rounded-lg cursor-pointer"
-                        title="เลื่อนดูหมวดหมู่ทางซ้าย"
-                      >
-                        <ChevronLeft className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => scrollCategories('right')}
-                        className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 border border-slate-200 rounded-lg cursor-pointer"
-                        title="เลื่อนดูหมวดหมู่ทางขวา"
-                      >
-                        <ChevronRight className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  )}
+          {/* SECTION 2: Product Categories */}
+          <section
+            className={`bg-white border rounded-xl p-4 space-y-3 transition-shadow ${
+              activeGuideSection === 'categories'
+                ? 'border-blue-600 ring-2 ring-blue-200'
+                : 'border-slate-200'
+            }`}
+          >
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+              <div className="flex items-center gap-2">
+                <Tag className="w-4 h-4 text-blue-600 shrink-0" />
+                <div>
+                  <h2 className="text-sm font-bold text-slate-900">
+                    2. เลือกหมวดหมู่ ({categories.length} หมวดหมู่)
+                  </h2>
                 </div>
               </div>
 
-              <div
-                ref={categoryScrollRef}
-                className="flex items-center gap-2 overflow-x-auto pb-1 scroll-smooth"
-              >
-                <button
-                  type="button"
-                  onClick={() => setSelectedCategoryId('all')}
-                  className={`px-3.5 py-1.5 text-xs sm:text-sm font-medium rounded-lg whitespace-nowrap shrink-0 cursor-pointer border transition-colors tabular-nums ${
-                    selectedCategoryId === 'all'
-                      ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                      : 'bg-white text-slate-700 border-slate-200 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200'
-                  }`}
-                >
-                  ทั้งหมด ({products.length})
-                </button>
-
-                {filteredCategories.map((cat) => {
-                  const isSelected = selectedCategoryId === cat.categoryId;
-                  const count = categoryProductCounts.get(cat.categoryId) ?? 0;
-                  return (
-                    <button
-                      key={cat.categoryId}
-                      type="button"
-                      onClick={() => setSelectedCategoryId(cat.categoryId)}
-                      className={`px-3.5 py-1.5 text-xs sm:text-sm font-medium rounded-lg whitespace-nowrap shrink-0 cursor-pointer border transition-colors tabular-nums ${
-                        isSelected
-                          ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                          : 'bg-white text-slate-700 border-slate-200 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200'
-                      }`}
-                    >
-                      {cat.name} ({count})
-                    </button>
-                  );
-                })}
-
-                {categorySearch.trim() && filteredCategories.length === 0 && (
-                  <div className="flex items-center gap-2 px-3 py-1.5 text-xs text-slate-500 whitespace-nowrap">
-                    <span>ไม่พบหมวดหมู่ &ldquo;{categorySearch.trim()}&rdquo;</span>
+              <div className="flex items-center gap-1.5">
+                <div className="relative flex-1 sm:w-56">
+                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input
+                    type="text"
+                    value={categorySearch}
+                    onChange={(e) => setCategorySearch(e.target.value)}
+                    placeholder="ค้นหาหมวดหมู่..."
+                    className="w-full min-h-[38px] pl-8 pr-8 py-1.5 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:outline-none focus:border-blue-600"
+                  />
+                  {categorySearch && (
                     <button
                       type="button"
                       onClick={() => setCategorySearch('')}
-                      className="text-blue-600 font-medium hover:underline cursor-pointer"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 cursor-pointer"
+                      aria-label="ล้างคำค้นหาหมวดหมู่"
                     >
-                      แสดงทั้งหมด
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                {categories.length > 0 && (
+                  <div className="hidden sm:inline-flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => scrollCategories('left')}
+                      className="min-h-[38px] min-w-[38px] flex items-center justify-center text-slate-600 hover:text-blue-600 hover:bg-blue-50 border border-slate-200 rounded-lg cursor-pointer"
+                      aria-label="เลื่อนดูหมวดหมู่ทางซ้าย"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => scrollCategories('right')}
+                      className="min-h-[38px] min-w-[38px] flex items-center justify-center text-slate-600 hover:text-blue-600 hover:bg-blue-50 border border-slate-200 rounded-lg cursor-pointer"
+                      aria-label="เลื่อนดูหมวดหมู่ทางขวา"
+                    >
+                      <ChevronRight className="w-4 h-4" />
                     </button>
                   </div>
                 )}
               </div>
             </div>
-          </div>
 
-          {/* Product Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {filteredProducts.length === 0 && (
-              <div className="sm:col-span-2 lg:col-span-3 bg-white border border-slate-200 rounded-xl p-8 text-center">
+            <div
+              ref={categoryScrollRef}
+              className="flex items-center gap-2 overflow-x-auto pb-1 scroll-smooth"
+            >
+              <button
+                type="button"
+                onClick={() => setSelectedCategoryId('all')}
+                className={`min-h-[42px] px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg whitespace-nowrap shrink-0 cursor-pointer border transition-colors tabular-nums ${
+                  selectedCategoryId === 'all'
+                    ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                    : 'bg-white text-slate-700 border-slate-200 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200'
+                }`}
+              >
+                ทั้งหมด ({products.length})
+              </button>
+
+              {filteredCategories.map((cat) => {
+                const isSelected = selectedCategoryId === cat.categoryId;
+                const count = categoryProductCounts.get(cat.categoryId) ?? 0;
+                return (
+                  <button
+                    key={cat.categoryId}
+                    type="button"
+                    onClick={() => setSelectedCategoryId(cat.categoryId)}
+                    className={`min-h-[42px] px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg whitespace-nowrap shrink-0 cursor-pointer border transition-colors tabular-nums ${
+                      isSelected
+                        ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                        : 'bg-white text-slate-700 border-slate-200 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200'
+                    }`}
+                  >
+                    {cat.name} ({count})
+                  </button>
+                );
+              })}
+
+              {categorySearch.trim() && filteredCategories.length === 0 && (
+                <div className="flex items-center gap-2 px-3 py-2 text-xs text-slate-500 whitespace-nowrap">
+                  <span>ไม่พบหมวดหมู่ &ldquo;{categorySearch.trim()}&rdquo;</span>
+                  <button
+                    type="button"
+                    onClick={() => setCategorySearch('')}
+                    className="text-blue-600 font-semibold hover:underline cursor-pointer"
+                  >
+                    แสดงทั้งหมด
+                  </button>
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* SECTION 3: Product Grid */}
+          <section
+            className={`space-y-3 rounded-xl transition-shadow ${
+              activeGuideSection === 'products' ? 'ring-2 ring-blue-200 p-1' : ''
+            }`}
+          >
+            <div className="flex items-center justify-between px-1">
+              <div className="text-sm font-bold text-slate-900">
+                3. รายการสินค้า ({selectedCategoryName})
+              </div>
+              <div className="text-xs text-slate-500 tabular-nums">
+                แสดง {filteredProducts.length} รายการ · ราคา{PRICE_TIER_LABELS[priceTier]}
+              </div>
+            </div>
+
+            {filteredProducts.length === 0 ? (
+              <div className="bg-white border border-slate-200 rounded-xl p-8 text-center">
                 {searchText.trim() ? (
-                  <div className="max-w-md mx-auto space-y-3">
-                    <div className="w-11 h-11 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center mx-auto">
+                  <div className="max-w-md mx-auto space-y-4">
+                    <div className="w-12 h-12 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center mx-auto">
                       <AlertCircle className="w-6 h-6" />
                     </div>
                     <div className="space-y-1">
-                      <p className="text-sm font-semibold text-slate-900">
+                      <p className="text-base font-bold text-slate-900">
                         ไม่พบสินค้านี้ในระบบ ต้องการเพิ่มสินค้าใหม่หรือไม่?
                       </p>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs sm:text-sm text-slate-500">
                         คำค้นหา / บาร์โค้ด:{' '}
                         <span className="font-mono font-semibold text-slate-800">
                           &ldquo;{searchText.trim()}&rdquo;
                         </span>
                       </p>
                     </div>
-                    <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
+                    <div className="flex flex-wrap items-center justify-center gap-2.5">
                       <button
                         type="button"
                         onClick={() => openQuickAddProduct(searchText.trim())}
-                        className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold rounded-lg transition-colors cursor-pointer"
+                        className="min-h-[44px] inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition-colors cursor-pointer"
                       >
                         <PackagePlus className="w-4 h-4" />
-                        เพิ่มสินค้าใหม่
+                        <span>เพิ่มสินค้าใหม่</span>
                       </button>
                       <button
                         type="button"
@@ -1068,141 +1277,186 @@ export function PosTerminalPage() {
                           setNotFoundPrompt(null);
                           searchInputRef.current?.focus();
                         }}
-                        className="px-4 py-2 text-xs sm:text-sm font-medium text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg transition-colors cursor-pointer"
+                        className="min-h-[44px] px-4 py-2.5 text-sm font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer"
                       >
                         ยกเลิก
                       </button>
                     </div>
                   </div>
                 ) : (
-                  <div className="text-sm text-slate-500">
-                    ไม่พบสินค้าที่เปิดขายตามเงื่อนไขที่ค้นหา
+                  <div className="space-y-2 text-sm text-slate-500">
+                    <p>ไม่มีสินค้าในหมวดหมู่ &ldquo;{selectedCategoryName}&rdquo;</p>
+                    {selectedCategoryId !== 'all' && (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedCategoryId('all')}
+                        className="text-blue-600 font-semibold hover:underline cursor-pointer"
+                      >
+                        ดูสินค้าทั้งหมด
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
-            )}
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3.5">
+                {filteredProducts.map((prod) => {
+                  const qtyOnHand = balanceMap.get(prod.productId) ?? 0;
+                  const isOut = qtyOnHand <= 0;
+                  const isLow = !isOut && qtyOnHand <= prod.minStockBaseQty;
+                  const baseUnit = prod.units.find((u) => u.isBaseUnit) ?? prod.units[0];
+                  const displayPrice = baseUnit
+                    ? getUnitPriceByTier(baseUnit, priceTier)
+                    : prod.retailPriceLak;
+                  const disableBaseAdd = !allowNegativeStock && isOut;
 
-            {filteredProducts.map((prod) => {
-              const qtyOnHand = balanceMap.get(prod.productId) ?? 0;
-              const isOut = qtyOnHand <= 0;
-              const isLow = !isOut && qtyOnHand <= prod.minStockBaseQty;
-              const baseUnit = prod.units.find((u) => u.isBaseUnit) ?? prod.units[0];
-              const displayPrice = baseUnit ? getUnitPriceByTier(baseUnit, priceTier) : prod.retailPriceLak;
+                  return (
+                    <div
+                      key={prod.productId}
+                      className="bg-white border border-slate-200 hover:border-blue-300 rounded-xl p-3.5 flex flex-col justify-between gap-3 transition-colors"
+                    >
+                      <div className="space-y-2.5">
+                        <ProductImageThumb src={prod.imageUrl} name={prod.name} />
 
-              return (
-                <div
-                  key={prod.productId}
-                  className="bg-white border border-slate-200 hover:border-blue-400 rounded-xl p-3.5 flex flex-col justify-between gap-2.5 transition-colors"
-                >
-                  <button
-                    type="button"
-                    onClick={() => baseUnit && addProductUnitToCart(prod, baseUnit)}
-                    className="text-left space-y-1 cursor-pointer group"
-                  >
-                    <div className="flex items-start gap-2.5">
-                      {prod.imageUrl && (
-                        <img
-                          src={prod.imageUrl}
-                          alt={prod.name}
-                          className="w-11 h-11 rounded-lg object-cover border border-slate-200 shrink-0 bg-slate-50"
-                        />
-                      )}
-                      <div className="min-w-0 flex-1 space-y-1">
-                        <div className="flex items-start justify-between gap-2">
-                          <span className="text-xs font-mono text-slate-400 truncate">
-                            {prod.sku}
-                          </span>
-                          <span
-                            className={`text-[11px] font-semibold tabular-nums shrink-0 ${
+                        {/* Full Product Name - no unnecessary truncation */}
+                        <div className="space-y-1">
+                          <h3 className="text-sm sm:text-[15px] font-semibold text-slate-900 leading-snug break-words">
+                            {prod.name}
+                          </h3>
+                          <div className="text-[11px] font-mono text-slate-400">
+                            รหัส: {prod.sku}
+                          </div>
+                        </div>
+
+                        {/* Price & Stock Info */}
+                        <div className="pt-1 border-t border-slate-100 space-y-1">
+                          <div className="flex items-baseline justify-between gap-2">
+                            <span className="text-lg font-bold text-blue-600 tabular-nums">
+                              {formatLak(displayPrice)}
+                            </span>
+                            <span className="text-xs font-medium text-slate-500">
+                              / {baseUnit?.unitName ?? prod.baseUnitName}
+                            </span>
+                          </div>
+
+                          <div
+                            className={`text-xs font-medium tabular-nums flex items-center gap-1 ${
                               isOut
                                 ? 'text-red-600'
                                 : isLow
                                   ? 'text-amber-600'
-                                  : 'text-slate-500'
+                                  : 'text-slate-600'
                             }`}
                           >
-                            คงเหลือ {qtyOnHand.toLocaleString('en-US')} {prod.baseUnitName}
-                          </span>
-                        </div>
-                        <div className="text-sm font-semibold text-slate-900 group-hover:text-blue-700 line-clamp-2 leading-snug">
-                          {prod.name}
-                        </div>
-                        <div className="text-base font-bold text-blue-700 tabular-nums pt-0.5">
-                          {formatLak(displayPrice)}{' '}
-                          <span className="text-xs font-normal text-slate-500">
-                            / {baseUnit?.unitName ?? prod.baseUnitName}
-                          </span>
+                            {isOut ? (
+                              <>
+                                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                                <span>สินค้าหมด (0 {prod.baseUnitName})</span>
+                              </>
+                            ) : (
+                              <span>
+                                {isLow ? 'ใกล้หมด · ' : ''}คงเหลือ {qtyOnHand.toLocaleString('en-US')}{' '}
+                                {prod.baseUnitName}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </button>
 
-                  {/* Multi-unit Quick Buttons */}
-                  <div className="flex flex-wrap gap-1.5 pt-2 border-t border-slate-100">
-                    {prod.units.map((unit) => (
-                      <button
-                        key={unit.unitId}
-                        type="button"
-                        onClick={() => addProductUnitToCart(prod, unit)}
-                        className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium bg-slate-50 hover:bg-blue-50 text-slate-700 hover:text-blue-700 border border-slate-200 hover:border-blue-300 rounded cursor-pointer tabular-nums"
-                      >
-                        <Plus className="w-3 h-3" />
-                        {unit.unitName} · {formatLak(getUnitPriceByTier(unit, priceTier), false)}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                      <div className="space-y-2 pt-1">
+                        {/* Primary Add to Cart Button */}
+                        <button
+                          type="button"
+                          disabled={disableBaseAdd || !baseUnit}
+                          onClick={() => baseUnit && addProductUnitToCart(prod, baseUnit)}
+                          className="w-full min-h-[44px] px-3 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-500 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-lg inline-flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+                        >
+                          <Plus className="w-4 h-4 shrink-0" />
+                          <span>{disableBaseAdd ? 'สินค้าหมด' : 'เพิ่มลงตะกร้า'}</span>
+                        </button>
+
+                        {/* Additional Unit Options (Wholesale / Pack / Box) */}
+                        {prod.units.length > 1 && (
+                          <div className="flex flex-wrap gap-1.5">
+                            {prod.units.map((unit) => (
+                              <button
+                                key={unit.unitId}
+                                type="button"
+                                onClick={() => addProductUnitToCart(prod, unit)}
+                                className="min-h-[34px] inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-slate-50 hover:bg-blue-50 text-slate-700 hover:text-blue-700 border border-slate-200 hover:border-blue-300 rounded-lg cursor-pointer tabular-nums"
+                              >
+                                <Plus className="w-3 h-3" />
+                                <span>
+                                  {unit.unitName} ·{' '}
+                                  {formatLak(getUnitPriceByTier(unit, priceTier), false)}
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </section>
         </div>
 
-        {/* RIGHT COLUMN: Cart, Discounts & Checkout */}
-        <div className="xl:col-span-5 bg-white border border-slate-200 rounded-xl overflow-hidden xl:sticky xl:top-20">
+        {/* RIGHT COLUMN: Section 4 (Cart) & Section 5 (Checkout) */}
+        <div
+          ref={cartSectionRef}
+          className={`lg:col-span-5 bg-white border rounded-xl overflow-hidden lg:sticky lg:top-20 transition-shadow ${
+            activeGuideSection === 'cart' || activeGuideSection === 'checkout'
+              ? 'border-blue-600 ring-2 ring-blue-200'
+              : 'border-slate-200'
+          }`}
+        >
           {/* Cart Header */}
-          <div className="p-4 border-b border-slate-200 flex items-center justify-between gap-2 bg-slate-50/70">
-            <div className="flex items-center gap-2">
-              <ShoppingCart className="w-4 h-4 text-blue-600" />
-              <h3 className="text-sm font-semibold text-slate-900">
-                ตะกร้าสินค้า ({cartLines.length} รายการ)
-              </h3>
+          <div className="p-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2 bg-slate-50">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                <ShoppingCart className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-sm sm:text-base font-bold text-slate-900">
+                  4. ตะกร้าสินค้า
+                </h2>
+                <div className="text-xs text-slate-500 tabular-nums">
+                  {cartLines.length} รายการ · รวม {totalCartUnits.toLocaleString('en-US')} ชิ้น
+                </div>
+              </div>
             </div>
-            <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={() => setHeldListModalOpen(true)}
-                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-white border border-slate-200 hover:border-blue-300 text-slate-700 rounded-lg cursor-pointer tabular-nums"
-              >
-                <PlayCircle className="w-3.5 h-3.5 text-blue-600" />
-                บิลพัก ({heldBills.length})
-              </button>
-              {cartLines.length > 0 && (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setHoldLabel('');
-                      setHoldModalOpen(true);
-                    }}
-                    className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-white border border-slate-200 hover:border-amber-300 text-amber-700 rounded-lg cursor-pointer"
-                  >
-                    <PauseCircle className="w-3.5 h-3.5" />
-                    พักบิล
-                  </button>
-                  <button
-                    type="button"
-                    onClick={clearCart}
-                    className="px-2.5 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 rounded-lg cursor-pointer"
-                  >
-                    ล้าง
-                  </button>
-                </>
-              )}
-            </div>
+
+            {cartLines.length > 0 && (
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setHoldLabel('');
+                    setHoldModalOpen(true);
+                  }}
+                  className="min-h-[38px] inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold bg-white border border-slate-200 hover:border-amber-400 text-amber-600 rounded-lg cursor-pointer"
+                  title="พักบิลนี้ไว้ก่อน เพื่อขายให้ลูกค้าคนถัดไป"
+                >
+                  <PauseCircle className="w-4 h-4" />
+                  <span>พักบิล</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={clearCart}
+                  className="min-h-[38px] inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 border border-transparent hover:border-red-200 rounded-lg cursor-pointer"
+                  title="ลบสินค้าทั้งหมดออกจากตะกร้า"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span>ล้างตะกร้า</span>
+                </button>
+              </div>
+            )}
           </div>
 
-          {/* Customer Selector & Name */}
-          <div className="px-4 py-3 border-b border-slate-100 space-y-2">
+          {/* Customer Selector */}
+          <div className="px-4 py-3 border-b border-slate-100 space-y-2 bg-white">
             <div className="flex items-center gap-2">
               <User className="w-4 h-4 text-slate-400 shrink-0" />
               <select
@@ -1218,7 +1472,7 @@ export function PosTerminalPage() {
                     setCustomerName('ลูกค้าทั่วไป');
                   }
                 }}
-                className="flex-1 text-xs sm:text-sm text-slate-800 bg-slate-50 border border-slate-200 rounded-md px-2 py-1 focus:outline-none"
+                className="flex-1 min-h-[38px] text-xs sm:text-sm text-slate-800 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-blue-600"
               >
                 <option value="">ลูกค้าทั่วไป (Walk-in)</option>
                 {customers.map((c) => (
@@ -1227,20 +1481,31 @@ export function PosTerminalPage() {
                   </option>
                 ))}
               </select>
-              <span className="text-[11px] font-semibold text-blue-700 shrink-0">
+              <span className="text-xs font-semibold text-blue-600 shrink-0">
                 {PRICE_TIER_LABELS[priceTier]}
               </span>
             </div>
 
             {selectedCustomer ? (
-              <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500 bg-blue-50/50 border border-blue-100 rounded-md px-2.5 py-1.5 tabular-nums">
+              <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-600 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 tabular-nums">
                 <span>
-                  แต้มสะสม: <strong className="text-blue-700">{selectedCustomer.pointsBalance.toLocaleString('en-US')}</strong>
-                  {selectedMembershipTier ? ` · ส่วนลดระดับ ${selectedMembershipTier.discountPercent}%` : ''}
+                  แต้มสะสม:{' '}
+                  <strong className="text-blue-600">
+                    {selectedCustomer.pointsBalance.toLocaleString('en-US')}
+                  </strong>
+                  {selectedMembershipTier
+                    ? ` · ส่วนลดสมาชิก ${selectedMembershipTier.discountPercent}%`
+                    : ''}
                 </span>
                 <span>
-                  ค้างชำระ: <strong className={selectedCustomer.creditBalanceLak > 0 ? 'text-amber-700' : 'text-slate-700'}>{formatLak(selectedCustomer.creditBalanceLak)}</strong>
-                  {selectedCustomer.creditLimitLak > 0 ? ` / ${formatLak(selectedCustomer.creditLimitLak)}` : ''}
+                  ค้างชำระ:{' '}
+                  <strong
+                    className={
+                      selectedCustomer.creditBalanceLak > 0 ? 'text-amber-600' : 'text-slate-800'
+                    }
+                  >
+                    {formatLak(selectedCustomer.creditBalanceLak)}
+                  </strong>
                 </span>
               </div>
             ) : (
@@ -1249,18 +1514,23 @@ export function PosTerminalPage() {
                 maxLength={120}
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
-                placeholder="ระบุชื่อลูกค้า Walk-in (ค่าเริ่มต้น: ลูกค้าทั่วไป)"
-                className="w-full text-xs text-slate-700 bg-transparent border-b border-slate-100 pb-1 focus:outline-none focus:border-blue-400"
+                placeholder="ชื่อลูกค้า (ค่าเริ่มต้น: ลูกค้าทั่วไป)"
+                className="w-full text-xs text-slate-700 bg-transparent border-b border-slate-200 pb-1.5 focus:outline-none focus:border-blue-600"
               />
             )}
           </div>
 
-          {/* Cart Items */}
-          <div className="divide-y divide-slate-100 max-h-[380px] overflow-y-auto">
+          {/* Cart Items List */}
+          <div className="divide-y divide-slate-100 max-h-[360px] overflow-y-auto bg-white">
             {cartLines.length === 0 && (
-              <div className="py-14 px-6 text-center text-xs text-slate-500 space-y-1">
-                <div className="font-medium text-slate-700">ยังไม่มีสินค้าในตะกร้า</div>
-                <div>สแกนบาร์โค้ดหรือคลิกเลือกสินค้าจากรายการด้านซ้าย</div>
+              <div className="py-12 px-6 text-center space-y-2">
+                <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
+                  <ShoppingCart className="w-6 h-6" />
+                </div>
+                <div className="text-sm font-semibold text-slate-700">ยังไม่มีสินค้าในตะกร้า</div>
+                <div className="text-xs text-slate-500">
+                  กดปุ่ม &ldquo;เพิ่มลงตะกร้า&rdquo; ที่สินค้าด้านซ้าย หรือสแกนบาร์โค้ดเพื่อเริ่มขาย
+                </div>
               </div>
             )}
 
@@ -1270,30 +1540,37 @@ export function PosTerminalPage() {
               if (!prod || !computedItem) return null;
 
               return (
-                <div key={line.lineKey} className="p-3.5 space-y-2">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <div className="text-xs sm:text-sm font-semibold text-slate-900 truncate">
+                <div key={line.lineKey} className="p-4 space-y-3">
+                  {/* Product Title & Remove Button */}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 space-y-0.5">
+                      <div className="text-sm font-semibold text-slate-900 leading-snug break-words">
                         {prod.name}
                       </div>
-                      <div className="text-[11px] font-mono text-slate-400">{prod.sku}</div>
+                      <div className="text-xs text-slate-500 tabular-nums">
+                        ราคาต่อหน่วย: {formatLak(computedItem.unitPriceLak)} / {computedItem.unitName}
+                      </div>
                     </div>
+
                     <button
                       type="button"
                       onClick={() => removeCartLine(line.lineKey)}
-                      className="p-1 text-slate-400 hover:text-red-600 cursor-pointer shrink-0"
+                      className="min-h-[34px] inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-red-600 hover:bg-red-50 border border-red-100 rounded-lg cursor-pointer shrink-0"
+                      title="ลบสินค้าออกจากตะกร้า"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
+                      <span>ลบสินค้า</span>
                     </button>
                   </div>
 
-                  <div className="grid grid-cols-12 gap-2 items-center text-xs">
-                    {/* Unit Switcher */}
+                  {/* Unit, Qty +/- and Line Subtotal */}
+                  <div className="grid grid-cols-12 gap-2.5 items-center">
                     <div className="col-span-4">
+                      <label className="block text-[10px] text-slate-500 mb-0.5">หน่วยสินค้า</label>
                       <select
                         value={line.unitId}
                         onChange={(e) => updateCartUnit(line.lineKey, e.target.value)}
-                        className="w-full px-2 py-1.5 text-xs border border-slate-200 rounded-md bg-white"
+                        className="w-full min-h-[40px] px-2 text-xs font-medium border border-slate-200 rounded-lg bg-slate-50 text-slate-800 focus:outline-none focus:border-blue-600"
                       >
                         {prod.units.map((u) => (
                           <option key={u.unitId} value={u.unitId}>
@@ -1303,144 +1580,235 @@ export function PosTerminalPage() {
                       </select>
                     </div>
 
-                    {/* Qty Control */}
-                    <div className="col-span-4 flex items-center border border-slate-200 rounded-md overflow-hidden">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          line.qty > 1
-                            ? updateCartQty(line.lineKey, line.qty - 1)
-                            : removeCartLine(line.lineKey)
-                        }
-                        className="px-2 py-1 bg-slate-50 hover:bg-slate-100 text-slate-700 font-semibold cursor-pointer"
-                      >
-                        -
-                      </button>
-                      <input
-                        type="number"
-                        min={1}
-                        value={line.qty}
-                        onChange={(e) => updateCartQty(line.lineKey, Number(e.target.value) || 1)}
-                        className="w-full text-center py-1 text-xs font-semibold tabular-nums focus:outline-none"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => updateCartQty(line.lineKey, line.qty + 1)}
-                        className="px-2 py-1 bg-slate-50 hover:bg-slate-100 text-slate-700 font-semibold cursor-pointer"
-                      >
-                        +
-                      </button>
+                    <div className="col-span-4">
+                      <label className="block text-[10px] text-slate-500 mb-0.5 text-center">
+                        เพิ่ม / ลดจำนวน
+                      </label>
+                      <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden bg-white min-h-[40px]">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            line.qty > 1
+                              ? updateCartQty(line.lineKey, line.qty - 1)
+                              : removeCartLine(line.lineKey)
+                          }
+                          className="w-9 min-h-[40px] flex items-center justify-center bg-slate-50 hover:bg-slate-100 text-slate-700 cursor-pointer"
+                          aria-label="ลดจำนวนสินค้า"
+                        >
+                          <Minus className="w-3.5 h-3.5" />
+                        </button>
+                        <input
+                          type="number"
+                          min={1}
+                          value={line.qty}
+                          onChange={(e) => updateCartQty(line.lineKey, Number(e.target.value) || 1)}
+                          className="w-full text-center text-sm font-bold text-slate-900 tabular-nums focus:outline-none"
+                          aria-label="จำนวนสินค้า"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => updateCartQty(line.lineKey, line.qty + 1)}
+                          className="w-9 min-h-[40px] flex items-center justify-center bg-slate-50 hover:bg-slate-100 text-slate-700 cursor-pointer"
+                          aria-label="เพิ่มจำนวนสินค้า"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
 
-                    {/* Line Total */}
-                    <div className="col-span-4 text-right font-bold text-slate-900 tabular-nums">
-                      {formatLak(computedItem.lineTotalLak)}
+                    <div className="col-span-4 text-right">
+                      <div className="text-[10px] text-slate-500 mb-0.5">รวมรายการ</div>
+                      <div className="text-sm sm:text-base font-bold text-slate-900 tabular-nums">
+                        {formatLak(computedItem.lineTotalLak)}
+                      </div>
                     </div>
                   </div>
 
-                  {/* Price & Line Discount */}
-                  <div className="grid grid-cols-2 gap-2 pt-0.5 text-[11px]">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-slate-500 shrink-0">ราคา:</span>
-                      {canEditPrice ? (
+                  {/* Optional Edit Price / Item Discount */}
+                  {(canEditPrice || line.discountLak > 0 || showDiscountOptions) && (
+                    <div className="grid grid-cols-2 gap-2 pt-1 text-xs">
+                      {canEditPrice && (
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-slate-500 shrink-0">แก้ราคา:</span>
+                          <input
+                            type="number"
+                            min={0}
+                            value={computedItem.unitPriceLak}
+                            onChange={(e) =>
+                              updateCartPrice(line.lineKey, Number(e.target.value) || 0)
+                            }
+                            className="w-full px-2 py-1 border border-slate-200 rounded-md text-right tabular-nums bg-slate-50 focus:bg-white"
+                          />
+                        </div>
+                      )}
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-slate-500 shrink-0">ลดรายการ:</span>
                         <input
                           type="number"
                           min={0}
-                          value={computedItem.unitPriceLak}
-                          onChange={(e) => updateCartPrice(line.lineKey, Number(e.target.value) || 0)}
-                          className="w-full px-2 py-1 border border-slate-200 rounded text-right tabular-nums"
+                          value={line.discountLak}
+                          onChange={(e) =>
+                            updateCartDiscount(line.lineKey, Number(e.target.value) || 0)
+                          }
+                          className="w-full px-2 py-1 border border-slate-200 rounded-md text-right tabular-nums bg-slate-50 focus:bg-white"
                         />
-                      ) : (
-                        <span className="font-medium text-slate-700 tabular-nums">
-                          {formatLak(computedItem.unitPriceLak)}
-                        </span>
-                      )}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-slate-500 shrink-0">ลดรายการ:</span>
-                      <input
-                        type="number"
-                        min={0}
-                        value={line.discountLak}
-                        onChange={(e) => updateCartDiscount(line.lineKey, Number(e.target.value) || 0)}
-                        className="w-full px-2 py-1 border border-slate-200 rounded text-right tabular-nums"
-                      />
-                    </div>
-                  </div>
+                  )}
                 </div>
               );
             })}
           </div>
 
-          {/* Totals & Checkout Footer */}
-          <div className="p-4 border-t border-slate-200 bg-slate-50/70 space-y-2.5">
-            <div className="flex justify-between text-xs text-slate-600 tabular-nums">
-              <span>รวมเป็นเงิน</span>
-              <span>{formatLak(billTotals.subtotalLak)}</span>
+          {/* SECTION 5: Checkout Summary & Primary CTA */}
+          <div className="p-4 sm:p-5 border-t border-slate-200 bg-slate-50 space-y-3.5">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-slate-900">5. สรุปยอดและชำระเงิน</h3>
+              <button
+                type="button"
+                onClick={() => setShowDiscountOptions((prev) => !prev)}
+                className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:underline cursor-pointer"
+              >
+                <span>{showDiscountOptions ? 'ซ่อนส่วนลด/โปรโมชั่น' : 'ใส่ส่วนลด / โปรโมชั่น'}</span>
+                {showDiscountOptions ? (
+                  <ChevronUp className="w-3.5 h-3.5" />
+                ) : (
+                  <ChevronDown className="w-3.5 h-3.5" />
+                )}
+              </button>
             </div>
 
-            {billTotals.itemDiscountTotalLak > 0 && (
-              <div className="flex justify-between text-xs text-slate-600 tabular-nums">
-                <span>ส่วนลดรายสินค้า</span>
-                <span>-{formatLak(billTotals.itemDiscountTotalLak)}</span>
+            {showDiscountOptions && (
+              <div className="p-3 bg-white border border-slate-200 rounded-xl space-y-2.5 text-xs">
+                {eligiblePromotions.length > 0 && (
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-slate-600 shrink-0">โปรโมชั่น:</span>
+                    <select
+                      value={selectedPromotionId}
+                      onChange={(e) => setSelectedPromotionId(e.target.value)}
+                      className="flex-1 min-h-[36px] px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs"
+                    >
+                      <option value="">ไม่ใช้โปรโมชั่น</option>
+                      {eligiblePromotions.map((p) => (
+                        <option key={p.promotionId} value={p.promotionId}>
+                          {p.code} · {p.name} (ขั้นต่ำ {formatLak(p.minSpendLak, false)})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-slate-600">ส่วนลดท้ายบิล (₭):</span>
+                  <input
+                    type="number"
+                    min={0}
+                    value={billDiscountLak}
+                    onChange={(e) =>
+                      setBillDiscountLak(Math.max(0, Math.round(Number(e.target.value) || 0)))
+                    }
+                    className="w-32 min-h-[36px] px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-lg text-right tabular-nums font-semibold"
+                  />
+                </div>
               </div>
             )}
 
-            {eligiblePromotions.length > 0 && (
-              <div className="flex items-center justify-between gap-3 text-xs text-slate-700">
-                <span className="shrink-0">โปรโมชั่น</span>
-                <select
-                  value={selectedPromotionId}
-                  onChange={(e) => setSelectedPromotionId(e.target.value)}
-                  className="flex-1 max-w-[220px] px-2 py-1 bg-white border border-slate-200 rounded-md text-xs"
-                >
-                  <option value="">ไม่ใช้โปรโมชั่น</option>
-                  {eligiblePromotions.map((p) => (
-                    <option key={p.promotionId} value={p.promotionId}>
-                      {p.code} · {p.name} (ขั้นต่ำ {formatLak(p.minSpendLak, false)})
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            {tierDiscountLak > 0 && (
-              <div className="flex justify-between text-xs text-blue-700 tabular-nums">
-                <span>ส่วนลดสมาชิก ({selectedMembershipTier?.name})</span>
-                <span>-{formatLak(tierDiscountLak)}</span>
-              </div>
-            )}
-
-            {promoDiscountLak > 0 && (
-              <div className="flex justify-between text-xs text-blue-700 tabular-nums">
-                <span>ส่วนลดโปรโมชั่น</span>
-                <span>-{formatLak(promoDiscountLak)}</span>
-              </div>
-            )}
-
-            <div className="flex items-center justify-between gap-3 text-xs text-slate-700">
-              <span>ส่วนลดเพิ่มเติมท้ายบิล (₭)</span>
-              <input
-                type="number"
-                min={0}
-                value={billDiscountLak}
-                onChange={(e) => setBillDiscountLak(Math.max(0, Math.round(Number(e.target.value) || 0)))}
-                className="w-28 px-2.5 py-1 bg-white border border-slate-200 rounded-md text-right tabular-nums font-medium"
-              />
-            </div>
-
-            {billTotals.taxRate > 0 && (
-              <div className="flex justify-between text-xs text-slate-600 tabular-nums">
-                <span>
-                  ภาษี ({billTotals.taxRate}%{settings?.taxSettings?.taxInclusive ? ' รวมในราคา' : ''})
+            {/* Financial Totals */}
+            <div className="space-y-1.5 text-xs sm:text-sm tabular-nums">
+              <div className="flex justify-between text-slate-600">
+                <span>ยอดรวมสินค้า ({totalCartUnits.toLocaleString('en-US')} ชิ้น)</span>
+                <span className="font-medium text-slate-800">
+                  {formatLak(billTotals.subtotalLak)}
                 </span>
-                <span>{formatLak(billTotals.taxAmountLak)}</span>
+              </div>
+
+              {totalCombinedDiscountLak > 0 && (
+                <div className="flex justify-between text-amber-600">
+                  <span>ส่วนลดรวม</span>
+                  <span className="font-semibold">-{formatLak(totalCombinedDiscountLak)}</span>
+                </div>
+              )}
+
+              {billTotals.taxRate > 0 && (
+                <div className="flex justify-between text-slate-600">
+                  <span>
+                    ภาษี ({billTotals.taxRate}%
+                    {settings?.taxSettings?.taxInclusive ? ' รวมในราคา' : ''})
+                  </span>
+                  <span>{formatLak(billTotals.taxAmountLak)}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Quick Payment Method Preview */}
+            {cartLines.length > 0 && (
+              <div className="p-3 bg-white border border-slate-200 rounded-xl space-y-2.5">
+                <div className="flex items-center justify-between text-xs text-slate-600">
+                  <span className="font-semibold text-slate-700">วิธีชำระเงิน</span>
+                  <span>
+                    {PAYMENT_METHOD_OPTIONS.find((m) => m.key === payMode)?.label ?? 'เงินสด'}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-5 gap-1">
+                  {PAYMENT_METHOD_OPTIONS.map((pm) => {
+                    const Icon = pm.icon;
+                    const active = payMode === pm.key;
+                    return (
+                      <button
+                        key={pm.key}
+                        type="button"
+                        onClick={() => setPayMode(pm.key)}
+                        className={`min-h-[42px] px-1 py-1.5 rounded-lg border text-[11px] font-medium flex flex-col items-center justify-center gap-0.5 cursor-pointer transition-colors ${
+                          active
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                        }`}
+                      >
+                        <Icon className="w-3.5 h-3.5 shrink-0" />
+                        <span className="truncate max-w-full">{pm.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {payMode === 'cash' && (
+                  <div className="grid grid-cols-2 gap-2 pt-1 items-center text-xs tabular-nums">
+                    <div>
+                      <label className="block text-[11px] text-slate-500 mb-0.5">
+                        จำนวนเงินที่ลูกค้าชำระ (₭)
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={cashTendered}
+                        onChange={(e) => setCashTendered(e.target.value)}
+                        className="w-full min-h-[38px] px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-lg text-right font-bold text-slate-900"
+                      />
+                    </div>
+                    <div className="text-right">
+                      <div className="text-[11px] text-slate-500 mb-0.5">เงินทอน</div>
+                      <div
+                        className={`text-base font-bold ${
+                          computedPaymentSummary.remaining > 0
+                            ? 'text-red-600'
+                            : 'text-green-600'
+                        }`}
+                      >
+                        {computedPaymentSummary.remaining > 0
+                          ? `ขาด ${formatLak(computedPaymentSummary.remaining)}`
+                          : formatLak(computedPaymentSummary.change)}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
+            {/* Net Total + Prominent Checkout CTA */}
             <div className="pt-2 border-t border-slate-200 flex items-baseline justify-between">
-              <span className="text-sm font-semibold text-slate-900">ยอดชำระสุทธิ</span>
-              <span className="text-2xl font-bold text-blue-700 tabular-nums">
+              <span className="text-sm sm:text-base font-bold text-slate-900">ยอดที่ต้องชำระ</span>
+              <span className="text-2xl sm:text-3xl font-bold text-blue-600 tabular-nums">
                 {formatLak(billTotals.grandTotalLak)}
               </span>
             </div>
@@ -1449,13 +1817,53 @@ export function PosTerminalPage() {
               type="button"
               disabled={!canCreateSale || cartLines.length === 0}
               onClick={openCheckoutModal}
-              className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-lg transition-colors cursor-pointer tabular-nums"
+              className="w-full min-h-[56px] px-5 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:text-slate-500 disabled:cursor-not-allowed text-white rounded-xl shadow-sm transition-colors cursor-pointer flex flex-col items-center justify-center"
             >
-              ชำระเงิน · {formatLak(billTotals.grandTotalLak)}
+              <span className="text-base font-bold tabular-nums">
+                ชำระเงิน · {formatLak(billTotals.grandTotalLak)}
+              </span>
+              <span className="text-[11px] font-normal text-blue-100">
+                {cartLines.length === 0
+                  ? 'กรุณาเพิ่มสินค้าลงตะกร้าก่อนชำระเงิน'
+                  : 'กดเพื่อตรวจสอบเงินทอน ยืนยันการขาย และพิมพ์ใบเสร็จ'}
+              </span>
             </button>
           </div>
         </div>
       </div>
+
+      {/* Mobile Compact Sticky Cart Bar (only on < lg screens, <= 15% height) */}
+      {cartLines.length > 0 && (
+        <div className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-slate-200 px-4 py-2.5 shadow-lg flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <div className="text-xs text-slate-500 tabular-nums">
+              ตะกร้า: {totalCartUnits} ชิ้น ({cartLines.length} รายการ)
+            </div>
+            <div className="text-base font-bold text-blue-600 tabular-nums truncate">
+              {formatLak(billTotals.grandTotalLak)}
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() =>
+                cartSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+              }
+              className="min-h-[42px] px-3.5 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg cursor-pointer"
+            >
+              ดูตะกร้า
+            </button>
+            <button
+              type="button"
+              disabled={!canCreateSale}
+              onClick={openCheckoutModal}
+              className="min-h-[42px] px-4 py-2 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg cursor-pointer"
+            >
+              ชำระเงิน
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Hold Bill Modal */}
       {holdModalOpen && (
@@ -1467,6 +1875,7 @@ export function PosTerminalPage() {
                 type="button"
                 onClick={() => setHoldModalOpen(false)}
                 className="p-1 text-slate-400 hover:text-slate-700 cursor-pointer"
+                aria-label="ปิด"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1483,7 +1892,7 @@ export function PosTerminalPage() {
                   value={holdLabel}
                   onChange={(e) => setHoldLabel(e.target.value)}
                   placeholder="เช่น ลูกค้าเสื้อน้ำเงิน / รอหยิบของเพิ่ม"
-                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg"
+                  className="w-full min-h-[42px] px-3 py-2 text-sm border border-slate-200 rounded-lg"
                 />
               </div>
               <div>
@@ -1494,21 +1903,21 @@ export function PosTerminalPage() {
                   value={billNotes}
                   onChange={(e) => setBillNotes(e.target.value)}
                   placeholder="หมายเหตุเพิ่มเติม (ถ้ามี)"
-                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg"
+                  className="w-full min-h-[42px] px-3 py-2 text-sm border border-slate-200 rounded-lg"
                 />
               </div>
               <div className="flex justify-end gap-2 pt-2">
                 <button
                   type="button"
                   onClick={() => setHoldModalOpen(false)}
-                  className="px-4 py-2 text-sm font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer"
+                  className="min-h-[42px] px-4 py-2 text-sm font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer"
                 >
                   ยกเลิก
                 </button>
                 <button
                   type="submit"
                   disabled={holdSaving}
-                  className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg cursor-pointer"
+                  className="min-h-[42px] px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg cursor-pointer"
                 >
                   {holdSaving ? 'กำลังพักบิล...' : 'ยืนยันพักบิล'}
                 </button>
@@ -1530,6 +1939,7 @@ export function PosTerminalPage() {
                 type="button"
                 onClick={() => setHeldListModalOpen(false)}
                 className="p-1 text-slate-400 hover:text-slate-700 cursor-pointer"
+                aria-label="ปิด"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1543,7 +1953,9 @@ export function PosTerminalPage() {
               {heldBills.map((held) => (
                 <div key={held.heldId} className="py-3 flex items-center justify-between gap-3">
                   <div className="min-w-0">
-                    <div className="text-sm font-semibold text-slate-900 truncate">{held.label}</div>
+                    <div className="text-sm font-semibold text-slate-900 truncate">
+                      {held.label}
+                    </div>
                     <div className="text-xs text-slate-500 tabular-nums">
                       {held.customerName} · {held.items.length} รายการ ·{' '}
                       {formatDateTimeVientiane(held.createdAt)}
@@ -1553,14 +1965,14 @@ export function PosTerminalPage() {
                     <button
                       type="button"
                       onClick={() => handleResumeHeldBill(held)}
-                      className="px-3 py-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-lg cursor-pointer"
+                      className="min-h-[38px] px-3 py-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-lg cursor-pointer"
                     >
                       เรียกคืน
                     </button>
                     <button
                       type="button"
                       onClick={() => handleDiscardHeldBill(held.heldId)}
-                      className="px-2.5 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 rounded-lg cursor-pointer"
+                      className="min-h-[38px] px-2.5 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 rounded-lg cursor-pointer"
                     >
                       ลบ
                     </button>
@@ -1572,80 +1984,91 @@ export function PosTerminalPage() {
         </div>
       )}
 
-      {/* Checkout Payment Modal */}
+      {/* Checkout Payment Confirmation Modal */}
       {checkoutOpen && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="w-full max-w-xl bg-white border border-slate-200 rounded-xl p-6">
+          <div className="w-full max-w-xl bg-white border border-slate-200 rounded-xl p-5 sm:p-6 my-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
               <div>
-                <h3 className="text-base font-semibold text-slate-900">รับชำระเงิน (Checkout)</h3>
+                <h3 className="text-base sm:text-lg font-bold text-slate-900">
+                  รับชำระเงินและยืนยันการขาย
+                </h3>
                 <p className="text-xs text-slate-500">
-                  ลูกค้า: {customerName || 'ลูกค้าทั่วไป'} · {billTotals.items.length} รายการ
+                  ลูกค้า: {customerName || 'ลูกค้าทั่วไป'} · {billTotals.items.length} รายการ (
+                  {totalCartUnits} ชิ้น)
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setCheckoutOpen(false)}
-                className="p-1 text-slate-400 hover:text-slate-700 cursor-pointer"
+                className="p-1.5 text-slate-400 hover:text-slate-700 cursor-pointer"
+                aria-label="ปิดหน้าต่างชำระเงิน"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {checkoutError && (
-              <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700">
+              <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-xs sm:text-sm text-red-700">
                 {checkoutError}
               </div>
             )}
 
             <form onSubmit={handleSubmitCheckout} className="space-y-4">
-              {/* Grand Total Display */}
-              <div className="p-4 rounded-xl bg-blue-50/70 border border-blue-200 flex items-center justify-between">
-                <span className="text-sm font-medium text-slate-700">ยอดที่ต้องชำระ</span>
-                <span className="text-2xl font-bold text-blue-700 tabular-nums">
-                  {formatLak(billTotals.grandTotalLak)}
-                </span>
+              {/* Totals Summary Box */}
+              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5 tabular-nums">
+                <div className="flex justify-between text-xs text-slate-600">
+                  <span>ยอดรวมสินค้า</span>
+                  <span>{formatLak(billTotals.subtotalLak)}</span>
+                </div>
+                {totalCombinedDiscountLak > 0 && (
+                  <div className="flex justify-between text-xs text-amber-600 font-medium">
+                    <span>ส่วนลด</span>
+                    <span>-{formatLak(totalCombinedDiscountLak)}</span>
+                  </div>
+                )}
+                <div className="pt-1.5 border-t border-slate-200 flex items-center justify-between">
+                  <span className="text-sm font-bold text-slate-900">ยอดที่ต้องชำระสุทธิ</span>
+                  <span className="text-2xl font-bold text-blue-600">
+                    {formatLak(billTotals.grandTotalLak)}
+                  </span>
+                </div>
               </div>
 
               {/* Payment Method Tabs */}
-              <div className="grid grid-cols-5 gap-1.5">
-                {(
-                  [
-                    { key: 'cash', label: 'เงินสด', icon: Banknote },
-                    { key: 'transfer', label: 'โอนเงิน', icon: Wallet },
-                    { key: 'qr', label: 'QR Pay', icon: QrCode },
-                    { key: 'credit', label: 'ขายเชื่อ', icon: CreditCard },
-                    { key: 'split', label: 'หลายช่องทาง', icon: Split },
-                  ] as const
-                ).map((pm) => {
-                  const Icon = pm.icon;
-                  return (
-                    <button
-                      key={pm.key}
-                      type="button"
-                      onClick={() => {
-                        setPayMode(pm.key);
-                        setCheckoutError(null);
-                      }}
-                      className={`p-2 rounded-lg border text-xs font-medium flex flex-col items-center gap-1 cursor-pointer transition-colors ${
-                        payMode === pm.key
-                          ? 'bg-blue-600 text-white border-blue-600'
-                          : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
-                      }`}
-                    >
-                      <Icon className="w-4 h-4" />
-                      <span>{pm.label}</span>
-                    </button>
-                  );
-                })}
+              <div className="space-y-1.5">
+                <div className="text-xs font-semibold text-slate-700">เลือกวิธีชำระเงิน</div>
+                <div className="grid grid-cols-5 gap-1.5">
+                  {PAYMENT_METHOD_OPTIONS.map((pm) => {
+                    const Icon = pm.icon;
+                    return (
+                      <button
+                        key={pm.key}
+                        type="button"
+                        onClick={() => {
+                          setPayMode(pm.key);
+                          setCheckoutError(null);
+                        }}
+                        className={`min-h-[54px] p-2 rounded-lg border text-xs font-semibold flex flex-col items-center justify-center gap-1 cursor-pointer transition-colors ${
+                          payMode === pm.key
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                        }`}
+                      >
+                        <Icon className="w-4 h-4" />
+                        <span>{pm.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               {/* Cash Input + Quick LAK Denominations */}
               {payMode === 'cash' && (
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1">
-                      จำนวนเงินสดที่รับมา (₭)
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      จำนวนเงินที่ลูกค้าชำระ (₭)
                     </label>
                     <input
                       type="number"
@@ -1653,14 +2076,14 @@ export function PosTerminalPage() {
                       required
                       value={cashTendered}
                       onChange={(e) => setCashTendered(e.target.value)}
-                      className="w-full px-3.5 py-2.5 text-lg font-bold border border-slate-200 rounded-lg text-right tabular-nums"
+                      className="w-full min-h-[48px] px-3.5 py-2.5 text-xl font-bold border border-slate-200 rounded-xl text-right tabular-nums focus:outline-none focus:border-blue-600"
                     />
                   </div>
                   <div className="flex flex-wrap gap-1.5">
                     <button
                       type="button"
                       onClick={() => setCashTendered(String(billTotals.grandTotalLak))}
-                      className="px-2.5 py-1.5 text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200 rounded-md cursor-pointer"
+                      className="min-h-[38px] px-3 py-1.5 text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200 rounded-lg cursor-pointer"
                     >
                       รับพอดี
                     </button>
@@ -1669,7 +2092,7 @@ export function PosTerminalPage() {
                         key={amt}
                         type="button"
                         onClick={() => setCashTendered(String(amt))}
-                        className="px-2.5 py-1.5 text-xs font-medium bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-md cursor-pointer tabular-nums"
+                        className="min-h-[38px] px-3 py-1.5 text-xs font-medium bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg cursor-pointer tabular-nums"
                       >
                         {amt.toLocaleString('en-US')}
                       </button>
@@ -1680,9 +2103,9 @@ export function PosTerminalPage() {
 
               {/* Single Transfer / QR / Credit Confirmation */}
               {(payMode === 'transfer' || payMode === 'qr' || payMode === 'credit') && (
-                <div className="p-3.5 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-600">
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs sm:text-sm text-slate-700">
                   {payMode === 'credit'
-                    ? `บันทึกยอดค้างชำระ (Credit Sale) จำนวน ${formatLak(billTotals.grandTotalLak)} ในนาม "${customerName || 'ลูกค้าทั่วไป'}"`
+                    ? `บันทึกยอดค้างชำระ (ขายเชื่อ) จำนวน ${formatLak(billTotals.grandTotalLak)} ในนาม "${customerName || 'ลูกค้าทั่วไป'}"`
                     : `รับชำระเต็มจำนวน ${formatLak(billTotals.grandTotalLak)} ผ่านช่องทาง ${payMode === 'transfer' ? 'โอนเงินผ่านธนาคาร' : 'QR Payment'}`}
                 </div>
               )}
@@ -1702,7 +2125,7 @@ export function PosTerminalPage() {
                           };
                           setSplitRows(next);
                         }}
-                        className="col-span-5 px-3 py-2 text-xs border border-slate-200 rounded-lg bg-white"
+                        className="col-span-5 min-h-[42px] px-3 py-2 text-xs border border-slate-200 rounded-lg bg-white"
                       >
                         <option value="cash">เงินสด</option>
                         <option value="transfer">โอนเงิน</option>
@@ -1721,13 +2144,14 @@ export function PosTerminalPage() {
                           };
                           setSplitRows(next);
                         }}
-                        className="col-span-6 px-3 py-2 text-sm border border-slate-200 rounded-lg text-right tabular-nums"
+                        className="col-span-6 min-h-[42px] px-3 py-2 text-sm border border-slate-200 rounded-lg text-right tabular-nums"
                       />
                       <button
                         type="button"
                         disabled={splitRows.length <= 1}
                         onClick={() => setSplitRows((prev) => prev.filter((_, i) => i !== idx))}
                         className="col-span-1 p-2 text-slate-400 hover:text-red-600 disabled:opacity-30 cursor-pointer"
+                        aria-label="ลบช่องทาง"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -1739,7 +2163,7 @@ export function PosTerminalPage() {
                       onClick={() =>
                         setSplitRows((prev) => [...prev, { method: 'qr', amountLak: 0 }])
                       }
-                      className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:underline cursor-pointer"
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:underline cursor-pointer"
                     >
                       <Plus className="w-3.5 h-3.5" />
                       เพิ่มช่องทางชำระเงิน
@@ -1751,7 +2175,7 @@ export function PosTerminalPage() {
               {/* Notes */}
               <div>
                 <label className="block text-xs font-medium text-slate-700 mb-1">
-                  หมายเหตุบิล (ถ้ามี)
+                  หมายเหตุบิล (ไม่บังคับ)
                 </label>
                 <input
                   type="text"
@@ -1759,30 +2183,36 @@ export function PosTerminalPage() {
                   value={billNotes}
                   onChange={(e) => setBillNotes(e.target.value)}
                   placeholder="เช่น เลขที่อ้างอิงสลิปโอนเงิน หรือข้อมูลจัดส่ง"
-                  className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg"
+                  className="w-full min-h-[40px] px-3 py-2 text-sm border border-slate-200 rounded-lg"
                 />
               </div>
 
-              {/* Change / Remaining Summary */}
-              <div className="p-3.5 rounded-lg bg-slate-50 border border-slate-200 grid grid-cols-2 gap-3 text-xs tabular-nums">
+              {/* Payment Received & Change Display */}
+              <div
+                className={`p-4 rounded-xl border grid grid-cols-2 gap-3 tabular-nums ${
+                  computedPaymentSummary.remaining > 0
+                    ? 'bg-red-50 border-red-200'
+                    : 'bg-green-50 border-green-200'
+                }`}
+              >
                 <div>
-                  <span className="text-slate-500">ยอดที่รับ/ตัดชำระ</span>
-                  <div className="text-base font-bold text-slate-900">
+                  <span className="text-xs text-slate-600">จำนวนเงินที่ลูกค้าชำระ</span>
+                  <div className="text-lg font-bold text-slate-900">
                     {formatLak(computedPaymentSummary.covered)}
                   </div>
                 </div>
                 <div className="text-right">
                   {computedPaymentSummary.remaining > 0 ? (
                     <>
-                      <span className="text-red-600 font-medium">ยังขาดอีก</span>
-                      <div className="text-base font-bold text-red-600">
+                      <span className="text-xs text-red-600 font-semibold">ยังขาดอีก</span>
+                      <div className="text-lg font-bold text-red-600">
                         {formatLak(computedPaymentSummary.remaining)}
                       </div>
                     </>
                   ) : (
                     <>
-                      <span className="text-green-700 font-medium">เงินทอน</span>
-                      <div className="text-base font-bold text-green-700">
+                      <span className="text-xs text-green-700 font-semibold">เงินทอน</span>
+                      <div className="text-xl font-bold text-green-600">
                         {formatLak(computedPaymentSummary.change)}
                       </div>
                     </>
@@ -1790,20 +2220,21 @@ export function PosTerminalPage() {
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2 pt-2">
+              <div className="flex flex-wrap justify-end gap-2.5 pt-2">
                 <button
                   type="button"
                   onClick={() => setCheckoutOpen(false)}
-                  className="px-4 py-2.5 text-sm font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer"
+                  className="min-h-[48px] px-4 py-2.5 text-sm font-medium text-slate-700 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer"
                 >
                   กลับไปแก้ไข
                 </button>
                 <button
                   type="submit"
                   disabled={checkoutSaving || computedPaymentSummary.remaining > 0}
-                  className="px-5 py-2.5 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-lg cursor-pointer"
+                  className="min-h-[48px] flex-1 sm:flex-none px-6 py-2.5 text-sm sm:text-base font-bold text-white bg-green-600 hover:bg-green-700 disabled:bg-slate-300 disabled:cursor-not-allowed rounded-xl cursor-pointer inline-flex items-center justify-center gap-2 transition-colors"
                 >
-                  {checkoutSaving ? 'กำลังบันทึกบิล...' : 'ยืนยันชำระเงิน & ออกใบเสร็จ'}
+                  <CheckCircle2 className="w-5 h-5" />
+                  <span>{checkoutSaving ? 'กำลังบันทึกการขาย...' : 'ยืนยันการขาย'}</span>
                 </button>
               </div>
             </form>
@@ -1838,7 +2269,7 @@ export function PosTerminalPage() {
         <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
           <div className="w-full max-w-md bg-white border border-slate-200 rounded-xl p-6 shadow-xl space-y-4">
             <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center shrink-0">
                 <AlertCircle className="w-5 h-5" />
               </div>
               <div className="space-y-1">
@@ -1861,17 +2292,17 @@ export function PosTerminalPage() {
                   setNotFoundPrompt(null);
                   searchInputRef.current?.focus();
                 }}
-                className="px-4 py-2 text-sm font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer"
+                className="min-h-[42px] px-4 py-2 text-sm font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer"
               >
                 ยกเลิก
               </button>
               <button
                 type="button"
                 onClick={() => openQuickAddProduct(notFoundPrompt.query)}
-                className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg cursor-pointer"
+                className="min-h-[42px] inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg cursor-pointer"
               >
                 <PackagePlus className="w-4 h-4" />
-                เพิ่มสินค้าใหม่
+                <span>เพิ่มสินค้าใหม่</span>
               </button>
             </div>
           </div>
@@ -1894,6 +2325,14 @@ export function PosTerminalPage() {
           setQuickAddOpen(false);
           searchInputRef.current?.focus();
         }}
+      />
+
+      {/* First-time POS Beginner Guide */}
+      <PosBeginnerGuideModal
+        open={guideOpen}
+        onStepChange={setActiveGuideSection}
+        onComplete={dismissBeginnerGuide}
+        onSkip={dismissBeginnerGuide}
       />
     </div>
   );

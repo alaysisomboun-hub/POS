@@ -258,22 +258,27 @@ export function ReceiptPrintModal({
         </div>
 
         {/* Actions */}
-        <div className="flex justify-end gap-2 mt-4 print:hidden">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer"
-          >
-            ปิดหน้าต่าง
-          </button>
-          <button
-            type="button"
-            onClick={() => window.print()}
-            className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg cursor-pointer"
-          >
-            <Printer className="w-4 h-4" />
-            พิมพ์ใบเสร็จ
-          </button>
+        <div className="mt-4 space-y-2.5 print:hidden">
+          <div className="text-xs text-slate-500 text-center">
+            กดปุ่ม &ldquo;พิมพ์ใบเสร็จ&rdquo; เพื่อพิมพ์ให้ลูกค้า หรือกด &ldquo;ปิดหน้าต่าง&rdquo; เพื่อเริ่มขายบิลถัดไป
+          </div>
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="min-h-[44px] px-4 py-2 text-sm font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer"
+            >
+              ปิดหน้าต่าง
+            </button>
+            <button
+              type="button"
+              onClick={() => window.print()}
+              className="min-h-[44px] inline-flex items-center gap-1.5 px-5 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg cursor-pointer"
+            >
+              <Printer className="w-4 h-4" />
+              <span>พิมพ์ใบเสร็จ</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
