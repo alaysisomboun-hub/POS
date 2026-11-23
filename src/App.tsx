@@ -9,6 +9,7 @@ import { ReportsPage } from './modules/reports/ReportsPage';
 import { AiAnalystPage } from './modules/analytics/AiAnalystPage';
 import { NotificationsPage } from './modules/notifications/NotificationsPage';
 import { PosTerminalPage } from './modules/pos/PosTerminalPage';
+import { QuickSalePage } from './modules/pos/QuickSalePage';
 import { SalesHistoryPage } from './modules/pos/SalesHistoryPage';
 import { CategoriesPage } from './modules/products/CategoriesPage';
 import { ProductsPage } from './modules/products/ProductsPage';
@@ -82,6 +83,12 @@ function MainRouter() {
         return (
           <RoleGuard moduleKey="pos" action="view">
             <PosTerminalPage />
+          </RoleGuard>
+        );
+      case 'quick_sale':
+        return (
+          <RoleGuard moduleKey="quick_sale" action="view">
+            <QuickSalePage />
           </RoleGuard>
         );
       case 'sales_history':

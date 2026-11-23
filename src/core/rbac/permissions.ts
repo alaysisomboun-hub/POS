@@ -11,6 +11,7 @@ export interface MenuItemConfig {
 export const MENU_ITEMS: MenuItemConfig[] = [
   // ຫຼັກຂອງລະບົບ POS (9 ເມນູຫຼັກ)
   { key: 'pos', label: 'ໜ້າຂາຍສິນຄ້າ', group: 'ເມນູຫຼັກ', phase: 4, description: 'ຂາຍຍ່ອຍ-ຂາຍສົ່ງ ສະແກນບາໂຄ້ດ ຊຳລະເງິນ ແລະ ພິມໃບບິນ' },
+  { key: 'quick_sale', label: 'ຂາຍດ່ວນ (Quick Sale)', group: 'ເມນູຫຼັກ', phase: 4, description: 'ຂາຍສິນຄ້າໄວດ້ວຍການສະແກນບາໂຄ້ດເທົ່ານັ້ນ' },
   { key: 'products', label: 'ສິນຄ້າ', group: 'ເມນູຫຼັກ', phase: 3, description: 'ຈັດການສິນຄ້າ SKU ບາໂຄ້ດ ລາຄາ ແລະ ໜ່ວຍຂາຍ' },
   { key: 'categories', label: 'ໝວດໝູ່ສິນຄ້າ', group: 'ເມນູຫຼັກ', phase: 3, description: 'ຈັດລະບຽບໝວດໝູ່ສິນຄ້າຫຼັກ ແລະ ໝວດໝູ່ຍ່ອຍ' },
   { key: 'inventory', label: 'ສະຕັອກສິນຄ້າ', group: 'ເມນູຫຼັກ', phase: 3, description: 'ຍອດຄົງເຫຼືອ ຮັບສິນຄ້າເຂົ້າ ເບີກອອກ ແລະ ກວດນັບສະຕັອກ' },
@@ -39,6 +40,7 @@ export const MENU_ITEMS: MenuItemConfig[] = [
 
 export const PRIMARY_SIDEBAR_KEYS: ModuleKey[] = [
   'pos',
+  'quick_sale',
   'products',
   'categories',
   'inventory',
@@ -95,6 +97,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, PermissionsMap> = {
   branch_manager: {
     dashboard: ['view', 'export'],
     pos: ['view', 'create', 'edit', 'approve'],
+    quick_sale: ['view', 'create', 'edit', 'approve'],
     sales_history: ['view', 'edit', 'approve', 'export'],
     products: ['view', 'create', 'edit', 'delete', 'export'],
     categories: ['view', 'create', 'edit', 'delete'],
@@ -116,6 +119,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, PermissionsMap> = {
   },
   cashier: {
     pos: ['view', 'create'],
+    quick_sale: ['view', 'create'],
     sales_history: ['view'],
     products: ['view'],
     categories: ['view'],

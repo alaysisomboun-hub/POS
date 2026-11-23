@@ -21,6 +21,7 @@ export type PermissionAction =
 export type ModuleKey =
   | 'dashboard'
   | 'pos'
+  | 'quick_sale'
   | 'sales_history'
   | 'products'
   | 'categories'

@@ -25,6 +25,7 @@ import {
   UserCog,
   Wallet,
   X,
+  Zap,
 } from 'lucide-react';
 import { useFirebase } from '../../core/firebase/FirebaseProvider';
 import { MENU_ITEMS, ROLE_LABELS, getVisiblePrimaryMenuItems } from '../../core/rbac/permissions';
@@ -33,6 +34,7 @@ import type { ModuleKey } from '../../core/firebase/types';
 const MODULE_ICONS: Record<ModuleKey, React.ComponentType<{ className?: string }>> = {
   dashboard: LayoutDashboard,
   pos: ShoppingCart,
+  quick_sale: Zap,
   sales_history: Receipt,
   products: Package,
   categories: FolderTree,
