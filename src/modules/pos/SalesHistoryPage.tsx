@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   collection,
   limit,
@@ -82,6 +82,8 @@ export function SalesHistoryPage() {
   const [refundMethod, setRefundMethod] = useState<SaleReturn['refundMethod']>('cash');
   const [returnReason, setReturnReason] = useState('');
   const [returnSaving, setReturnSaving] = useState(false);
+  const voidSavingRef = useRef(false);
+  const returnSavingRef = useRef(false);
 
   const canApproveOrEdit =
     hasPermission(userProfile, 'sales_history', 'approve') ||
@@ -227,8 +229,9 @@ export function SalesHistoryPage() {
 
   const handleConfirmVoid = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!userProfile || !voidTarget) return;
+    if (!userProfile || !voidTarget || voidSavingRef.current) return;
 
+    voidSavingRef.current = true;
     setVoidSaving(true);
     try {
       await executeVoidSale({
@@ -251,13 +254,14 @@ export function SalesHistoryPage() {
         text: err instanceof Error ? err.message : 'ບໍ່ສາມາດຍົກເລີກບິນຂາຍໄດ້',
       });
     } finally {
+      voidSavingRef.current = false;
       setVoidSaving(false);
     }
   };
 
   const handleConfirmReturn = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!userProfile || !returnTarget) return;
+    if (!userProfile || !returnTarget || returnSavingRef.current) return;
 
     const lines = returnTarget.items.map((_, idx) => ({
       saleItemIndex: idx,
@@ -265,6 +269,7 @@ export function SalesHistoryPage() {
       restock: returnRestock[idx] ?? true,
     }));
 
+    returnSavingRef.current = true;
     setReturnSaving(true);
     try {
       const createdRet = await executeSaleReturn({
@@ -289,6 +294,7 @@ export function SalesHistoryPage() {
         text: err instanceof Error ? err.message : 'ບໍ່ສາມາດບັນທຶກການຄືນສິນຄ້າໄດ້',
       });
     } finally {
+      returnSavingRef.current = false;
       setReturnSaving(false);
     }
   };

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   collection,
   limit,
@@ -35,6 +35,7 @@ export function StockInPage() {
   const [reason, setReason] = useState('');
 
   const [saving, setSaving] = useState(false);
+  const savingRef = useRef(false);
   const [notice, setNotice] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
 
   const canCreate = hasPermission(userProfile, 'stock_in', 'create');
@@ -155,7 +156,7 @@ export function StockInPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!userProfile || !selectedProduct || !selectedUnit || !canCreate) return;
+    if (!userProfile || !selectedProduct || !selectedUnit || !canCreate || savingRef.current) return;
 
     if (selectedProduct.trackExpiry && !expiryDate.trim()) {
       setNotice({
@@ -165,6 +166,7 @@ export function StockInPage() {
       return;
     }
 
+    savingRef.current = true;
     setSaving(true);
     setNotice(null);
 
@@ -200,6 +202,7 @@ export function StockInPage() {
         text: err instanceof Error ? err.message : 'ບໍ່ສາມາດຮັບສິນຄ້າເຂົ້າສາງໄດ້',
       });
     } finally {
+      savingRef.current = false;
       setSaving(false);
     }
   };
@@ -208,9 +211,9 @@ export function StockInPage() {
     <div className="space-y-6">
       <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-5">
         <div>
-          <h2 className="text-base font-semibold text-slate-900">ຮັບສິນຄ້າເຂົ້າສາງ ແລະ ບັນທຶກລ໋ອດ</h2>
+          <h2 className="text-base font-semibold text-slate-900">ຮັບສິນຄ້າເຂົ້າສາງ</h2>
           <p className="text-xs text-slate-500">
-            ຮອງຮັບການຮັບເຂົ້າຕາມໜ່ວຍໃຫຍ່ (ແພັກ/ລັງ) ແປງເປັນໜ່ວຍພື້ນຖານ ຄິດໄລ່ຕົ້ນທຶນ WAC ແລະ ບັນທຶກວັນໝົດອາຍຸອັດຕະໂນມັດ
+            ຮອງຮັບການຮັບເຂົ້າຕາມໜ່ວຍໃຫຍ່ (ແພັກ/ລັງ) ຄິດໄລ່ຕົ້ນທຶນ WAC ແລະ ອັບເດດສະຕັອກທັນທີ
           </p>
         </div>
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   collection,
   doc,
@@ -8,7 +8,7 @@ import {
   where,
   writeBatch,
 } from 'firebase/firestore';
-import { Edit3, FolderPlus, FolderTree, Search, X } from 'lucide-react';
+import { CheckCircle2, Edit3, FolderPlus, FolderTree, RotateCcw, Search, Trash2, X } from 'lucide-react';
 import { db } from '../../core/firebase/config';
 import { OperationType, handleFirestoreError } from '../../core/firebase/errorHandler';
 import { useFirebase } from '../../core/firebase/FirebaseProvider';
@@ -33,10 +33,15 @@ export function CategoriesPage() {
   const [sortOrder, setSortOrder] = useState('10');
   const [status, setStatus] = useState<'active' | 'inactive'>('active');
   const [saving, setSaving] = useState(false);
+  const savingRef = useRef(false);
+  const [deleteTarget, setDeleteTarget] = useState<Category | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [noticeMsg, setNoticeMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const canCreate = hasPermission(userProfile, 'categories', 'create');
   const canEdit = hasPermission(userProfile, 'categories', 'edit');
+  const canDelete = hasPermission(userProfile, 'categories', 'delete') || canEdit;
 
   useEffect(() => {
     if (!userProfile) return;
@@ -159,7 +164,7 @@ export function CategoriesPage() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!userProfile) return;
+    if (!userProfile || savingRef.current) return;
 
     const cleanName = name.trim();
     if (!cleanName) {
@@ -184,6 +189,7 @@ export function CategoriesPage() {
       return;
     }
 
+    savingRef.current = true;
     setSaving(true);
     setErrorMsg(null);
 
@@ -245,12 +251,60 @@ export function CategoriesPage() {
         setErrorMsg(wrapped instanceof Error ? wrapped.message : 'ບໍ່ສາມາດບັນທຶກໝວດໝູ່ໄດ້');
       }
     } finally {
+      savingRef.current = false;
       setSaving(false);
+    }
+  };
+
+  const handleToggleArchiveCategory = async (cat: Category, nextStatus: 'active' | 'inactive') => {
+    if (!userProfile || deleting) return;
+    setDeleting(true);
+    try {
+      const batch = writeBatch(db);
+      batch.update(doc(db, 'categories', cat.categoryId), {
+        status: nextStatus,
+        updatedAt: serverTimestamp(),
+      });
+      appendAuditLogToBatch(batch, {
+        user: userProfile,
+        branchId: activeBranchId,
+        action: nextStatus === 'inactive' ? 'DELETE_CATEGORY' : 'RESTORE_CATEGORY',
+        entityType: 'categories',
+        entityId: cat.categoryId,
+        before: { status: cat.status, name: cat.name },
+        after: { status: nextStatus, name: cat.name },
+      });
+      await batch.commit();
+      setDeleteTarget(null);
+      setNoticeMsg(
+        nextStatus === 'inactive'
+          ? `ປິດໃຊ້ງານ / ລຶບໝວດໝູ່ "${cat.name}" ອອກຈາກໜ້າຂາຍຮຽບຮ້ອຍແລ້ວ`
+          : `ເປີດໃຊ້ງານໝວດໝູ່ "${cat.name}" ຄືນສຳເລັດແລ້ວ`,
+      );
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : 'ບໍ່ສາມາດປັບປຸງສະຖານະໝວດໝູ່ໄດ້');
+    } finally {
+      setDeleting(false);
     }
   };
 
   return (
     <div className="space-y-5">
+      {noticeMsg && (
+        <div className="p-3 rounded-xl bg-green-50 border border-green-200 text-xs sm:text-sm text-green-800 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 shrink-0 text-green-600" />
+            <span>{noticeMsg}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setNoticeMsg(null)}
+            className="text-green-700 hover:text-green-900 cursor-pointer"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
       {/* Toolbar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
@@ -380,6 +434,26 @@ export function CategoriesPage() {
                           <Edit3 className="w-4 h-4" />
                         </button>
                       )}
+                      {canDelete && cat.status === 'active' && (
+                        <button
+                          type="button"
+                          onClick={() => setDeleteTarget(cat)}
+                          className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md cursor-pointer"
+                          title="ລຶບ / ປິດໃຊ້ງານໝວດໝູ່"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                      {canDelete && cat.status === 'inactive' && (
+                        <button
+                          type="button"
+                          onClick={() => void handleToggleArchiveCategory(cat, 'active')}
+                          className="p-1.5 text-slate-500 hover:text-green-600 hover:bg-green-50 rounded-md cursor-pointer"
+                          title="ເປີດໃຊ້ງານຄືນ"
+                        >
+                          <RotateCcw className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -431,9 +505,27 @@ export function CategoriesPage() {
                   <button
                     type="button"
                     onClick={() => openEditModal(cat)}
-                    className="px-2.5 py-1 text-xs font-medium text-slate-700 border border-slate-200 rounded-md"
+                    className="px-2.5 py-1 text-xs font-medium text-slate-700 border border-slate-200 rounded-md cursor-pointer"
                   >
                     ແກ້ໄຂ
+                  </button>
+                )}
+                {canDelete && cat.status === 'active' && (
+                  <button
+                    type="button"
+                    onClick={() => setDeleteTarget(cat)}
+                    className="px-2.5 py-1 text-xs font-medium text-red-600 border border-red-200 rounded-md cursor-pointer"
+                  >
+                    ລຶບ
+                  </button>
+                )}
+                {canDelete && cat.status === 'inactive' && (
+                  <button
+                    type="button"
+                    onClick={() => void handleToggleArchiveCategory(cat, 'active')}
+                    className="px-2.5 py-1 text-xs font-medium text-green-700 border border-green-200 rounded-md cursor-pointer"
+                  >
+                    ເປີດໃຊ້ງານ
                   </button>
                 )}
               </div>
@@ -556,6 +648,45 @@ export function CategoriesPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white border border-slate-200 rounded-xl p-6 space-y-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-base font-semibold text-slate-900">ຢືນຢັນການລຶບໝວດໝູ່</h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  ຕ້ອງການລຶບ / ປິດໃຊ້ງານໝວດໝູ່ &ldquo;{deleteTarget.name}&rdquo; ຫຼືບໍ່? ສິນຄ້າທີ່ເຄີຍຢູ່ໃນໝວດໝູ່ນີ້ຈະບໍ່ສູນຫາຍ
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDeleteTarget(null)}
+                className="p-1 text-slate-400 hover:text-slate-700 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setDeleteTarget(null)}
+                className="px-4 py-2 text-sm font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer"
+              >
+                ຍົກເລີກ
+              </button>
+              <button
+                type="button"
+                disabled={deleting}
+                onClick={() => void handleToggleArchiveCategory(deleteTarget, 'inactive')}
+                className="px-4 py-2 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 disabled:opacity-60 rounded-lg cursor-pointer"
+              >
+                {deleting ? 'ກຳລັງດຳເນີນການ...' : 'ຢືນຢັນລຶບ'}
+              </button>
+            </div>
           </div>
         </div>
       )}

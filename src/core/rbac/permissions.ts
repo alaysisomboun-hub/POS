@@ -9,42 +9,44 @@ export interface MenuItemConfig {
 }
 
 export const MENU_ITEMS: MenuItemConfig[] = [
-  // ພາບລວມ ແລະ ການວິເຄາະ
-  { key: 'dashboard', label: 'ໜ້າຫຼັກ (Dashboard)', group: 'ພາບລວມ ແລະ ການວິເຄາະ', phase: 9, description: 'ສະຫຼຸບຍອດຂາຍ ຕົ້ນທຶນ ກຳໄລ ສະຕັອກ ແລະ ກຣາຟແບບ Real-time' },
-  { key: 'reports', label: 'ລາຍງານ', group: 'ພາບລວມ ແລະ ການວິເຄາະ', phase: 9, description: 'ລາຍງານຍອດຂາຍ ສິນຄ້າ ການເງິນ ບັນຊີ ແລະ ສົ່ງອອກ PDF/Excel/CSV' },
-  { key: 'ai_analyst', label: 'AI ວິເຄາະທຸລະກິດ', group: 'ພາບລວມ ແລະ ການວິເຄາະ', phase: 10, description: 'ວິເຄາະຍອດຂາຍ ກຳໄລ ຄາດການສະຕັອກ ແລະ ຄວາມສ່ຽງດ້ວຍ Gemini AI' },
-  { key: 'notifications', label: 'ການແຈ້ງເຕືອນ', group: 'ພາບລວມ ແລະ ການວິເຄາະ', phase: 10, description: 'ແຈ້ງເຕືອນສິນຄ້າໃກ້ໝົດ ໝົດອາຍຸ ໜີ້ກາຍກຳນົດ ແລະ ຄວາມຜິດປົກກະຕິ' },
+  // ຫຼັກຂອງລະບົບ POS (9 ເມນູຫຼັກ)
+  { key: 'pos', label: 'ໜ້າຂາຍສິນຄ້າ', group: 'ເມນູຫຼັກ', phase: 4, description: 'ຂາຍຍ່ອຍ-ຂາຍສົ່ງ ສະແກນບາໂຄ້ດ ຊຳລະເງິນ ແລະ ພິມໃບບິນ' },
+  { key: 'products', label: 'ສິນຄ້າ', group: 'ເມນູຫຼັກ', phase: 3, description: 'ຈັດການສິນຄ້າ SKU ບາໂຄ້ດ ລາຄາ ແລະ ໜ່ວຍຂາຍ' },
+  { key: 'categories', label: 'ໝວດໝູ່ສິນຄ້າ', group: 'ເມນູຫຼັກ', phase: 3, description: 'ຈັດລະບຽບໝວດໝູ່ສິນຄ້າຫຼັກ ແລະ ໝວດໝູ່ຍ່ອຍ' },
+  { key: 'inventory', label: 'ສະຕັອກສິນຄ້າ', group: 'ເມນູຫຼັກ', phase: 3, description: 'ຍອດຄົງເຫຼືອ ຮັບສິນຄ້າເຂົ້າ ເບີກອອກ ແລະ ກວດນັບສະຕັອກ' },
+  { key: 'sales_history', label: 'ປະຫວັດການຂາຍ', group: 'ເມນູຫຼັກ', phase: 4, description: 'ກວດສອບບິນຂາຍ ພິມໃບບິນຄືນ ຄືນສິນຄ້າ ແລະ ຍົກເລີກບິນ' },
+  { key: 'income', label: 'ລາຍຮັບ ແລະ ລາຍຈ່າຍ', group: 'ເມນູຫຼັກ', phase: 8, description: 'ສະຫຼຸບລາຍຮັບ ລາຍຈ່າຍ ແລະ ຍອດຄົງເຫຼືອສຸດທິຂອງຮ້ານ' },
+  { key: 'reports', label: 'ລາຍງານ', group: 'ເມນູຫຼັກ', phase: 9, description: 'ລາຍງານຍອດຂາຍ ສະຕັອກຄົງເຫຼືອ ການເງິນ ແລະ ສົ່ງອອກ CSV' },
+  { key: 'staff', label: 'ພະນັກງານ', group: 'ເມນູຫຼັກ', phase: 2, description: 'ຈັດການພະນັກງານ ບົດບາດ ແລະ ສິດການໃຊ້ງານ' },
+  { key: 'settings', label: 'ຕັ້ງຄ່າຮ້ານຄ້າ', group: 'ເມນູຫຼັກ', phase: 2, description: 'ຕັ້ງຄ່າຮ້ານຄ້າ ໃບບິນ ພາສີ ແລະ ສຳຮອງຂໍ້ມູນ' },
 
-  // ໜ້າຂາຍສິນຄ້າ POS
-  { key: 'pos', label: 'ໜ້າຂາຍສິນຄ້າ (POS)', group: 'ຂາຍໜ້າຮ້ານ POS', phase: 4, description: 'ຂາຍຍ່ອຍ-ຂາຍສົ່ງ ສະແກນບາໂຄດ ຊຳລະຫຼາຍຊ່ອງທາງ ແລະ ພິມໃບບິນ' },
-  { key: 'sales_history', label: 'ປະຫວັດການຂາຍ', group: 'ຂາຍໜ້າຮ້ານ POS', phase: 4, description: 'ກວດສອບບິນຂາຍ ຄືນສິນຄ້າ ແລະ ຍົກເລີກບິນຕາມສິດ' },
+  // ໂມດູນເສີມ (ຮັກສາໄວ້ເພື່ອຄວາມເຂົ້າກັນໄດ້ຂອງສິດເດີມ)
+  { key: 'dashboard', label: 'ພາບລວມ (Dashboard)', group: 'ໂມດູນເສີມ', phase: 9, description: 'ສະຫຼຸບຍອດຂາຍ ຕົ້ນທຶນ ແລະ ກຳໄລ' },
+  { key: 'stock_in', label: 'ຮັບສິນຄ້າເຂົ້າ', group: 'ໂມດູນເສີມ', phase: 3, description: 'ຮັບສິນຄ້າເຂົ້າສາງ ແລະ ບັນທຶກລັອດ' },
+  { key: 'stock_out', label: 'ເບີກສິນຄ້າອອກ', group: 'ໂມດູນເສີມ', phase: 3, description: 'ເບີກສິນຄ້າ ສິນຄ້າເສຍຫາຍ ແລະ ໝົດອາຍຸ' },
+  { key: 'expenses', label: 'ລາຍຈ່າຍ', group: 'ໂມດູນເສີມ', phase: 8, description: 'ບັນທຶກຄ່າໃຊ້ຈ່າຍດຳເນີນງານຂອງຮ້ານ' },
+  { key: 'purchasing', label: 'ຈັດຊື້ສິນຄ້າ', group: 'ໂມດູນເສີມ', phase: 6, description: 'ໃບສັ່ງຊື້ (PO)' },
+  { key: 'suppliers', label: 'ຜູ້ສະໜອງ', group: 'ໂມດູນເສີມ', phase: 6, description: 'ຂໍ້ມູນຄູ່ຄ້າ' },
+  { key: 'customers', label: 'ລູກຄ້າ', group: 'ໂມດູນເສີມ', phase: 7, description: 'ຖານຂໍ້ມູນລູກຄ້າ' },
+  { key: 'memberships_promotions', label: 'ສະມາຊິກ ແລະ ໂປຣໂມຊັ່ນ', group: 'ໂມດູນເສີມ', phase: 5, description: 'ລະດັບສະມາຊິກ ແລະ ໂປຣໂມຊັ່ນ' },
+  { key: 'accounts_receivable', label: 'ລູກໜີ້', group: 'ໂມດູນເສີມ', phase: 7, description: 'ຕິດຕາມໜີ້ລູກຄ້າ' },
+  { key: 'accounts_payable', label: 'ເຈົ້າໜີ້', group: 'ໂມດູນເສີມ', phase: 7, description: 'ຕິດຕາມຍອດຄ້າງຈ່າຍ' },
+  { key: 'accounting', label: 'ບັນຊີ', group: 'ໂມດູນເສີມ', phase: 8, description: 'ປຶ້ມລາຍວັນ ແລະ ຜັງບັນຊີ' },
+  { key: 'ai_analyst', label: 'AI ວິເຄາະທຸລະກິດ', group: 'ໂມດູນເສີມ', phase: 10, description: 'ວິເຄາະຂໍ້ມູນດ້ວຍ AI' },
+  { key: 'notifications', label: 'ການແຈ້ງເຕືອນ', group: 'ໂມດູນເສີມ', phase: 10, description: 'ແຈ້ງເຕືອນສິນຄ້າໃກ້ໝົດ' },
+  { key: 'backup', label: 'ສຳຮອງຂໍ້ມູນ', group: 'ໂມດູນເສີມ', phase: 10, description: 'ສຳຮອງ ແລະ ກູ້ຄືນຂໍ້ມູນ' },
+];
 
-  // ສິນຄ້າ ແລະ ສາງສິນຄ້າ
-  { key: 'products', label: 'ຈັດການສິນຄ້າ', group: 'ສິນຄ້າ ແລະ ສາງສິນຄ້າ', phase: 3, description: 'ຈັດການ SKU ບາໂຄດ ຫຼາຍໜ່ວຍ ລາຄາຫຼາຍລະດັບ ແລະ ພິມສະຫຼາກ' },
-  { key: 'categories', label: 'ໝວດໝູ່ສິນຄ້າ', group: 'ສິນຄ້າ ແລະ ສາງສິນຄ້າ', phase: 3, description: 'ຈັດໂຄງສ້າງໝວດໝູ່ສິນຄ້າຫຼັກ ແລະ ໝວດໝູ່ຍ່ອຍ' },
-  { key: 'inventory', label: 'ສາງສິນຄ້າ', group: 'ສິນຄ້າ ແລະ ສາງສິນຄ້າ', phase: 3, description: 'ຍອດຄົງເຫຼືອ ລັອດ/ວັນໝົດອາຍຸ ກວດນັບ ແລະ Stock Ledger' },
-  { key: 'stock_in', label: 'ຮັບສິນຄ້າເຂົ້າ', group: 'ສິນຄ້າ ແລະ ສາງສິນຄ້າ', phase: 3, description: 'ຮັບສິນຄ້າເຂົ້າສາງ ແລະ ບັນທຶກລັອດພ້ອມວັນໝົດອາຍຸ' },
-  { key: 'stock_out', label: 'ເບີກສິນຄ້າອອກ', group: 'ສິນຄ້າ ແລະ ສາງສິນຄ້າ', phase: 3, description: 'ເບີກສິນຄ້າ ສິນຄ້າເສຍຫາຍ ໝົດອາຍຸ ແລະ ສູນຫາຍ' },
-
-  // ຈັດຊື້ ແລະ ຜູ້ສະໜອງ
-  { key: 'purchasing', label: 'ຈັດຊື້ສິນຄ້າ', group: 'ຈັດຊື້ ແລະ ຜູ້ສະໜອງ', phase: 6, description: 'ໃບສັ່ງຊື້ (PO) ຄຳນວນສ່ວນຫຼຸດ ຄ່າຂົນສົ່ງ ພາສີ ແລະ ຕົ້ນທຶນ WAC' },
-  { key: 'suppliers', label: 'ຜູ້ສະໜອງ (Suppliers)', group: 'ຈັດຊື້ ແລະ ຜູ້ສະໜອງ', phase: 6, description: 'ຂໍ້ມູນຄູ່ຄ້າ ເງື່ອນໄຂຊຳລະເງິນ ແລະ ຍອດຄ້າງຈ່າຍ' },
-
-  // ລູກຄ້າ ແລະ ໂປຣໂມຊັ່ນ
-  { key: 'customers', label: 'ລູກຄ້າ', group: 'ລູກຄ້າ ແລະ ໂປຣໂມຊັ່ນ', phase: 7, description: 'ຖານຂໍ້ມູນລູກຄ້າ ວົງເງິນເຄຣດິດ ປະຫວັດການຊື້ ແລະ ຄະແນນສະສົມ' },
-  { key: 'memberships_promotions', label: 'ສະມາຊິກ ແລະ ໂປຣໂມຊັ່ນ', group: 'ລູກຄ້າ ແລະ ໂປຣໂມຊັ່ນ', phase: 5, description: 'ລະດັບສະມາຊິກ ລາຄາພິເສດ ແລະ ໂປຣໂມຊັ່ນຕາມເງື່ອນໄຂ' },
-
-  // ການເງິນ ແລະ ບັນຊີ
-  { key: 'accounts_receivable', label: 'ລູກໜີ້', group: 'ການເງິນ ແລະ ບັນຊີ', phase: 7, description: 'ຕິດຕາມໜີ້ລູກຄ້າ ຮັບຊຳລະບາງສ່ວນ/ເຕັມຈຳນວນ ແລະ ແຈ້ງເຕືອນກາຍກຳນົດ' },
-  { key: 'accounts_payable', label: 'ເຈົ້າໜີ້', group: 'ການເງິນ ແລະ ບັນຊີ', phase: 7, description: 'ຕິດຕາມຍອດຄ້າງຈ່າຍຜູ້ສະໜອງ ແລະ ບັນທຶກຊຳລະໜີ້' },
-  { key: 'income', label: 'ລາຍຮັບ', group: 'ການເງິນ ແລະ ບັນຊີ', phase: 8, description: 'ລາຍຮັບຈາກການຂາຍ ຊຳລະໜີ້ ແລະ ລາຍຮັບອື່ນໆ' },
-  { key: 'expenses', label: 'ລາຍຈ່າຍ', group: 'ການເງິນ ແລະ ບັນຊີ', phase: 8, description: 'ບັນທຶກຄ່າໃຊ້ຈ່າຍດຳເນີນງານ 7 ໝວດໝູ່ຂອງຮ້ານ' },
-  { key: 'accounting', label: 'ບັນຊີ ແລະ ການເງິນ', group: 'ການເງິນ ແລະ ບັນຊີ', phase: 8, description: 'ຜັງບັນຊີ ປຶ້ມລາຍວັນ ແຍກປະເພດ ໃບດຸ່ນດ່ຽງ ແລະ ໃບສະຫຼຸບກຳໄລຂາດທຶນ' },
-
-  // ອົງກອນ ແລະ ລະບົບ
-  { key: 'staff', label: 'ພະນັກງານ', group: 'ອົງກອນ ແລະ ລະບົບ', phase: 2, description: 'ຈັດການພະນັກງານ ບົດບາດ 7 ລະດັບ ກຳນົດສິດ ແລະ ປະຫວັດການໃຊ້ງານ' },
-  { key: 'backup', label: 'ສຳຮອງຂໍ້ມູນ', group: 'ອົງກອນ ແລະ ລະບົບ', phase: 10, description: 'ສຳຮອງ ກວດສອບຄວາມສົມບູນ ກູ້ຄືນ ແລະ ຣີເຊັດຂໍ້ມູນຢ່າງປອດໄພ' },
-  { key: 'settings', label: 'ຕັ້ງຄ່າລະບົບ', group: 'ອົງກອນ ແລະ ລະບົບ', phase: 2, description: 'ຕັ້ງຄ່າຮ້ານຄ້າ ສະກຸນເງິນ LAK ພາສີ ແລະ ຮູບແບບໃບບິນ' },
+export const PRIMARY_SIDEBAR_KEYS: ModuleKey[] = [
+  'pos',
+  'products',
+  'categories',
+  'inventory',
+  'sales_history',
+  'income',
+  'reports',
+  'staff',
+  'settings',
 ];
 
 export const ROLE_LABELS: Record<UserRole, string> = {
@@ -94,8 +96,8 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, PermissionsMap> = {
     dashboard: ['view', 'export'],
     pos: ['view', 'create', 'edit', 'approve'],
     sales_history: ['view', 'edit', 'approve', 'export'],
-    products: ['view', 'create', 'edit', 'export'],
-    categories: ['view', 'create', 'edit'],
+    products: ['view', 'create', 'edit', 'delete', 'export'],
+    categories: ['view', 'create', 'edit', 'delete'],
     inventory: ['view', 'create', 'edit', 'approve', 'export'],
     stock_in: ['view', 'create', 'approve'],
     stock_out: ['view', 'create', 'approve'],
@@ -105,7 +107,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, PermissionsMap> = {
     memberships_promotions: ['view', 'create', 'edit'],
     accounts_receivable: ['view', 'create', 'approve'],
     accounts_payable: ['view'],
-    income: ['view'],
+    income: ['view', 'create'],
     expenses: ['view', 'create'],
     reports: ['view', 'export'],
     staff: ['view', 'create', 'edit'],
@@ -116,6 +118,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, PermissionsMap> = {
     pos: ['view', 'create'],
     sales_history: ['view'],
     products: ['view'],
+    categories: ['view'],
     customers: ['view', 'create'],
     memberships_promotions: ['view'],
     accounts_receivable: ['view', 'create'],
@@ -168,16 +171,31 @@ export function hasPermission(
   return fallback.includes(action);
 }
 
+export function canAccessPrimaryModule(user: UserProfile | null, key: ModuleKey): boolean {
+  if (key === 'income') {
+    return hasPermission(user, 'income', 'view') || hasPermission(user, 'expenses', 'view');
+  }
+  if (key === 'inventory') {
+    return (
+      hasPermission(user, 'inventory', 'view') ||
+      hasPermission(user, 'stock_in', 'view') ||
+      hasPermission(user, 'stock_out', 'view')
+    );
+  }
+  return hasPermission(user, key, 'view');
+}
+
+export function getVisiblePrimaryMenuItems(user: UserProfile | null): MenuItemConfig[] {
+  const byKey = new Map(MENU_ITEMS.map((m) => [m.key, m]));
+  return PRIMARY_SIDEBAR_KEYS.map((k) => byKey.get(k))
+    .filter((item): item is MenuItemConfig => Boolean(item))
+    .filter((item) => canAccessPrimaryModule(user, item.key));
+}
+
 export function getVisibleMenuGroups(user: UserProfile | null): {
   group: string;
   items: MenuItemConfig[];
 }[] {
-  const groups = new Map<string, MenuItemConfig[]>();
-  for (const item of MENU_ITEMS) {
-    if (!hasPermission(user, item.key, 'view')) continue;
-    const list = groups.get(item.group) ?? [];
-    list.push(item);
-    groups.set(item.group, list);
-  }
-  return Array.from(groups.entries()).map(([group, items]) => ({ group, items }));
+  const items = getVisiblePrimaryMenuItems(user);
+  return items.length > 0 ? [{ group: 'ເມນູຫຼັກ', items }] : [];
 }

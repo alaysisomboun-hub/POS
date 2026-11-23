@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import { AppShell } from './components/layout/AppShell';
 import { FirebaseProvider, useFirebase } from './core/firebase/FirebaseProvider';
+import { canAccessPrimaryModule, getVisiblePrimaryMenuItems } from './core/rbac/permissions';
 import { RoleGuard } from './core/rbac/RoleGuard';
 import { DashboardPage } from './modules/dashboard/DashboardPage';
 import { ReportsPage } from './modules/reports/ReportsPage';
@@ -20,8 +21,7 @@ import { CustomersPage } from './modules/customers/CustomersPage';
 import { MembershipsPromotionsPage } from './modules/customers/MembershipsPromotionsPage';
 import { AccountsReceivablePage } from './modules/finance/AccountsReceivablePage';
 import { AccountsPayablePage } from './modules/finance/AccountsPayablePage';
-import { IncomePage } from './modules/finance/IncomePage';
-import { ExpensesPage } from './modules/finance/ExpensesPage';
+import { FinancePage } from './modules/finance/FinancePage';
 import { AccountingPage } from './modules/finance/AccountingPage';
 import { StaffManagementPage } from './modules/organization/StaffManagementPage';
 import { BackupRestorePage } from './modules/settings/BackupRestorePage';
@@ -29,8 +29,18 @@ import { SettingsOverviewPage } from './modules/settings/SettingsOverviewPage';
 import type { ModuleKey } from './core/firebase/types';
 
 function MainRouter() {
-  const { ready, connectionOk } = useFirebase();
-  const [activeModule, setActiveModule] = useState<ModuleKey>('dashboard');
+  const { ready, connectionOk, userProfile } = useFirebase();
+  const [activeModule, setActiveModule] = useState<ModuleKey>('pos');
+
+  useEffect(() => {
+    if (!ready || !userProfile) return;
+    if (!canAccessPrimaryModule(userProfile, activeModule)) {
+      const firstAllowed = getVisiblePrimaryMenuItems(userProfile)[0];
+      if (firstAllowed) {
+        setActiveModule(firstAllowed.key);
+      }
+    }
+  }, [ready, userProfile, activeModule]);
 
   if (!ready) {
     return (
@@ -94,7 +104,15 @@ function MainRouter() {
         );
       case 'inventory':
         return (
-          <RoleGuard moduleKey="inventory" action="view">
+          <RoleGuard
+            moduleKey="inventory"
+            action="view"
+            fallback={
+              <RoleGuard moduleKey="stock_in" action="view">
+                <InventoryPage />
+              </RoleGuard>
+            }
+          >
             <InventoryPage />
           </RoleGuard>
         );
@@ -147,15 +165,18 @@ function MainRouter() {
           </RoleGuard>
         );
       case 'income':
-        return (
-          <RoleGuard moduleKey="income" action="view">
-            <IncomePage />
-          </RoleGuard>
-        );
       case 'expenses':
         return (
-          <RoleGuard moduleKey="expenses" action="view">
-            <ExpensesPage />
+          <RoleGuard
+            moduleKey="income"
+            action="view"
+            fallback={
+              <RoleGuard moduleKey="expenses" action="view">
+                <FinancePage />
+              </RoleGuard>
+            }
+          >
+            <FinancePage />
           </RoleGuard>
         );
       case 'accounting':

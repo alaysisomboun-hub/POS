@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   collection,
   limit,
@@ -48,6 +48,7 @@ export function StockOutPage() {
   const [reason, setReason] = useState('');
 
   const [saving, setSaving] = useState(false);
+  const savingRef = useRef(false);
   const [notice, setNotice] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
 
   const canCreate = hasPermission(userProfile, 'stock_out', 'create');
@@ -189,8 +190,9 @@ export function StockOutPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!userProfile || !selectedProduct || !selectedUnit || !canCreate) return;
+    if (!userProfile || !selectedProduct || !selectedUnit || !canCreate || savingRef.current) return;
 
+    savingRef.current = true;
     setSaving(true);
     setNotice(null);
 
@@ -224,6 +226,7 @@ export function StockOutPage() {
         text: err instanceof Error ? err.message : 'ບໍ່ສາມາດເບີກສິນຄ້າອອກໄດ້',
       });
     } finally {
+      savingRef.current = false;
       setSaving(false);
     }
   };
@@ -233,10 +236,10 @@ export function StockOutPage() {
       <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-5">
         <div>
           <h2 className="text-base font-semibold text-slate-900">
-            ເບີກສິນຄ້າອອກ / ຕັດສິນຄ້າເສຍຫາຍ ໝົດອາຍຸ ສູນຫາຍ
+            ເບີກສິນຄ້າອອກ / ຕັດສິນຄ້າເສຍຫາຍ ໝົດອາຍຸ
           </h2>
           <p className="text-xs text-slate-500">
-            ຮອງຮັບການຕັດສະຕ໋ອກແບບ FEFO (ລ໋ອດໝົດອາຍຸກ່ອນອອກກ່ອນ) ຫຼື ເລືອກລ໋ອດສະເພາະ ພ້ອມອັບເດດ Stock Ledger ທັນທີ
+            ຮອງຮັບການຕັດສະຕ໋ອກແບບ FEFO (ລ໋ອດໝົດອາຍຸກ່ອນອອກກ່ອນ) ຫຼື ເລືອກລ໋ອດສະເພາະ
           </p>
         </div>
 

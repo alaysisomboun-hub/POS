@@ -56,6 +56,8 @@ export function BarcodeQrScannerModal({
   const readerId = `scanner_view_${reactId}`;
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const detectedLockRef = useRef(false);
+  const mountedRef = useRef(true);
+  const camerasCountRef = useRef(0);
   const manualInputRef = useRef<HTMLInputElement | null>(null);
 
   const [cameras, setCameras] = useState<CameraOption[]>([]);
@@ -88,15 +90,18 @@ export function BarcodeQrScannerModal({
     detectedLockRef.current = true;
     playScanBeep();
     await stopScannerSafely();
-    onDetected(clean);
+    if (mountedRef.current) {
+      onDetected(clean);
+    }
   };
 
   const startCamera = async (preferredCameraId?: string) => {
+    if (!mountedRef.current) return;
     setCameraState('starting');
     setCameraError(null);
     await stopScannerSafely();
 
-    if (!document.getElementById(readerId)) return;
+    if (!mountedRef.current || !document.getElementById(readerId)) return;
 
     const inst = new Html5Qrcode(readerId, {
       useBarCodeDetectorIfSupported: true,
@@ -120,12 +125,18 @@ export function BarcodeQrScannerModal({
         : { facingMode: 'environment' };
 
       await inst.start(target, scanConfig, onSuccess, () => {});
+      if (!mountedRef.current) {
+        await stopScannerSafely();
+        return;
+      }
       setCameraState('active');
 
-      if (cameras.length === 0) {
+      if (camerasCountRef.current === 0) {
         Html5Qrcode.getCameras()
           .then((list) => {
+            if (!mountedRef.current) return;
             if (list.length > 0) {
+              camerasCountRef.current = list.length;
               setCameras(list.map((c) => ({ id: c.id, label: c.label || `ກ້ອງ ${c.id.slice(0, 6)}` })));
               if (preferredCameraId) {
                 setSelectedCameraId(preferredCameraId);
@@ -135,14 +146,21 @@ export function BarcodeQrScannerModal({
           .catch(() => {});
       }
     } catch (err) {
+      if (!mountedRef.current) return;
       // Fallback to first enumerated camera if facingMode: environment failed on desktop webcam
       if (!preferredCameraId) {
         try {
           const list = await Html5Qrcode.getCameras();
+          if (!mountedRef.current) return;
           if (list.length > 0) {
+            camerasCountRef.current = list.length;
             setCameras(list.map((c) => ({ id: c.id, label: c.label || `ກ້ອງ ${c.id.slice(0, 6)}` })));
             setSelectedCameraId(list[0].id);
             await inst.start(list[0].id, scanConfig, onSuccess, () => {});
+            if (!mountedRef.current) {
+              await stopScannerSafely();
+              return;
+            }
             setCameraState('active');
             return;
           }
@@ -151,6 +169,7 @@ export function BarcodeQrScannerModal({
         }
       }
 
+      if (!mountedRef.current) return;
       const rawMsg = err instanceof Error ? err.message : String(err);
       let friendly = 'ບໍ່ສາມາດເປີດກ້ອງໄດ້ ກະລຸນາກວດສອບສິດການໃຊ້ກ້ອງ ຫຼື ໃຊ້ເຄື່ອງສະແກນ USB/Bluetooth ດ້ານລຸ່ມ';
       if (rawMsg.toLowerCase().includes('notallowed') || rawMsg.toLowerCase().includes('permission')) {
@@ -164,6 +183,7 @@ export function BarcodeQrScannerModal({
   };
 
   useEffect(() => {
+    mountedRef.current = true;
     detectedLockRef.current = false;
     void startCamera();
     const focusTimer = setTimeout(() => {
@@ -171,6 +191,7 @@ export function BarcodeQrScannerModal({
     }, 250);
 
     return () => {
+      mountedRef.current = false;
       clearTimeout(focusTimer);
       void stopScannerSafely();
     };

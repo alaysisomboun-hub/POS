@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   collection,
   doc,
@@ -79,6 +79,8 @@ export function StaffManagementPage() {
   const [showPermissionMatrix, setShowPermissionMatrix] = useState(true);
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const savingRef = useRef(false);
+  const statusSavingRef = useRef(false);
 
   const isTopAdmin =
     userProfile?.role === 'super_admin' || userProfile?.role === 'owner';
@@ -243,7 +245,7 @@ export function StaffManagementPage() {
   };
 
   const handleToggleStaffStatus = async (staff: UserProfile) => {
-    if (!userProfile || !canEdit) return;
+    if (!userProfile || !canEdit || statusSavingRef.current) return;
     if (!isTopAdmin && (staff.role === 'super_admin' || staff.role === 'owner')) {
       setFeedback({
         type: 'err',
@@ -259,6 +261,7 @@ export function StaffManagementPage() {
       return;
     }
 
+    statusSavingRef.current = true;
     const nextStatus = staff.status === 'active' ? 'suspended' : 'active';
     try {
       const batch = writeBatch(db);
@@ -289,12 +292,14 @@ export function StaffManagementPage() {
           text: err instanceof Error ? err.message : 'ບໍ່ສາມາດປ່ຽນສະຖານະພະນັກງານໄດ້',
         });
       }
+    } finally {
+      statusSavingRef.current = false;
     }
   };
 
   const handleSaveStaff = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!userProfile) return;
+    if (!userProfile || savingRef.current) return;
 
     const cleanName = formName.trim().slice(0, 120);
     const cleanEmail = formEmail.trim().toLowerCase().slice(0, 160);
@@ -325,6 +330,7 @@ export function StaffManagementPage() {
       }
     }
 
+    savingRef.current = true;
     setSaving(true);
     setErrorMsg(null);
 
@@ -415,6 +421,7 @@ export function StaffManagementPage() {
         setErrorMsg(err instanceof Error ? err.message : 'ບໍ່ສາມາດບັນທຶກຂໍ້ມູນພະນັກງານໄດ້');
       }
     } finally {
+      savingRef.current = false;
       setSaving(false);
     }
   };

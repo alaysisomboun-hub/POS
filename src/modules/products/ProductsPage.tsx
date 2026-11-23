@@ -17,6 +17,7 @@ import {
   PackagePlus,
   Plus,
   QrCode,
+  RotateCcw,
   Search,
   Trash2,
   Wand2,
@@ -32,6 +33,7 @@ import { generateSafeId } from '../../core/utils/id';
 import { compressProductImageFile } from '../../core/utils/image';
 import { formatLak } from '../../core/utils/money';
 import { BarcodeQrScannerModal } from '../../components/scanner/BarcodeQrScannerModal';
+import { ProductThumb } from '../../components/ui/ProductThumb';
 import { formatMultiUnitBreakdown } from '../inventory/stockService';
 import { BarcodeLabelModal } from './BarcodeLabelModal';
 import type {
@@ -88,10 +90,15 @@ export function ProductsPage() {
   const [status, setStatus] = useState<'active' | 'inactive'>('active');
   const [units, setUnits] = useState<ProductUnit[]>([]);
   const [saving, setSaving] = useState(false);
+  const savingRef = useRef(false);
+  const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [actionNotice, setActionNotice] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const canCreate = hasPermission(userProfile, 'products', 'create');
   const canEdit = hasPermission(userProfile, 'products', 'edit');
+  const canDelete = hasPermission(userProfile, 'products', 'delete') || canEdit;
 
   useEffect(() => {
     if (!userProfile) return;
@@ -404,7 +411,7 @@ export function ProductsPage() {
 
   const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!userProfile) return;
+    if (!userProfile || savingRef.current) return;
 
     const cleanSku = sku.trim().toUpperCase().slice(0, 50);
     const cleanName = name.trim().slice(0, 160);
@@ -480,6 +487,7 @@ export function ProductsPage() {
     const parsedOpening = Math.max(0, Math.round(Number(openingStockQty) || 0));
     const parsedEditStock = Math.max(0, Math.round(Number(editStockQty) || 0));
 
+    savingRef.current = true;
     setSaving(true);
     setErrorMsg(null);
 
@@ -728,12 +736,60 @@ export function ProductsPage() {
         setErrorMsg(wrapped instanceof Error ? wrapped.message : 'ບໍ່ສາມາດບັນທຶກຂໍ້ມູນສິນຄ້າໄດ້');
       }
     } finally {
+      savingRef.current = false;
       setSaving(false);
+    }
+  };
+
+  const handleToggleProductArchive = async (prod: Product, nextStatus: 'active' | 'inactive') => {
+    if (!userProfile || deleting) return;
+    setDeleting(true);
+    try {
+      const batch = writeBatch(db);
+      batch.update(doc(db, 'products', prod.productId), {
+        status: nextStatus,
+        updatedAt: serverTimestamp(),
+      });
+      appendAuditLogToBatch(batch, {
+        user: userProfile,
+        branchId: activeBranchId,
+        action: nextStatus === 'inactive' ? 'DELETE_PRODUCT' : 'RESTORE_PRODUCT',
+        entityType: 'products',
+        entityId: prod.productId,
+        before: { status: prod.status, name: prod.name },
+        after: { status: nextStatus, name: prod.name },
+      });
+      await batch.commit();
+      setDeleteTarget(null);
+      setActionNotice(
+        nextStatus === 'inactive'
+          ? `ລຶບສິນຄ້າ "${prod.name}" ອອກຈາກໜ້າຂາຍຮຽບຮ້ອຍແລ້ວ (ປະຫວັດການຂາຍຖືກຮັກສາໄວ້)`
+          : `ເປີດຂາຍສິນຄ້າ "${prod.name}" ຄືນສຳເລັດແລ້ວ`,
+      );
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : 'ບໍ່ສາມາດປັບປຸງສະຖານະສິນຄ້າໄດ້');
+    } finally {
+      setDeleting(false);
     }
   };
 
   return (
     <div className="space-y-5">
+      {actionNotice && (
+        <div className="p-3 rounded-xl bg-green-50 border border-green-200 text-xs sm:text-sm text-green-800 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 shrink-0 text-green-600" />
+            <span>{actionNotice}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setActionNotice(null)}
+            className="text-green-700 hover:text-green-900 cursor-pointer"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
       {/* Toolbar */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2.5">
@@ -844,17 +900,7 @@ export function ProductsPage() {
                 <tr key={prod.productId} className="hover:bg-slate-50/70">
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-3">
-                      {prod.imageUrl ? (
-                        <img
-                          src={prod.imageUrl}
-                          alt={prod.name}
-                          className="w-10 h-10 rounded-lg object-cover border border-slate-200 shrink-0 bg-slate-50"
-                        />
-                      ) : (
-                        <div className="w-10 h-10 rounded-lg border border-slate-200 bg-slate-50 flex items-center justify-center text-slate-400 shrink-0">
-                          <Package className="w-4 h-4" />
-                        </div>
-                      )}
+                      <ProductThumb src={prod.imageUrl} name={prod.name} variant="row" />
                       <div className="min-w-0">
                         <div className="font-semibold text-slate-900 truncate">{prod.name}</div>
                         <div className="text-xs text-slate-500 font-mono truncate">
@@ -912,6 +958,26 @@ export function ProductsPage() {
                           <Edit3 className="w-4 h-4" />
                         </button>
                       )}
+                      {canDelete && prod.status === 'active' && (
+                        <button
+                          type="button"
+                          onClick={() => setDeleteTarget(prod)}
+                          className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md cursor-pointer"
+                          title="ລຶບສິນຄ້າ"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                      {canDelete && prod.status === 'inactive' && (
+                        <button
+                          type="button"
+                          onClick={() => void handleToggleProductArchive(prod, 'active')}
+                          className="p-1.5 text-slate-500 hover:text-green-600 hover:bg-green-50 rounded-md cursor-pointer"
+                          title="ເປີດຂາຍຄືນ"
+                        >
+                          <RotateCcw className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -930,17 +996,7 @@ export function ProductsPage() {
             <div key={prod.productId} className="bg-white border border-slate-200 rounded-xl p-4 space-y-2">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2.5 min-w-0">
-                  {prod.imageUrl ? (
-                    <img
-                      src={prod.imageUrl}
-                      alt={prod.name}
-                      className="w-10 h-10 rounded-lg object-cover border border-slate-200 shrink-0 bg-slate-50"
-                    />
-                  ) : (
-                    <div className="w-10 h-10 rounded-lg border border-slate-200 bg-slate-50 flex items-center justify-center text-slate-400 shrink-0">
-                      <Package className="w-4 h-4" />
-                    </div>
-                  )}
+                  <ProductThumb src={prod.imageUrl} name={prod.name} variant="row" />
                   <div className="min-w-0">
                     <div className="font-semibold text-slate-900 text-sm truncate">{prod.name}</div>
                     <div className="text-xs text-slate-500 font-mono truncate">
@@ -960,7 +1016,7 @@ export function ProductsPage() {
                 <button
                   type="button"
                   onClick={() => setLabelProduct(prod)}
-                  className="px-2.5 py-1 text-xs font-medium text-blue-600 border border-blue-200 rounded-md"
+                  className="px-2.5 py-1 text-xs font-medium text-blue-600 border border-blue-200 rounded-md cursor-pointer"
                 >
                   ພິມສະຫຼາກ
                 </button>
@@ -968,9 +1024,27 @@ export function ProductsPage() {
                   <button
                     type="button"
                     onClick={() => openEditModal(prod)}
-                    className="px-2.5 py-1 text-xs font-medium text-slate-700 border border-slate-200 rounded-md"
+                    className="px-2.5 py-1 text-xs font-medium text-slate-700 border border-slate-200 rounded-md cursor-pointer"
                   >
                     ແກ້ໄຂ
+                  </button>
+                )}
+                {canDelete && prod.status === 'active' && (
+                  <button
+                    type="button"
+                    onClick={() => setDeleteTarget(prod)}
+                    className="px-2.5 py-1 text-xs font-medium text-red-600 border border-red-200 rounded-md cursor-pointer"
+                  >
+                    ລຶບ
+                  </button>
+                )}
+                {canDelete && prod.status === 'inactive' && (
+                  <button
+                    type="button"
+                    onClick={() => void handleToggleProductArchive(prod, 'active')}
+                    className="px-2.5 py-1 text-xs font-medium text-green-700 border border-green-200 rounded-md cursor-pointer"
+                  >
+                    ເປີດຂາຍຄືນ
                   </button>
                 )}
               </div>
@@ -1527,6 +1601,46 @@ export function ProductsPage() {
           storeName={organization?.name || 'ຮ້ານຄ້າຫຼັກ'}
           onClose={() => setLabelProduct(null)}
         />
+      )}
+
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white border border-slate-200 rounded-xl p-6 space-y-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-base font-semibold text-slate-900">ຢືນຢັນການລຶບສິນຄ້າ</h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  ຕ້ອງການລຶບສິນຄ້າ &ldquo;{deleteTarget.name}&rdquo; ({deleteTarget.sku}) ອອກຈາກໜ້າຂາຍຫຼືບໍ່?
+                  ປະຫວັດການຂາຍ ແລະ ຂໍ້ມູນສະຕັອກເກົ່າຈະຍັງຖືກຮັກສາໄວ້ຄືເກົ່າ
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDeleteTarget(null)}
+                className="p-1 text-slate-400 hover:text-slate-700 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setDeleteTarget(null)}
+                className="px-4 py-2 text-sm font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer"
+              >
+                ຍົກເລີກ
+              </button>
+              <button
+                type="button"
+                disabled={deleting}
+                onClick={() => void handleToggleProductArchive(deleteTarget, 'inactive')}
+                className="px-4 py-2 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 disabled:opacity-60 rounded-lg cursor-pointer"
+              >
+                {deleting ? 'ກຳລັງດຳເນີນການ...' : 'ຢືນຢັນລຶບສິນຄ້າ'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

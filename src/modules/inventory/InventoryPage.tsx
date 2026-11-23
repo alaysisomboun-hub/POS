@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   collection,
   doc,
@@ -19,6 +19,8 @@ import {
   History,
   MapPin,
   PackageCheck,
+  PackageMinus,
+  PackagePlus,
   Plus,
   Search,
   X,
@@ -31,6 +33,8 @@ import { hasPermission } from '../../core/rbac/permissions';
 import { formatDateTimeVientiane, formatDateVientiane } from '../../core/utils/date';
 import { generateSafeId } from '../../core/utils/id';
 import { formatLak } from '../../core/utils/money';
+import { StockInPage } from './StockInPage';
+import { StockOutPage } from './StockOutPage';
 import {
   executeStockCountAdjustment,
   formatMultiUnitBreakdown,
@@ -45,7 +49,7 @@ import type {
   StorageZoneType,
 } from '../../core/firebase/types';
 
-type InventoryTab = 'balances' | 'lots' | 'count' | 'ledger' | 'locations';
+type InventoryTab = 'balances' | 'stock_in' | 'stock_out' | 'lots' | 'count' | 'ledger' | 'locations';
 
 const MOVEMENT_LABELS: Record<StockMovementType, string> = {
   initial: 'ຍອດຍົກມາ',
@@ -102,9 +106,13 @@ export function InventoryPage() {
   const [locDesc, setLocDesc] = useState('');
   const [locStatus, setLocStatus] = useState<'active' | 'inactive'>('active');
   const [locSaving, setLocSaving] = useState(false);
+  const locSavingRef = useRef(false);
+  const countSavingRef = useRef(false);
   const [locError, setLocError] = useState<string | null>(null);
 
   const canEditInventory = hasPermission(userProfile, 'inventory', 'edit');
+  const canStockIn = hasPermission(userProfile, 'stock_in', 'view');
+  const canStockOut = hasPermission(userProfile, 'stock_out', 'view');
 
   useEffect(() => {
     if (!userProfile) return;
@@ -304,12 +312,13 @@ export function InventoryPage() {
 
   const handleApplyStockCount = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!userProfile || !selectedCountProduct || !selectedCountUnit) return;
+    if (!userProfile || !selectedCountProduct || !selectedCountUnit || countSavingRef.current) return;
 
     const countedBase = Math.round(
       (Number(countQty) || 0) * Math.max(1, selectedCountUnit.conversionFactor),
     );
 
+    countSavingRef.current = true;
     setCountSaving(true);
     setCountMessage(null);
 
@@ -333,6 +342,7 @@ export function InventoryPage() {
         text: err instanceof Error ? err.message : 'ບໍ່ສາມາດປັບປຸງຍອດກວດນັບໄດ້',
       });
     } finally {
+      countSavingRef.current = false;
       setCountSaving(false);
     }
   };
@@ -361,7 +371,7 @@ export function InventoryPage() {
 
   const handleSaveLocation = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!userProfile) return;
+    if (!userProfile || locSavingRef.current) return;
 
     const cleanCode = locCode.trim().toUpperCase().slice(0, 30);
     const cleanName = locName.trim().slice(0, 100);
@@ -370,6 +380,7 @@ export function InventoryPage() {
       return;
     }
 
+    locSavingRef.current = true;
     setLocSaving(true);
     setLocError(null);
 
@@ -429,6 +440,7 @@ export function InventoryPage() {
         setLocError(wrapped instanceof Error ? wrapped.message : 'ບໍ່ສາມາດບັນທຶກຕຳແໜ່ງຈັດເກັບໄດ້');
       }
     } finally {
+      locSavingRef.current = false;
       setLocSaving(false);
     }
   };
@@ -468,30 +480,34 @@ export function InventoryPage() {
         <div className="flex flex-wrap items-center gap-1 p-1 bg-slate-200/70 rounded-lg self-start">
           {(
             [
-              { key: 'balances', label: 'ຍອດຄົງເຫຼືອ', icon: Boxes },
-              { key: 'lots', label: 'ລ໋ອດ & ວັນໝົດອາຍຸ', icon: AlertTriangle },
-              { key: 'count', label: 'ກວດນັບສະຕ໋ອກ', icon: ClipboardCheck },
-              { key: 'ledger', label: 'Stock Ledger', icon: History },
-              { key: 'locations', label: 'ຕຳແໜ່ງຈັດເກັບ', icon: MapPin },
+              { key: 'balances', label: 'ຍອດຄົງເຫຼືອ', icon: Boxes, visible: true },
+              { key: 'stock_in', label: 'ຮັບສິນຄ້າເຂົ້າ', icon: PackagePlus, visible: canStockIn },
+              { key: 'stock_out', label: 'ເບີກ/ຕັດສະຕ໋ອກ', icon: PackageMinus, visible: canStockOut },
+              { key: 'lots', label: 'ລ໋ອດ & ໝົດອາຍຸ', icon: AlertTriangle, visible: true },
+              { key: 'count', label: 'ກວດນັບສະຕ໋ອກ', icon: ClipboardCheck, visible: true },
+              { key: 'ledger', label: 'ປະຫວັດເຄື່ອນໄຫວ', icon: History, visible: true },
+              { key: 'locations', label: 'ຕຳແໜ່ງຈັດເກັບ', icon: MapPin, visible: true },
             ] as const
-          ).map((t) => {
-            const Icon = t.icon;
-            return (
-              <button
-                key={t.key}
-                type="button"
-                onClick={() => setActiveTab(t.key)}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap cursor-pointer ${
-                  activeTab === t.key
-                    ? 'bg-white text-slate-900 shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <Icon className="w-3.5 h-3.5" />
-                {t.label}
-              </button>
-            );
-          })}
+          )
+            .filter((t) => t.visible)
+            .map((t) => {
+              const Icon = t.icon;
+              return (
+                <button
+                  key={t.key}
+                  type="button"
+                  onClick={() => setActiveTab(t.key)}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap cursor-pointer ${
+                    activeTab === t.key
+                      ? 'bg-white text-blue-700 font-semibold shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  {t.label}
+                </button>
+              );
+            })}
         </div>
 
         {(activeTab === 'balances' || activeTab === 'lots') && (
@@ -507,6 +523,9 @@ export function InventoryPage() {
           </div>
         )}
       </div>
+
+      {activeTab === 'stock_in' && <StockInPage />}
+      {activeTab === 'stock_out' && <StockOutPage />}
 
       {/* TAB 1: Stock Balances */}
       {activeTab === 'balances' && (

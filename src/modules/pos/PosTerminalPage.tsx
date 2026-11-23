@@ -17,7 +17,6 @@ import {
   ChevronUp,
   CreditCard,
   Minus,
-  Package,
   PackagePlus,
   PauseCircle,
   PlayCircle,
@@ -40,8 +39,9 @@ import { hasPermission } from '../../core/rbac/permissions';
 import { formatDateTimeVientiane } from '../../core/utils/date';
 import { formatLak } from '../../core/utils/money';
 import { BarcodeQrScannerModal } from '../../components/scanner/BarcodeQrScannerModal';
+import { ProductThumb } from '../../components/ui/ProductThumb';
 import { QuickAddProductModal } from '../products/QuickAddProductModal';
-import { PosBeginnerGuideModal, type PosGuideStep } from './PosBeginnerGuideModal';
+import { PosBeginnerGuideModal } from './PosBeginnerGuideModal';
 import { ReceiptPrintModal } from './ReceiptPrintModal';
 import {
   computeBillTotals,
@@ -95,40 +95,14 @@ const PAYMENT_METHOD_OPTIONS: Array<{
 
 const QUICK_LAK_AMOUNTS = [10000, 20000, 50000, 100000, 200000, 500000];
 
-function ProductImageThumb({ src, name }: { src?: string; name: string }) {
-  const [imgError, setImgError] = useState(false);
-
-  useEffect(() => {
-    setImgError(false);
-  }, [src]);
-
-  if (!src || imgError) {
-    return (
-      <div className="w-full h-28 rounded-lg bg-slate-50 border border-slate-100 flex flex-col items-center justify-center text-slate-400 gap-1">
-        <Package className="w-7 h-7 stroke-[1.5]" />
-        <span className="text-[11px] text-slate-400">ບໍ່ມີຮູບສິນຄ້າ</span>
-      </div>
-    );
-  }
-
-  return (
-    <div className="w-full h-28 rounded-lg bg-slate-50 border border-slate-100 overflow-hidden flex items-center justify-center">
-      <img
-        src={src}
-        alt={name}
-        referrerPolicy="no-referrer"
-        onError={() => setImgError(true)}
-        className="w-full h-full object-cover"
-      />
-    </div>
-  );
-}
-
 export function PosTerminalPage() {
   const { userProfile, organization, activeBranchId, settings } = useFirebase();
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const categoryScrollRef = useRef<HTMLDivElement | null>(null);
   const cartSectionRef = useRef<HTMLDivElement | null>(null);
+  const holdSavingRef = useRef(false);
+  const checkoutSavingRef = useRef(false);
+  const tryScanRef = useRef<(code: string) => void>(() => {});
 
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -139,7 +113,6 @@ export function PosTerminalPage() {
   const [promotions, setPromotions] = useState<Promotion[]>([]);
 
   const [searchText, setSearchText] = useState('');
-  const [categorySearch, setCategorySearch] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all');
   const [priceTier, setPriceTier] = useState<PriceTier>('retail');
 
@@ -180,42 +153,16 @@ export function PosTerminalPage() {
   const [completedSale, setCompletedSale] = useState<SaleOrder | null>(null);
   const [posScannerOpen, setPosScannerOpen] = useState(false);
 
-  // First-time POS Beginner Guide
+  // Optional Manual POS Guide
   const [guideOpen, setGuideOpen] = useState(false);
-  const [activeGuideSection, setActiveGuideSection] = useState<
-    PosGuideStep['sectionId'] | null
-  >(null);
 
   const canCreateSale = hasPermission(userProfile, 'pos', 'create');
   const canEditPrice = hasPermission(userProfile, 'pos', 'edit');
   const canCreateProduct = hasPermission(userProfile, 'products', 'create');
   const allowNegativeStock = settings?.inventorySettings?.allowNegativeStock ?? false;
 
-  const guideStorageKey = useMemo(
-    () => `grocery_pos_beginner_guide_seen_v1_${userProfile?.uid ?? 'default'}`,
-    [userProfile?.uid],
-  );
-
-  useEffect(() => {
-    if (!userProfile) return;
-    try {
-      const seen = window.localStorage.getItem(guideStorageKey);
-      if (seen !== 'true') {
-        setGuideOpen(true);
-      }
-    } catch {
-      // Ignore storage access restriction
-    }
-  }, [userProfile, guideStorageKey]);
-
   const dismissBeginnerGuide = () => {
-    try {
-      window.localStorage.setItem(guideStorageKey, 'true');
-    } catch {
-      // Ignore storage access restriction
-    }
     setGuideOpen(false);
-    setActiveGuideSection(null);
     window.setTimeout(() => {
       searchInputRef.current?.focus();
     }, 80);
@@ -367,16 +314,6 @@ export function PosTerminalPage() {
     }
     return counts;
   }, [products]);
-
-  const filteredCategories = useMemo(() => {
-    const q = categorySearch.trim().toLowerCase();
-    if (!q) return categories;
-    return categories.filter(
-      (c) =>
-        c.name.toLowerCase().includes(q) ||
-        (c.description && c.description.toLowerCase().includes(q)),
-    );
-  }, [categories, categorySearch]);
 
   const scrollCategories = (direction: 'left' | 'right') => {
     const el = categoryScrollRef.current;
@@ -690,14 +627,84 @@ export function PosTerminalPage() {
     e.preventDefault();
     if (!searchText.trim()) {
       searchInputRef.current?.focus();
-      setFeedback({
-        type: 'ok',
-        text: 'ພ້ອມຮັບບາໂຄ້ດແລ້ວ — ຍິງບາໂຄ້ດຈາກເຄື່ອງສະແກນ ຫຼື ພິມຊື່ສິນຄ້າແລ້ວກົດ Enter ໄດ້ເລີຍ',
-      });
       return;
     }
     tryAddScannedCodeToCart(searchText, true);
   };
+
+  tryScanRef.current = (code: string) => {
+    tryAddScannedCodeToCart(code, false);
+  };
+
+  // Global USB / Bluetooth HID barcode scanner listener (fast keystrokes <= 70ms ending with Enter)
+  useEffect(() => {
+    const anyModalOpen =
+      checkoutOpen ||
+      posScannerOpen ||
+      quickAddOpen ||
+      Boolean(notFoundPrompt) ||
+      holdModalOpen ||
+      heldListModalOpen ||
+      Boolean(completedSale) ||
+      guideOpen;
+
+    if (anyModalOpen) return;
+
+    let buffer = '';
+    let lastTime = 0;
+
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      const active = document.activeElement;
+      if (
+        active &&
+        active !== searchInputRef.current &&
+        (active.tagName === 'INPUT' ||
+          active.tagName === 'TEXTAREA' ||
+          active.tagName === 'SELECT')
+      ) {
+        return;
+      }
+
+      if (active === searchInputRef.current) {
+        // When focused inside the search input, form onSubmit handles Enter cleanly
+        return;
+      }
+
+      const now = Date.now();
+      if (now - lastTime > 70) {
+        buffer = '';
+      }
+      lastTime = now;
+
+      if (e.key === 'Enter') {
+        if (buffer.trim().length >= 3) {
+          e.preventDefault();
+          const scanned = buffer.trim();
+          buffer = '';
+          tryScanRef.current(scanned);
+        } else {
+          buffer = '';
+        }
+        return;
+      }
+
+      if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        buffer += e.key;
+      }
+    };
+
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, [
+    checkoutOpen,
+    posScannerOpen,
+    quickAddOpen,
+    notFoundPrompt,
+    holdModalOpen,
+    heldListModalOpen,
+    completedSale,
+    guideOpen,
+  ]);
 
   const updateCartQty = (lineKey: string, nextQty: number) => {
     const safeQty = Math.max(1, Math.round(nextQty));
@@ -785,8 +792,9 @@ export function PosTerminalPage() {
 
   const handleConfirmHoldBill = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!userProfile || cartLines.length === 0) return;
+    if (!userProfile || cartLines.length === 0 || holdSavingRef.current) return;
 
+    holdSavingRef.current = true;
     setHoldSaving(true);
     try {
       await createPosHeldBill({
@@ -815,6 +823,7 @@ export function PosTerminalPage() {
         text: err instanceof Error ? err.message : 'ບໍ່ສາມາດພັກບິນໄດ້',
       });
     } finally {
+      holdSavingRef.current = false;
       setHoldSaving(false);
     }
   };
@@ -911,7 +920,7 @@ export function PosTerminalPage() {
 
   const handleSubmitCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!userProfile || !canCreateSale) return;
+    if (!userProfile || !canCreateSale || checkoutSavingRef.current) return;
 
     if (computedPaymentSummary.remaining > 0) {
       setCheckoutError(
@@ -920,6 +929,7 @@ export function PosTerminalPage() {
       return;
     }
 
+    checkoutSavingRef.current = true;
     setCheckoutSaving(true);
     setCheckoutError(null);
 
@@ -960,6 +970,7 @@ export function PosTerminalPage() {
         err instanceof Error ? err.message : 'ບໍ່ສາມາດບັນທຶກການຂາຍໄດ້ ກະລຸນາລອງໃໝ່',
       );
     } finally {
+      checkoutSavingRef.current = false;
       setCheckoutSaving(false);
     }
   };
@@ -1044,25 +1055,12 @@ export function PosTerminalPage() {
 
       {/* Main 2-Column POS Workspace */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-        {/* LEFT COLUMN: Section 1 (Search & Scan), Section 2 (Categories), Section 3 (Products) */}
+        {/* LEFT COLUMN: Search & Scan Bar, Category Tabs, 1-Click Product Grid */}
         <div className="lg:col-span-7 space-y-4">
-          {/* SECTION 1: Search & Barcode Scanner */}
-          <section
-            className={`bg-white border rounded-xl p-4 sm:p-5 space-y-3 transition-shadow ${
-              activeGuideSection === 'search' || activeGuideSection === 'scanner'
-                ? 'border-blue-600 ring-2 ring-blue-200'
-                : 'border-slate-200'
-            }`}
-          >
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <h2 className="text-sm sm:text-base font-bold text-slate-900">1. ຄົ້ນຫາສິນຄ້າ</h2>
-              <span className="text-xs text-slate-500">
-                ພິມຊື່ສິນຄ້າ ລະຫັດ SKU ຫຼື ຍິງບາໂຄ້ດແລ້ວກົດ Enter
-              </span>
-            </div>
-
-            <form onSubmit={handleBarcodeSubmit} className="space-y-2.5">
-              <div className="relative">
+          {/* Streamlined Search & Barcode Bar */}
+          <section className="bg-white border border-slate-200 rounded-xl p-3.5 sm:p-4 space-y-3">
+            <form onSubmit={handleBarcodeSubmit} className="flex flex-col sm:flex-row gap-2">
+              <div className="relative flex-1">
                 <Search className="w-5 h-5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   ref={searchInputRef}
@@ -1070,176 +1068,115 @@ export function PosTerminalPage() {
                   autoFocus
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
-                  placeholder="ຄົ້ນຫາຊື່ສິນຄ້າ ຫຼື ສະແກນບາໂຄ້ດ"
-                  className="w-full min-h-[48px] pl-11 pr-10 py-2.5 text-base bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+                  placeholder="ຄົ້ນຫາຊື່ສິນຄ້າ ຫຼື ຍິງບາໂຄ້ດ..."
+                  className="w-full min-h-[46px] pl-11 pr-20 py-2 text-sm sm:text-base bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
                 />
-                {searchText && (
+                {searchText ? (
                   <button
                     type="button"
                     onClick={() => {
                       setSearchText('');
                       searchInputRef.current?.focus();
                     }}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-700 cursor-pointer"
+                    className="absolute right-12 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-slate-700 cursor-pointer"
                     aria-label="ລ້າງຄຳຄົ້ນຫາ"
                   >
                     <X className="w-4 h-4" />
                   </button>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                ) : null}
                 <button
                   type="submit"
-                  className="min-h-[46px] px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl flex items-center justify-center gap-2 cursor-pointer transition-colors"
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 w-9 h-9 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center justify-center cursor-pointer transition-colors"
+                  title="ຄົ້ນຫາ / ເພີ່ມດ້ວຍບາໂຄ້ດ"
+                  aria-label="ຄົ້ນຫາ"
                 >
-                  <ScanBarcode className="w-5 h-5 shrink-0" />
-                  <div className="text-left leading-tight">
-                    <div className="text-sm font-semibold whitespace-nowrap">ສະແກນບາໂຄ້ດ</div>
-                    <div className="text-[11px] text-blue-100">ຄົ້ນຫາ ຫຼື ຍິງລະຫັດສິນຄ້າ</div>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setPosScannerOpen(true)}
-                  className="min-h-[46px] px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl flex items-center justify-center gap-2 cursor-pointer transition-colors"
-                >
-                  <QrCode className="w-5 h-5 shrink-0" />
-                  <div className="text-left leading-tight">
-                    <div className="text-sm font-semibold whitespace-nowrap">ສະແກນດ້ວຍກ້ອງ</div>
-                    <div className="text-[11px] text-slate-300">ເປີດກ້ອງສະແກນ Barcode / QR</div>
-                  </div>
+                  <ScanBarcode className="w-4 h-4" />
                 </button>
               </div>
-            </form>
-          </section>
 
-          {/* SECTION 2: Product Categories */}
-          <section
-            className={`bg-white border rounded-xl p-4 space-y-3 transition-shadow ${
-              activeGuideSection === 'categories'
-                ? 'border-blue-600 ring-2 ring-blue-200'
-                : 'border-slate-200'
-            }`}
-          >
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-              <div className="flex items-center gap-2">
-                <Tag className="w-4 h-4 text-blue-600 shrink-0" />
-                <div>
-                  <h2 className="text-sm font-bold text-slate-900">
-                    2. ເລືອກໝວດໝູ່ ({categories.length} ໝວດໝູ່)
-                  </h2>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-1.5">
-                <div className="relative flex-1 sm:w-56">
-                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  <input
-                    type="text"
-                    value={categorySearch}
-                    onChange={(e) => setCategorySearch(e.target.value)}
-                    placeholder="ຄົ້ນຫາໝວດໝູ່..."
-                    className="w-full min-h-[38px] pl-8 pr-8 py-1.5 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:outline-none focus:border-blue-600"
-                  />
-                  {categorySearch && (
-                    <button
-                      type="button"
-                      onClick={() => setCategorySearch('')}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 cursor-pointer"
-                      aria-label="ລ້າງຄຳຄົ້ນຫາໝວດໝູ່"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                </div>
-
-                {categories.length > 0 && (
-                  <div className="hidden sm:inline-flex items-center gap-1">
-                    <button
-                      type="button"
-                      onClick={() => scrollCategories('left')}
-                      className="min-h-[38px] min-w-[38px] flex items-center justify-center text-slate-600 hover:text-blue-600 hover:bg-blue-50 border border-slate-200 rounded-lg cursor-pointer"
-                      aria-label="ເລື່ອນເບິ່ງໝວດໝູ່ທາງຊ້າຍ"
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => scrollCategories('right')}
-                      className="min-h-[38px] min-w-[38px] flex items-center justify-center text-slate-600 hover:text-blue-600 hover:bg-blue-50 border border-slate-200 rounded-lg cursor-pointer"
-                      aria-label="ເລື່ອນເບິ່ງໝວດໝູ່ທາງຂວາ"
-                    >
-                      <ChevronRight className="w-4 h-4" />
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div
-              ref={categoryScrollRef}
-              className="flex items-center gap-2 overflow-x-auto pb-1 scroll-smooth"
-            >
               <button
                 type="button"
-                onClick={() => setSelectedCategoryId('all')}
-                className={`min-h-[42px] px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg whitespace-nowrap shrink-0 cursor-pointer border transition-colors tabular-nums ${
-                  selectedCategoryId === 'all'
-                    ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                    : 'bg-white text-slate-700 border-slate-200 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200'
-                }`}
+                onClick={() => setPosScannerOpen(true)}
+                className="min-h-[46px] px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl inline-flex items-center justify-center gap-2 text-sm font-semibold cursor-pointer transition-colors whitespace-nowrap shrink-0"
               >
-                ທັງໝົດ ({products.length})
+                <QrCode className="w-4 h-4 shrink-0" />
+                <span>ສະແກນກ້ອງ</span>
               </button>
+            </form>
 
-              {filteredCategories.map((cat) => {
-                const isSelected = selectedCategoryId === cat.categoryId;
-                const count = categoryProductCounts.get(cat.categoryId) ?? 0;
-                return (
+            {/* Clean Category Filter Strip */}
+            <div className="flex items-center gap-1.5">
+              <div className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 shrink-0 pr-1">
+                <Tag className="w-3.5 h-3.5 text-blue-600" />
+                <span className="hidden sm:inline">ໝວດໝູ່:</span>
+              </div>
+              <div
+                ref={categoryScrollRef}
+                className="flex-1 flex items-center gap-1.5 overflow-x-auto pb-0.5 scroll-smooth"
+              >
+                <button
+                  type="button"
+                  onClick={() => setSelectedCategoryId('all')}
+                  className={`min-h-[38px] px-3.5 py-1.5 text-xs sm:text-sm font-semibold rounded-lg whitespace-nowrap shrink-0 cursor-pointer border transition-colors tabular-nums ${
+                    selectedCategoryId === 'all'
+                      ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                      : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200'
+                  }`}
+                >
+                  ທັງໝົດ ({products.length})
+                </button>
+
+                {categories.map((cat) => {
+                  const isSelected = selectedCategoryId === cat.categoryId;
+                  const count = categoryProductCounts.get(cat.categoryId) ?? 0;
+                  return (
+                    <button
+                      key={cat.categoryId}
+                      type="button"
+                      onClick={() => setSelectedCategoryId(cat.categoryId)}
+                      className={`min-h-[38px] px-3.5 py-1.5 text-xs sm:text-sm font-semibold rounded-lg whitespace-nowrap shrink-0 cursor-pointer border transition-colors tabular-nums ${
+                        isSelected
+                          ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                          : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200'
+                      }`}
+                    >
+                      {cat.name} ({count})
+                    </button>
+                  );
+                })}
+              </div>
+
+              {categories.length > 3 && (
+                <div className="hidden sm:inline-flex items-center gap-1 shrink-0">
                   <button
-                    key={cat.categoryId}
                     type="button"
-                    onClick={() => setSelectedCategoryId(cat.categoryId)}
-                    className={`min-h-[42px] px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg whitespace-nowrap shrink-0 cursor-pointer border transition-colors tabular-nums ${
-                      isSelected
-                        ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                        : 'bg-white text-slate-700 border-slate-200 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200'
-                    }`}
+                    onClick={() => scrollCategories('left')}
+                    className="min-h-[36px] min-w-[34px] flex items-center justify-center text-slate-500 hover:text-blue-600 hover:bg-blue-50 border border-slate-200 rounded-lg cursor-pointer"
+                    aria-label="ເລື່ອນເບິ່ງໝວດໝູ່ທາງຊ້າຍ"
                   >
-                    {cat.name} ({count})
+                    <ChevronLeft className="w-4 h-4" />
                   </button>
-                );
-              })}
-
-              {categorySearch.trim() && filteredCategories.length === 0 && (
-                <div className="flex items-center gap-2 px-3 py-2 text-xs text-slate-500 whitespace-nowrap">
-                  <span>ບໍ່ພົບໝວດໝູ່ &ldquo;{categorySearch.trim()}&rdquo;</span>
                   <button
                     type="button"
-                    onClick={() => setCategorySearch('')}
-                    className="text-blue-600 font-semibold hover:underline cursor-pointer"
+                    onClick={() => scrollCategories('right')}
+                    className="min-h-[36px] min-w-[34px] flex items-center justify-center text-slate-500 hover:text-blue-600 hover:bg-blue-50 border border-slate-200 rounded-lg cursor-pointer"
+                    aria-label="ເລື່ອນເບິ່ງໝວດໝູ່ທາງຂວາ"
                   >
-                    ສະແດງທັງໝົດ
+                    <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>
               )}
             </div>
           </section>
 
-          {/* SECTION 3: Product Grid */}
-          <section
-            className={`space-y-3 rounded-xl transition-shadow ${
-              activeGuideSection === 'products' ? 'ring-2 ring-blue-200 p-1' : ''
-            }`}
-          >
+          {/* Product Grid (1-click card add) */}
+          <section className="space-y-2.5">
             <div className="flex items-center justify-between px-1">
               <div className="text-sm font-bold text-slate-900">
-                3. ລາຍການສິນຄ້າ ({selectedCategoryName})
+                ລາຍການສິນຄ້າ ({selectedCategoryName})
               </div>
               <div className="text-xs text-slate-500 tabular-nums">
-                ສະແດງ {filteredProducts.length} ລາຍການ · ລາຄາ{PRICE_TIER_LABELS[priceTier]}
+                {filteredProducts.length} ລາຍການ · ລາຄາ{PRICE_TIER_LABELS[priceTier]}
               </div>
             </div>
 
@@ -1299,7 +1236,7 @@ export function PosTerminalPage() {
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3.5">
+              <div className="grid grid-cols-2 xl:grid-cols-3 gap-3">
                 {filteredProducts.map((prod) => {
                   const qtyOnHand = balanceMap.get(prod.productId) ?? 0;
                   const isOut = qtyOnHand <= 0;
@@ -1313,28 +1250,35 @@ export function PosTerminalPage() {
                   return (
                     <div
                       key={prod.productId}
-                      className="bg-white border border-slate-200 hover:border-blue-300 rounded-xl p-3.5 flex flex-col justify-between gap-3 transition-colors"
+                      onClick={() => {
+                        if (!disableBaseAdd && baseUnit) {
+                          addProductUnitToCart(prod, baseUnit);
+                        }
+                      }}
+                      className={`bg-white border rounded-xl p-3 flex flex-col justify-between gap-2.5 transition-colors ${
+                        disableBaseAdd
+                          ? 'border-slate-200 opacity-75 cursor-not-allowed'
+                          : 'border-slate-200 hover:border-blue-400 hover:shadow-xs cursor-pointer'
+                      }`}
                     >
-                      <div className="space-y-2.5">
-                        <ProductImageThumb src={prod.imageUrl} name={prod.name} />
+                      <div className="space-y-2">
+                        <ProductThumb src={prod.imageUrl} name={prod.name} variant="card" />
 
-                        {/* Full Product Name - no unnecessary truncation */}
-                        <div className="space-y-1">
-                          <h3 className="text-sm sm:text-[15px] font-semibold text-slate-900 leading-snug break-words">
+                        <div className="space-y-0.5">
+                          <h3 className="text-sm font-semibold text-slate-900 leading-snug break-words">
                             {prod.name}
                           </h3>
                           <div className="text-[11px] font-mono text-slate-400">
-                            ລະຫັດ: {prod.sku}
+                            {prod.sku}
                           </div>
                         </div>
 
-                        {/* Price & Stock Info */}
-                        <div className="pt-1 border-t border-slate-100 space-y-1">
-                          <div className="flex items-baseline justify-between gap-2">
-                            <span className="text-lg font-bold text-blue-600 tabular-nums">
+                        <div className="pt-1 border-t border-slate-100 space-y-0.5">
+                          <div className="flex items-baseline justify-between gap-1.5">
+                            <span className="text-base sm:text-lg font-bold text-blue-600 tabular-nums">
                               {formatLak(displayPrice)}
                             </span>
-                            <span className="text-xs font-medium text-slate-500">
+                            <span className="text-xs text-slate-500 shrink-0">
                               / {baseUnit?.unitName ?? prod.baseUnitName}
                             </span>
                           </div>
@@ -1345,13 +1289,13 @@ export function PosTerminalPage() {
                                 ? 'text-red-600'
                                 : isLow
                                   ? 'text-amber-600'
-                                  : 'text-slate-600'
+                                  : 'text-slate-500'
                             }`}
                           >
                             {isOut ? (
                               <>
                                 <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                                <span>ສິນຄ້າໝົດ (0 {prod.baseUnitName})</span>
+                                <span>ໝົດສະຕັອກ (0)</span>
                               </>
                             ) : (
                               <span>
@@ -1363,35 +1307,41 @@ export function PosTerminalPage() {
                         </div>
                       </div>
 
-                      <div className="space-y-2 pt-1">
-                        {/* Primary Add to Cart Button */}
+                      <div className="space-y-1.5 pt-0.5">
                         <button
                           type="button"
                           disabled={disableBaseAdd || !baseUnit}
-                          onClick={() => baseUnit && addProductUnitToCart(prod, baseUnit)}
-                          className="w-full min-h-[44px] px-3 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-500 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-lg inline-flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (baseUnit) addProductUnitToCart(prod, baseUnit);
+                          }}
+                          className="w-full min-h-[40px] px-3 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-500 disabled:cursor-not-allowed text-white text-xs sm:text-sm font-semibold rounded-lg inline-flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
                         >
                           <Plus className="w-4 h-4 shrink-0" />
                           <span>{disableBaseAdd ? 'ສິນຄ້າໝົດ' : 'ເພີ່ມໃສ່ກະຕ່າ'}</span>
                         </button>
 
-                        {/* Additional Unit Options (Wholesale / Pack / Box) */}
                         {prod.units.length > 1 && (
-                          <div className="flex flex-wrap gap-1.5">
-                            {prod.units.map((unit) => (
-                              <button
-                                key={unit.unitId}
-                                type="button"
-                                onClick={() => addProductUnitToCart(prod, unit)}
-                                className="min-h-[34px] inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-slate-50 hover:bg-blue-50 text-slate-700 hover:text-blue-700 border border-slate-200 hover:border-blue-300 rounded-lg cursor-pointer tabular-nums"
-                              >
-                                <Plus className="w-3 h-3" />
-                                <span>
-                                  {unit.unitName} ·{' '}
-                                  {formatLak(getUnitPriceByTier(unit, priceTier), false)}
-                                </span>
-                              </button>
-                            ))}
+                          <div className="flex flex-wrap gap-1">
+                            {prod.units
+                              .filter((u) => u.unitId !== baseUnit?.unitId)
+                              .map((unit) => (
+                                <button
+                                  key={unit.unitId}
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    addProductUnitToCart(prod, unit);
+                                  }}
+                                  className="min-h-[30px] inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium bg-slate-50 hover:bg-blue-50 text-slate-700 hover:text-blue-700 border border-slate-200 hover:border-blue-300 rounded-md cursor-pointer tabular-nums"
+                                >
+                                  <Plus className="w-3 h-3" />
+                                  <span>
+                                    {unit.unitName} ·{' '}
+                                    {formatLak(getUnitPriceByTier(unit, priceTier), false)}
+                                  </span>
+                                </button>
+                              ))}
                           </div>
                         )}
                       </div>
@@ -1403,14 +1353,10 @@ export function PosTerminalPage() {
           </section>
         </div>
 
-        {/* RIGHT COLUMN: Section 4 (Cart) & Section 5 (Checkout) */}
+        {/* RIGHT COLUMN: Cart & Checkout */}
         <div
           ref={cartSectionRef}
-          className={`lg:col-span-5 bg-white border rounded-xl overflow-hidden lg:sticky lg:top-20 transition-shadow ${
-            activeGuideSection === 'cart' || activeGuideSection === 'checkout'
-              ? 'border-blue-600 ring-2 ring-blue-200'
-              : 'border-slate-200'
-          }`}
+          className="lg:col-span-5 bg-white border border-slate-200 rounded-xl overflow-hidden lg:sticky lg:top-20"
         >
           {/* Cart Header */}
           <div className="p-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2 bg-slate-50">
@@ -1420,7 +1366,7 @@ export function PosTerminalPage() {
               </div>
               <div>
                 <h2 className="text-sm sm:text-base font-bold text-slate-900">
-                  4. ກະຕ່າສິນຄ້າ
+                  ກະຕ່າສິນຄ້າ
                 </h2>
                 <div className="text-xs text-slate-500 tabular-nums">
                   {cartLines.length} ລາຍການ · ລວມ {totalCartUnits.toLocaleString('en-US')} ອັນ
@@ -1660,10 +1606,10 @@ export function PosTerminalPage() {
             })}
           </div>
 
-          {/* SECTION 5: Checkout Summary & Primary CTA */}
+          {/* Checkout Summary & Primary CTA */}
           <div className="p-4 sm:p-5 border-t border-slate-200 bg-slate-50 space-y-3.5">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-slate-900">5. ສະຫຼຸບຍອດ ແລະ ຊຳລະເງິນ</h3>
+              <h3 className="text-sm font-bold text-slate-900">ສະຫຼຸບຍອດ ແລະ ຊຳລະເງິນ</h3>
               <button
                 type="button"
                 onClick={() => setShowDiscountOptions((prev) => !prev)}
@@ -1773,32 +1719,53 @@ export function PosTerminalPage() {
                 </div>
 
                 {payMode === 'cash' && (
-                  <div className="grid grid-cols-2 gap-2 pt-1 items-center text-xs tabular-nums">
-                    <div>
-                      <label className="block text-[11px] text-slate-500 mb-0.5">
-                        ຈຳນວນເງິນທີ່ລູກຄ້າຊຳລະ (₭)
-                      </label>
-                      <input
-                        type="number"
-                        min={0}
-                        value={cashTendered}
-                        onChange={(e) => setCashTendered(e.target.value)}
-                        className="w-full min-h-[38px] px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-lg text-right font-bold text-slate-900"
-                      />
-                    </div>
-                    <div className="text-right">
-                      <div className="text-[11px] text-slate-500 mb-0.5">ເງິນທອນ</div>
-                      <div
-                        className={`text-base font-bold ${
-                          computedPaymentSummary.remaining > 0
-                            ? 'text-red-600'
-                            : 'text-green-600'
-                        }`}
-                      >
-                        {computedPaymentSummary.remaining > 0
-                          ? `ຂາດ ${formatLak(computedPaymentSummary.remaining)}`
-                          : formatLak(computedPaymentSummary.change)}
+                  <div className="space-y-2 pt-1 text-xs tabular-nums">
+                    <div className="grid grid-cols-2 gap-2 items-center">
+                      <div>
+                        <label className="block text-[11px] text-slate-500 mb-0.5">
+                          ເງິນທີ່ຮັບຈາກລູກຄ້າ (₭)
+                        </label>
+                        <input
+                          type="number"
+                          min={0}
+                          value={cashTendered}
+                          onChange={(e) => setCashTendered(e.target.value)}
+                          className="w-full min-h-[38px] px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-lg text-right font-bold text-slate-900"
+                        />
                       </div>
+                      <div className="text-right">
+                        <div className="text-[11px] text-slate-500 mb-0.5">ເງິນທອນ</div>
+                        <div
+                          className={`text-base font-bold ${
+                            computedPaymentSummary.remaining > 0
+                              ? 'text-red-600'
+                              : 'text-green-600'
+                          }`}
+                        >
+                          {computedPaymentSummary.remaining > 0
+                            ? `ຂາດ ${formatLak(computedPaymentSummary.remaining)}`
+                            : formatLak(computedPaymentSummary.change)}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setCashTendered(String(billTotals.grandTotalLak))}
+                        className="px-2 py-1 text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200 rounded-md cursor-pointer"
+                      >
+                        ພໍດີ
+                      </button>
+                      {[10000, 20000, 50000, 100000, 200000].map((amt) => (
+                        <button
+                          key={amt}
+                          type="button"
+                          onClick={() => setCashTendered(String(amt))}
+                          className="px-2 py-1 text-[11px] font-medium bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-md cursor-pointer"
+                        >
+                          {amt.toLocaleString('en-US')}
+                        </button>
+                      ))}
                     </div>
                   </div>
                 )}
@@ -2327,10 +2294,9 @@ export function PosTerminalPage() {
         }}
       />
 
-      {/* First-time POS Beginner Guide */}
+      {/* Optional POS Beginner Guide */}
       <PosBeginnerGuideModal
         open={guideOpen}
-        onStepChange={setActiveGuideSection}
         onComplete={dismissBeginnerGuide}
         onSkip={dismissBeginnerGuide}
       />

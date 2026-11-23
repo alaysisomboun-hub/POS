@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { doc, serverTimestamp, writeBatch } from 'firebase/firestore';
 import {
   Bell,
   Boxes,
   CheckCircle2,
   Coins,
+  DatabaseBackup,
   Printer,
   Save,
   Store,
@@ -14,9 +15,12 @@ import { OperationType, handleFirestoreError } from '../../core/firebase/errorHa
 import { useFirebase } from '../../core/firebase/FirebaseProvider';
 import { appendAuditLogToBatch } from '../../core/firebase/auditService';
 import { hasPermission } from '../../core/rbac/permissions';
+import { BackupRestorePage } from './BackupRestorePage';
 
 export function SettingsOverviewPage() {
   const { userProfile, organization, activeBranch, activeBranchId, settings } = useFirebase();
+  const [settingsTab, setSettingsTab] = useState<'store' | 'backup'>('store');
+  const savingRef = useRef(false);
 
   // Store Profile
   const [storeName, setStoreName] = useState('');
@@ -54,6 +58,10 @@ export function SettingsOverviewPage() {
     hasPermission(userProfile, 'settings', 'edit') ||
     userProfile?.role === 'owner' ||
     userProfile?.role === 'super_admin';
+  const canBackup =
+    hasPermission(userProfile, 'backup', 'view') ||
+    userProfile?.role === 'owner' ||
+    userProfile?.role === 'super_admin';
 
   useEffect(() => {
     if (organization) {
@@ -87,8 +95,9 @@ export function SettingsOverviewPage() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!userProfile || !organization || !settings || !canManage) return;
+    if (!userProfile || !organization || !settings || !canManage || savingRef.current) return;
 
+    savingRef.current = true;
     setSaving(true);
     setSavedNotice(false);
     setErrorMsg(null);
@@ -205,20 +214,57 @@ export function SettingsOverviewPage() {
         setErrorMsg(err instanceof Error ? err.message : 'ບໍ່ສາມາດບັນທຶກການຕັ້ງຄ່າໄດ້');
       }
     } finally {
+      savingRef.current = false;
       setSaving(false);
     }
   };
 
   return (
     <div className="max-w-4xl space-y-5">
-      <div>
-        <h2 className="text-base font-semibold text-slate-900">
-          ຕັ້ງຄ່າຮ້ານຄ້າ ໃບບິນ ພາສີ ແລະ ນະໂຍບາຍລະບົບ
-        </h2>
-        <p className="text-xs text-slate-500">
-          ລະບົບຮ້ານຄ້າດ່ຽວ (1 ສາຂາ) · ສະກຸນເງິນຫຼັກ: LAK (ກີບ) · ເຂດເວລາ: Asia/Vientiane · ຮູບແບບວັນທີ: DD/MM/YYYY
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h2 className="text-base font-semibold text-slate-900">
+            ຕັ້ງຄ່າຮ້ານຄ້າ ໃບບິນ ແລະ ນະໂຍບາຍລະບົບ
+          </h2>
+          <p className="text-xs text-slate-500">
+            ສະກຸນເງິນຫຼັກ: LAK (ກີບ) · ເຂດເວລາ: Asia/Vientiane · DD/MM/YYYY
+          </p>
+        </div>
+
+        {canBackup && (
+          <div className="inline-flex bg-slate-200/70 p-1 rounded-lg self-start">
+            <button
+              type="button"
+              onClick={() => setSettingsTab('store')}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md cursor-pointer ${
+                settingsTab === 'store'
+                  ? 'bg-white text-blue-700 font-semibold shadow-xs'
+                  : 'text-slate-600'
+              }`}
+            >
+              <Store className="w-3.5 h-3.5" />
+              ຕັ້ງຄ່າຮ້ານຄ້າ
+            </button>
+            <button
+              type="button"
+              onClick={() => setSettingsTab('backup')}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md cursor-pointer ${
+                settingsTab === 'backup'
+                  ? 'bg-white text-blue-700 font-semibold shadow-xs'
+                  : 'text-slate-600'
+              }`}
+            >
+              <DatabaseBackup className="w-3.5 h-3.5" />
+              ສຳຮອງ & ກູ້ຄືນ
+            </button>
+          </div>
+        )}
       </div>
+
+      {settingsTab === 'backup' && canBackup ? (
+        <BackupRestorePage />
+      ) : (
+        <>
 
       {errorMsg && (
         <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700">
@@ -592,6 +638,8 @@ export function SettingsOverviewPage() {
           </div>
         )}
       </form>
+        </>
+      )}
     </div>
   );
 }
